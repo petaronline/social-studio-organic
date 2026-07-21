@@ -3,7 +3,7 @@
 /**
  * Organic / Connected Accounts
  *
- * Lets each Vass user connect their Facebook Pages, Instagram Business
+ * Lets each user connect their Facebook Pages, Instagram Business
  * accounts, and (eventually) Threads. Each platform section shows:
  *   - Connected accounts with avatar, name/handle, follower count
  *   - A connect button that kicks off the Meta OAuth flow
@@ -197,7 +197,7 @@ export default function OrganicAccountsPage() {
         <PageHeader
           icon={Users}
           title="Connected accounts"
-          description="Each Vass user connects their own accounts. You only see yours."
+          description="Each user connects their own accounts. You only see yours."
           tint={PAGE_TINTS.accounts}
         />
         <button

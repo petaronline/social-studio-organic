@@ -16,8 +16,8 @@ import { GeistMono } from 'geist/font/mono';
 import '@/styles/globals.css';
 
 export const metadata: Metadata = {
-  title: 'Vass',
-  description: 'Launch ads, sharper. An internal tool by Hyper Studio.',
+  title: 'The Social Studio',
+  description: 'Plan, write and schedule social. An internal tool by Hyper Studio.',
   icons: {
     icon: '/favicon.svg',
   },

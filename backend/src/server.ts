@@ -1,5 +1,5 @@
 /**
- * Vass — backend entry point.
+ * The Social Studio — backend entry point.
  *
  * Boot order:
  *   1. Load + validate env vars (utils/env.ts will throw if anything's wrong)
@@ -84,7 +84,7 @@ app.use(
 
 // ---- Start ----
 const server = app.listen(env.PORT, '0.0.0.0', () => {
-  console.log(`[vass] Backend listening on 0.0.0.0:${env.PORT} (${env.NODE_ENV})`);
+  console.log(`[studio] Backend listening on 0.0.0.0:${env.PORT} (${env.NODE_ENV})`);
 });
 
 // ---- Periodic session cleanup (once per hour) ----
@@ -107,13 +107,13 @@ const cleanupInterval = setInterval(async () => {
 
 // ---- Graceful shutdown ----
 async function shutdown(signal: string): Promise<void> {
-  console.log(`[vass] ${signal} received, shutting down gracefully...`);
+  console.log(`[studio] ${signal} received, shutting down gracefully...`);
   clearInterval(cleanupInterval);
   server.close(() => {
-    console.log('[vass] HTTP server closed');
+    console.log('[studio] HTTP server closed');
   });
   await closePool();
-  console.log('[vass] Database pool closed');
+  console.log('[studio] Database pool closed');
   process.exit(0);
 }
 

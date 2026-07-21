@@ -1,12 +1,14 @@
-# Vass Organic
+# The Social Studio
 
 **Internal social publishing tool by Hyper Studio.** Plan, compose, schedule and measure organic posts across Instagram, Facebook Pages, Threads, TikTok and LinkedIn — from one workspace.
 
-Vass Organic is a private workspace tool. There is no public signup — users are created by a workspace admin. The current version supports a single workspace per install; teams come later.
+No ads. No campaigns. Social only — that's the point of it being its own product.
+
+The Social Studio is a private workspace tool. There is no public signup — users are created by a workspace admin. The current version supports a single workspace per install; teams come later.
 
 ## Relationship to Vass (the ads app)
 
-Vass Organic began as the `/organic` section of [Vass](https://github.com/petaronline/vass), Hyper Studio's Meta ad launcher, and was split out into its own product. The two are now **fully independent**: separate repo, separate database, separate Redis, separate containers, separate domain, separate session cookie. Neither app reads the other's tables and neither can take the other down.
+The Social Studio began as the `/organic` section of [Vass](https://github.com/petaronline/vass), Hyper Studio's Meta ad launcher, and was split out into its own product. The two are now **fully independent**: separate repo, separate database, separate Redis, separate containers, separate domain, separate session cookie. Neither app reads the other's tables and neither can take the other down.
 
 What they still have in common is by copy, not by connection:
 
@@ -92,9 +94,13 @@ Total time: 5–10 minutes on a 2-core machine, mostly Docker building.
 
 ## Running alongside the ads app
 
-Every host-side resource is renamed so both stacks coexist on one box:
+Every host-side resource is renamed so both stacks coexist on one box. Note the
+infrastructure still carries the `vass-organic` name it was installed under —
+container names, the `/opt` path and the database. That is deliberate: renaming
+them means a reinstall and a data migration, and buys nothing a user ever sees.
 
-| component | Vass (ads) | Vass Organic |
+
+| component | Vass (ads) | The Social Studio |
 |-----------|-----------|--------------|
 | compose project | `vass` | `vass-organic` |
 | postgres | 5432 | 5433 |
@@ -108,7 +114,7 @@ Every host-side resource is renamed so both stacks coexist on one box:
 
 ## Reverse proxy
 
-Vass Organic listens on `127.0.0.1:3031` (frontend) and `127.0.0.1:4041` (backend). Your reverse proxy needs two rules:
+The Social Studio listens on `127.0.0.1:3031` (frontend) and `127.0.0.1:4041` (backend). Your reverse proxy needs two rules:
 
 - `/`         → `127.0.0.1:3031`
 - `/api/*`    → `127.0.0.1:4041` (stripping the `/api` prefix)
@@ -257,3 +263,22 @@ Schedule this in cron. Test the restore at least once.
 ## License
 
 Internal use by Hyper Studio. Not licensed for external distribution.
+
+## A note on the name, for anyone reading the code
+
+The product is **The Social Studio**. The repo, containers, database and
+`/opt` path still say `vass-organic`, because that is what it was installed
+as and renaming infrastructure means a reinstall for zero user-visible gain.
+
+Three `vass` strings inside the code are **load-bearing and must never be
+renamed**:
+
+| string | where | why |
+|---|---|---|
+| `vass-secret-encryption-v1` | `backend/src/utils/crypto.ts` | salt for the AES key that encrypts every stored access token. Change it and every Meta/TikTok/Threads/LinkedIn token in the database becomes undecryptable. |
+| `vass-hmac-public-url-v1` | `backend/src/utils/crypto.ts` | salt for signed upload URLs. Change it and existing media links break. |
+| `source = 'vass'` | `organic_posts` rows, and the queries reading them | a stored column value distinguishing posts this app created from posts synced back from Meta. Change it and Studio, Pipeline and Analytics stop recognising your own posts. |
+
+The drag-and-drop MIME types (`text/vass-account`, `text/vass-unified`), the
+`vass-upload:` URL scheme and the `vass:branding-updated` browser event are
+internal identifiers — harmless, and not worth the churn.

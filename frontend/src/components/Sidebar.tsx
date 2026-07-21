@@ -34,7 +34,7 @@ import {
   BarChart3,
   type LucideIcon,
 } from 'lucide-react';
-import { VassLogo } from './VassLogo';
+import { StudioLogo } from './StudioLogo';
 import { branding, CurrentUser } from '@/lib/api';
 
 // ─── Active style palette ────────────────────────────────────────────────────
@@ -139,7 +139,7 @@ export function Sidebar({ user }: { user: CurrentUser }) {
             className="max-h-[28px] max-w-full object-contain"
           />
         ) : (
-          <VassLogo variant="full" height={26} color="#0A0A0A" />
+          <StudioLogo variant="full" height={26} color="#0A0A0A" />
         )}
       </div>
 

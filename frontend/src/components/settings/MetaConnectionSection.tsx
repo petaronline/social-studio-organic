@@ -82,7 +82,7 @@ export function MetaConnectionSection() {
   }
 
   async function handleDisconnect() {
-    if (!confirm('Disconnect your Facebook account from Vass? You will need to reconnect to launch ads.')) {
+    if (!confirm('Disconnect your Facebook account? You will need to reconnect to publish to your Pages and Instagram.')) {
       return;
     }
     setError(null);

@@ -424,18 +424,18 @@ function TesterOnboardingInfo() {
             >
               developers.facebook.com <ExternalLink size={11} />
             </a>{' '}
-            → your Vass Meta App → <strong>Roles → Roles</strong> → <strong>Add People</strong> →
+            → your Meta App → <strong>Roles → Roles</strong> → <strong>Add People</strong> →
             select <strong>Developers</strong> or <strong>Testers</strong> and enter their Facebook user.
             They'll get a notification on Facebook to accept.
           </li>
           <li>
-            <strong className="text-ink">Create their Vass account here</strong> using the button above.
+            <strong className="text-ink">Create their account here</strong> using the button above.
             Send them the email + temporary password out of band.
           </li>
         </ol>
         <div className="rounded-lg bg-white/60 border border-blue-100 px-3 py-2 text-xs text-ink-muted">
           <span className="font-medium text-ink">Their pages stay theirs.</span>{' '}
-          When they click "Connect Facebook" in Vass, they sign in with their own Facebook account.
+          When they click "Connect Facebook", they sign in with their own Facebook account.
           They see only their own pages and ad accounts — yours stay invisible to them.
           The Meta App is just the shared OAuth client; nothing about their Facebook assets needs to be added to it.
         </div>
@@ -472,7 +472,7 @@ function CreatedCredentialsCard({
             <button onClick={onDismiss} className="btn-ghost text-xs"><X size={12} /></button>
           </div>
           <p className="text-xs text-ink-muted mb-3">
-            This is the only time the password is shown. Vass doesn't email it out for you — copy it now
+            This is the only time the password is shown. The Social Studio doesn't email it out for you — copy it now
             and send via Slack, password manager, or however you prefer.
           </p>
           <div className="space-y-2 font-mono text-xs">

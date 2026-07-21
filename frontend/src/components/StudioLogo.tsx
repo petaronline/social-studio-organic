@@ -1,17 +1,21 @@
 /**
- * Vass logo — clean wordmark in Geist Sans with a small upward arrow accent.
+ * The Social Studio logo.
  *
- * Approach: keep the full word "Vass" readable, place a small arrow
- * accent to the upper-right (or use it standalone as the mark).
+ * Two-tone wordmark: "The Social" in muted weight, "Studio" in full weight,
+ * so the eye lands on the word that matters at small sizes. The arrow accent
+ * from the original Vass mark is kept — it reads as "publish / send out",
+ * which is if anything more apt here than it was for ads.
  *
  * Variants:
- *   - "full": "Vass↗" — wordmark + accent arrow
- *   - "mark": just the arrow in a blue square (favicon, sidebar collapsed)
- *   - "wordmark": just "Vass" text, no arrow
+ *   - "full":     the wordmark + accent arrow (sidebar, login)
+ *   - "mark":     just the arrow in a rounded square (favicon, tight spaces)
+ *   - "wordmark": text only, no arrow
+ *
+ * Sizes are all derived from `height` so the lockup scales as one unit.
  */
 import React from 'react';
 
-interface VassLogoProps {
+interface StudioLogoProps {
   variant?: 'full' | 'mark' | 'wordmark';
   className?: string;
   height?: number;
@@ -19,20 +23,23 @@ interface VassLogoProps {
   background?: string;
 }
 
-export function VassLogo({
+/** Muted tone for the leading "The Social", derived from the main colour. */
+const MUTED_OPACITY = 0.55;
+
+export function StudioLogo({
   variant = 'full',
   className = '',
   height = 28,
   color = 'currentColor',
-  background = '#2563EB',
-}: VassLogoProps) {
+  background = '#0F766E',
+}: StudioLogoProps) {
   if (variant === 'mark') {
     // Arrow inside a rounded square — for favicon / tight spaces
     return (
       <div
         className={`inline-flex items-center justify-center rounded ${className}`}
         style={{ width: height, height, background }}
-        aria-label="Vass"
+        aria-label="The Social Studio"
       >
         <svg
           viewBox="0 0 24 24"
@@ -54,20 +61,26 @@ export function VassLogo({
     );
   }
 
+  const wordmark = (
+    <span
+      style={{
+        color,
+        fontFamily: 'var(--font-geist-sans), system-ui, sans-serif',
+        fontSize: `${height * 0.62}px`,
+        letterSpacing: '-0.03em',
+        lineHeight: 1,
+        whiteSpace: 'nowrap',
+      }}
+    >
+      <span style={{ fontWeight: 400, opacity: MUTED_OPACITY }}>The Social </span>
+      <span style={{ fontWeight: 700 }}>Studio</span>
+    </span>
+  );
+
   if (variant === 'wordmark') {
     return (
-      <span
-        className={className}
-        style={{
-          color,
-          fontFamily: 'var(--font-geist-sans), system-ui, sans-serif',
-          fontWeight: 700,
-          fontSize: `${height * 0.85}px`,
-          letterSpacing: '-0.04em',
-          lineHeight: 1,
-        }}
-      >
-        Vass
+      <span className={className} aria-label="The Social Studio">
+        {wordmark}
       </span>
     );
   }
@@ -77,28 +90,17 @@ export function VassLogo({
     <div
       className={`inline-flex items-baseline ${className}`}
       style={{ gap: height * 0.08 }}
-      aria-label="Vass"
+      aria-label="The Social Studio"
     >
-      <span
-        style={{
-          color,
-          fontFamily: 'var(--font-geist-sans), system-ui, sans-serif',
-          fontWeight: 700,
-          fontSize: `${height * 0.85}px`,
-          letterSpacing: '-0.04em',
-          lineHeight: 1,
-        }}
-      >
-        Vass
-      </span>
+      {wordmark}
       <svg
         viewBox="0 0 24 24"
-        width={height * 0.35}
-        height={height * 0.35}
+        width={height * 0.3}
+        height={height * 0.3}
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden="true"
-        style={{ marginBottom: height * 0.05 }}
+        style={{ marginBottom: height * 0.04 }}
       >
         <path
           d="M6 18 L18 6 M9 6 L18 6 L18 15"

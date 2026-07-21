@@ -49,7 +49,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
       <div className="mb-8">
         <h1 className="h-page">Settings</h1>
         <p className="text-sm text-ink-muted mt-1">
-          Configure how Vass connects to Meta and which ad accounts your team can launch into.
+          Configure how The Social Studio connects to each network, and how your team is organised.
         </p>
       </div>
 

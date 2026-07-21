@@ -1,5 +1,5 @@
 /**
- * Toggle — Vass's standard on/off switch.
+ * Toggle — the standard on/off switch.
  *
  * Used wherever a boolean setting is exposed in the UI (settings pages,
  * launch builder, ad account enable/disable, etc.). Visual: rounded pill,

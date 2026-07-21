@@ -4,7 +4,7 @@
  * Settings → Branding (admin only).
  *
  * Lets an admin upload a workspace logo (PNG or SVG, ≤ 500 KB). The logo
- * replaces the default Vass mark in the sidebar and on the login page.
+ * replaces the default Social Studio mark in the sidebar and on the login page.
  *
  * Storage flow:
  *   1. User picks a file via <input type="file"> or drops one onto the zone.
@@ -155,7 +155,7 @@ export default function BrandingPage() {
           <h2 className="h-sub text-ink">Workspace logo</h2>
         </div>
         <p className="text-xs text-ink-muted leading-relaxed">
-          Upload a PNG or SVG. It replaces the default Vass mark in the sidebar
+          Upload a PNG or SVG. It replaces the default Social Studio mark in the sidebar
           and on the login page. Max 500 KB. Wide horizontal logos work best.
         </p>
 
@@ -174,7 +174,7 @@ export default function BrandingPage() {
               />
             ) : (
               <span className="text-sm text-ink-subtle italic">
-                Default Vass logo
+                Default Social Studio logo
               </span>
             )}
             {savedLogo && (

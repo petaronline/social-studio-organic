@@ -5,16 +5,16 @@
  *
  * Matches the approved mockup:
  *   - Centered card on light gray background
- *   - "Vass↗" wordmark at top
+ *   - "The Social Studio↗" wordmark at top
  *   - Welcome heading + subtitle
  *   - Uppercase labels above each input
  *   - Electric blue primary button
- *   - Pronunciation footer
+ *   - Tagline footer
  */
 import { useEffect, useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth, branding, ApiError } from '@/lib/api';
-import { VassLogo } from '@/components/VassLogo';
+import { StudioLogo } from '@/components/StudioLogo';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -60,7 +60,7 @@ export default function LoginPage() {
       <div className="w-full max-w-[420px] animate-slide-up">
         <div className="bg-surface rounded-lg px-14 py-12 shadow-lift">
           {/* Logo — custom workspace upload if present, otherwise the
-              built-in Vass wordmark. */}
+              built-in Social Studio wordmark. */}
           <div className="mb-10">
             {logoDataUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -70,7 +70,7 @@ export default function LoginPage() {
                 className="max-h-[36px] max-w-[180px] object-contain"
               />
             ) : (
-              <VassLogo variant="full" height={32} color="#0A0A0A" />
+              <StudioLogo variant="full" height={32} color="#0A0A0A" />
             )}
           </div>
 
@@ -79,7 +79,7 @@ export default function LoginPage() {
             Welcome back.
           </h1>
           <p className="text-sm text-ink-muted mb-8">
-            Sign in to launch sharper ad campaigns.
+            Sign in to plan and publish your social.
           </p>
 
           {/* Form */}
@@ -136,9 +136,9 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Pronunciation footer */}
+          {/* Footer */}
           <p className="text-xs text-ink-subtle text-center mt-6 leading-relaxed">
-            Vass <span className="text-ink-muted">/vas/</span> — Swedish for <em>sharp</em>.
+            Plan, write and schedule social — in one place.
             <br />
             By{' '}
             <a

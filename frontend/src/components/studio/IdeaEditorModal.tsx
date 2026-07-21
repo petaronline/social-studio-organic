@@ -15,7 +15,7 @@
  *   - When `idea` is set → PATCH /organic/ideas/:id
  *
  * Close-without-saving discards unsaved changes; no warning prompt
- * (matches the rest of Vass's lightweight modal UX).
+ * (matches the rest of the app's lightweight modal UX).
  *
  * Click outside the panel and ESC also close.
  */
