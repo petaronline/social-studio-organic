@@ -88,7 +88,23 @@ if [[ "$EXISTING" != "0" ]]; then
          docker volume rm vass-organic_organic_postgres_data
          docker compose up -d && docker compose exec backend npm run migrate"
 fi
-echo "    target schema migrated, database empty"
+echo "    target schema migrated, no users yet"
+
+say "Clearing migration-seeded defaults from the target…"
+# The users check above proves this is a fresh install, but "fresh" is not the
+# same as "every table empty": the migrations seed rows of their own — notably
+# app_settings, which arrives pre-populated with defaults like
+# meta.business_id. Restoring the source's app_settings on top of that
+# collides on the primary key and aborts the whole transaction.
+#
+# So clear exactly the tables we are about to repopulate. CASCADE also clears
+# anything referencing them (sessions, notifications, audit_log), all of which
+# are empty on a fresh install and are deliberately not migrated anyway.
+TRUNCATE_LIST=$(IFS=,; echo "${TABLES[*]}")
+docker exec -i "$DST_PG" psql -U "$DST_DB_USER" -d "$DST_DB_NAME" \
+  --set ON_ERROR_STOP=1 -q \
+  -c "TRUNCATE TABLE ${TRUNCATE_LIST} RESTART IDENTITY CASCADE;"
+echo "    cleared ${#TABLES[@]} tables"
 
 say "Dumping organic data from $SRC_DB_NAME…"
 TABLE_ARGS=()
