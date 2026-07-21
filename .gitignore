@@ -1,0 +1,13 @@
+config.php
+.env
+.env.*
+node_modules/
+vendor/
+dist/
+build/
+.next/
+.DS_Store
+*.log
+
+# TypeScript incremental build cache
+*.tsbuildinfo
