@@ -172,9 +172,33 @@ if [[ $FAILED -eq 0 ]]; then
   c_green " Vass Organic is live at https://${DOMAIN}"
   c_green "════════════════════════════════════════════════════════════"
 else
-  c_red "Some checks failed. If it's only the https ones, AutoSSL may not"
-  c_red "have issued the certificate yet — WHM → Manage AutoSSL → Run for"
-  c_red "all users, wait a few minutes, then re-run those curls."
+  c_red "════════════════════════════════════════════════════════════"
+  c_red " Checks failed — diagnostics below. Send this whole block."
+  c_red "════════════════════════════════════════════════════════════"
+  cd "$INSTALL_ROOT"
+
+  step "Container status"
+  docker compose ps || true
+
+  step "Host ports (ours 3031/4041, ads 3030/4040 for comparison)"
+  ss -tlnp 2>/dev/null | grep -E "3031|4041|3030|4040|5433|6380" || echo "  (nothing listening)"
+
+  step "Backend logs (last 60)"
+  docker compose logs --tail=60 --no-color backend 2>&1 | tail -60 || true
+
+  step "Frontend logs (last 40)"
+  docker compose logs --tail=40 --no-color frontend 2>&1 | tail -40 || true
+
+  step "Restart counts (a climbing number means a crash loop)"
+  for c in vass-organic-backend vass-organic-frontend vass-organic-postgres vass-organic-redis; do
+    printf '    %-32s restarts=%s running=%s\n' "$c" \
+      "$(docker inspect -f '{{.RestartCount}}' "$c" 2>/dev/null || echo '?')" \
+      "$(docker inspect -f '{{.State.Running}}' "$c" 2>/dev/null || echo '?')"
+  done
+
+  echo
+  c_red "If only the two https checks failed but the direct ones passed,"
+  c_red "it is just AutoSSL: WHM → Manage AutoSSL → Run for all users."
 fi
 
 cat <<EOF

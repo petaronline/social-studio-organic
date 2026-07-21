@@ -11,13 +11,22 @@
 #   - backend    (API + publish/sync worker, both in one container)
 #   - frontend   (Next.js static + SSR)
 #
-# ---- Designed to run ALONGSIDE the ads app (Vass) on the same host ----
+# ---- HOST NETWORKING, NOT PORT PUBLISHING ----
 #
-# Everything that could collide with a Vass install has been renamed or
-# moved: the compose project name, all four container names, all three
-# volume names, and every host-side port. If you run both stacks on one
-# box, `docker compose ls` should show `vass` and `vass-organic` as two
-# independent projects sharing nothing.
+# Every service uses `network_mode: host` and binds its host port directly.
+# This mirrors the ads app's live compose on the same server, and it is not a
+# style choice: published ports on the bridge network did not work on this box
+# for the two Node services (the ports listened but every connection was reset),
+# while the ads stack has run reliably on host networking for months. Do not
+# "clean this up" back to `ports:` without testing on the real server.
+#
+# Consequences to keep in mind:
+#   • There is no container-to-container DNS. Services address each other on
+#     127.0.0.1, so DATABASE_URL/REDIS_URL below use explicit host ports.
+#   • Ports are claimed on the host directly, so they must not collide with
+#     the ads app. They don't — see the table.
+#
+# ---- Designed to run ALONGSIDE the ads app (Vass) on the same host ----
 #
 #   component   Vass (ads)   Vass Organic
 #   ---------   ----------   ------------
@@ -26,15 +35,10 @@
 #   backend     4040         4041
 #   frontend    3030         3031
 #
-# Bound to 127.0.0.1 only. A reverse proxy (Apache, nginx, Caddy, cPanel)
-# in front terminates TLS and forwards to:
-#   - host port 3031 → frontend
-#   - host port 4041 → backend  (paths starting with /api/* should be
-#                                rewritten by the reverse proxy to strip
-#                                the /api prefix before forwarding here)
-#
-# Change the host-side ports here if these are taken on your server.
-# The container-side ports (3000/4000) should NOT be changed.
+# A reverse proxy (Apache, via the cPanel userdata include installed by
+# scripts/go-live.sh) terminates TLS and forwards:
+#   - https://organic.petaronline.us/      → 127.0.0.1:3031
+#   - https://organic.petaronline.us/api/* → 127.0.0.1:4041 (/api stripped)
 # ====================================================================
 
 name: vass-organic
@@ -44,16 +48,18 @@ services:
     image: postgres:16-alpine
     container_name: vass-organic-postgres
     restart: unless-stopped
+    network_mode: host
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-vassorganic}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB:-vassorganic}
+      # Host networking means we share the host's port space with the ads
+      # app's postgres on 5432 — so ours must listen elsewhere.
+      PGPORT: 5433
     volumes:
       - organic_postgres_data:/var/lib/postgresql/data
-    ports:
-      - "127.0.0.1:5433:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vassorganic}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vassorganic} -p 5433"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -62,13 +68,12 @@ services:
     image: redis:7-alpine
     container_name: vass-organic-redis
     restart: unless-stopped
-    command: redis-server --save 60 1 --loglevel warning
+    network_mode: host
+    command: redis-server --port 6380 --save 60 1 --loglevel warning
     volumes:
       - organic_redis_data:/data
-    ports:
-      - "127.0.0.1:6380:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-p", "6380", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -79,6 +84,7 @@ services:
       dockerfile: Dockerfile
     container_name: vass-organic-backend
     restart: unless-stopped
+    network_mode: host
     depends_on:
       postgres:
         condition: service_healthy
@@ -86,16 +92,16 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: ${NODE_ENV:-production}
-      PORT: 4000
-      DATABASE_URL: postgresql://${POSTGRES_USER:-vassorganic}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-vassorganic}
-      REDIS_URL: redis://redis:6379
+      # Overrides the Dockerfile's EXPOSE 4000 — with host networking the
+      # app binds this port on the host itself.
+      PORT: 4041
+      DATABASE_URL: postgresql://${POSTGRES_USER:-vassorganic}:${POSTGRES_PASSWORD}@127.0.0.1:5433/${POSTGRES_DB:-vassorganic}
+      REDIS_URL: redis://127.0.0.1:6380
       SESSION_SECRET: ${SESSION_SECRET}
       FRONTEND_URL: ${FRONTEND_URL}
       UPLOAD_ROOT: /uploads
     volumes:
       - organic_uploads:/uploads
-    ports:
-      - "127.0.0.1:4041:4000"
 
   frontend:
     build:
@@ -105,13 +111,17 @@ services:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     container_name: vass-organic-frontend
     restart: unless-stopped
+    network_mode: host
     depends_on:
       - backend
     environment:
       NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3031
+      # Next's standalone server binds process.env.HOSTNAME. Docker sets
+      # HOSTNAME to the container id by default, which the server cannot
+      # bind — pin it explicitly, exactly as the ads app does.
+      HOSTNAME: 127.0.0.1
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-    ports:
-      - "127.0.0.1:3031:3000"
 
 volumes:
   organic_postgres_data:
