@@ -443,8 +443,10 @@ export function BrandSelector() {
         const a = accounts.find((x) => x.id === item.id);
         return a ? accountDisplayName(a) : 'Profile';
       }
+      // Unreachable in this app: nothing writes an 'adaccount' scope item
+      // any more. Kept only so the persisted scope format stays readable.
       const ad = adAccts.find((x) => x.id === item.id);
-      return ad ? ad.name : 'Ad account';
+      return ad ? ad.name : 'Account';
     }
     return `${scope.items.length} selected`;
   })();

@@ -43,7 +43,7 @@ function initialOf(name: string): string {
   return trimmed[0].toUpperCase();
 }
 
-export function AdAccountAvatar({ name, pictureUrl, size = 24, className }: Props) {
+export function AccountAvatar({ name, pictureUrl, size = 24, className }: Props) {
   const [imgFailed, setImgFailed] = useState(false);
 
   const showImage = pictureUrl && !imgFailed;

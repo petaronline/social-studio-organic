@@ -256,7 +256,7 @@ export function MetaConnectionSection() {
           <h2 className="h-section text-ink">Your Facebook connection</h2>
           <p className="text-sm text-ink-muted mt-1">
             {hasWorkspaceCreds
-              ? 'Sign in with your own Facebook account. Only you see your pages and ad accounts — other workspace users see only theirs.'
+              ? 'Sign in with your own Facebook account. Only you see your Pages and Instagram accounts — other workspace users see only theirs.'
               : 'Ask an admin to configure the workspace Meta App first.'}
           </p>
         </div>

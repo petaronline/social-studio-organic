@@ -51,7 +51,7 @@ export function TopBar({ user }: { user: CurrentUser }) {
         />
         <input
           type="search"
-          placeholder="Search ad sets, templates, batches…"
+          placeholder="Search posts, drafts, ideas…"
           className="w-full pl-10 pr-3 py-2 text-sm bg-white/60 border border-white/60 rounded-full
                      placeholder:text-ink-subtle focus:bg-white focus:border-accent
                      focus:ring-2 focus:ring-accent/15 focus:outline-none transition-colors"

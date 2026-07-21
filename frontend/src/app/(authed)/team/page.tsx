@@ -128,7 +128,7 @@ export default function TeamPage() {
   }
 
   async function handleDelete(user: TeamUser) {
-    if (!confirm(`Remove ${user.name} (${user.email}) from this workspace?\n\nTheir launch history and uploads will be preserved but they won't be able to sign in.`)) {
+    if (!confirm(`Remove ${user.name} (${user.email}) from this workspace?\n\nTheir posts and uploads will be preserved but they won't be able to sign in.`)) {
       return;
     }
     setBusyId(user.id);
@@ -264,7 +264,7 @@ export default function TeamPage() {
                 className="input"
                 disabled={creating}
               >
-                <option value="member">Member — can launch ads with their own Facebook</option>
+                <option value="member">Member — connects their own social accounts</option>
                 <option value="admin">Admin — can also manage workspace settings + team</option>
                 <option value="viewer">Viewer — read-only</option>
               </select>
@@ -436,7 +436,7 @@ function TesterOnboardingInfo() {
         <div className="rounded-lg bg-white/60 border border-blue-100 px-3 py-2 text-xs text-ink-muted">
           <span className="font-medium text-ink">Their pages stay theirs.</span>{' '}
           When they click "Connect Facebook", they sign in with their own Facebook account.
-          They see only their own pages and ad accounts — yours stay invisible to them.
+          They see only their own pages and profiles — yours stay invisible to them.
           The Meta App is just the shared OAuth client; nothing about their Facebook assets needs to be added to it.
         </div>
       </div>

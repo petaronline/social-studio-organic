@@ -35,7 +35,7 @@ import {
   MessageCircle,
 } from 'lucide-react';
 import { PageHeader, PAGE_TINTS } from '@/components/PageHeader';
-import { AdAccountAvatar } from '@/components/AdAccountAvatar';
+import { AccountAvatar } from '@/components/AccountAvatar';
 import { organicAccounts, OrganicAccount, OrganicPlatform, ApiError } from '@/lib/api';
 
 // ─── Platform config ─────────────────────────────────────────────────────────
@@ -290,7 +290,7 @@ export default function OrganicAccountsPage() {
                   <div>
                     <p className="text-sm text-ink-muted">
                       {platform.comingSoon
-                        ? 'OAuth flow for Threads launches in patch 4.25.'
+                        ? 'Threads OAuth is not available for this account yet.'
                         : 'No accounts connected yet.'}
                     </p>
                     {platform.note && (
@@ -349,10 +349,10 @@ function AccountRow({
 
   return (
     <li className="flex items-center gap-4 px-6 py-3.5">
-      {/* Avatar — AdAccountAvatar falls back to a colored initial if the
+      {/* Avatar — AccountAvatar falls back to a colored initial if the
           picture URL fails to load (e.g. an expired Meta signed URL). */}
       <div className="shrink-0">
-        <AdAccountAvatar name={displayName ?? '?'} pictureUrl={pictureUrl ?? null} size={36} />
+        <AccountAvatar name={displayName ?? '?'} pictureUrl={pictureUrl ?? null} size={36} />
       </div>
 
       {/* Info */}

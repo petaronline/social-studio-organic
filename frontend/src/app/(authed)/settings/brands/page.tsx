@@ -7,18 +7,17 @@
  * Left rail: brand groupings (Unassigned + brands), drag targets,
  *   first-member-avatar thumbnails. This is the canonical place to
  *   create / rename / recolor / delete brands.
- * Main panel: ALL accounts (ad accounts + organic profiles) in the
- *   selected grouping, each a draggable row you drop onto a brand.
- *   A type filter (All / Profiles / Ad accounts) narrows the list.
+ * Main panel: the social profiles in the selected grouping, each a
+ *   draggable row you drop onto a brand.
  *
- * The Social profiles and Ad accounts pages share the same rail and
- * keep their own per-type lists; this page is the unified view.
+ * The Social profiles page shares the same rail; this page is the
+ * brand-first view of the same assignments.
  */
 
 import { useCallback, useEffect, useMemo, useState, type DragEvent } from 'react';
 import {
   Search, CheckCircle2, AlertCircle,
-  Facebook, Instagram, AtSign, Megaphone,
+  Facebook, Instagram, AtSign,
 } from 'lucide-react';
 import {
   brands as brandsApi,
@@ -37,9 +36,17 @@ import { BrandHashtagsSection } from '@/components/settings/BrandHashtagsSection
 interface Toast { id: number; type: 'success' | 'error'; message: string; }
 let toastCounter = 0;
 
-type UnifiedAccount =
-  | { kind: 'organic'; id: string; name: string; sub: string; pictureUrl: string | null; brandId: string | null; platform: OrganicPlatform }
-  | { kind: 'adaccount'; id: string; name: string; sub: string; pictureUrl: string | null; brandId: string | null };
+/** A profile that can be dropped into a brand. The ads app also grouped ad
+ *  accounts here; `kind` is kept so the drag payload format is unchanged. */
+type UnifiedAccount = {
+  kind: 'organic';
+  id: string;
+  name: string;
+  sub: string;
+  pictureUrl: string | null;
+  brandId: string | null;
+  platform: OrganicPlatform;
+};
 
 export default function BrandsPage() {
   const [brandList, setBrandList] = useState<Brand[]>([]);
@@ -47,7 +54,6 @@ export default function BrandsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string>(UNASSIGNED_ID);
   const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState<'all' | 'organic' | 'ad'>('all');
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
 
@@ -186,12 +192,10 @@ export default function BrandsPage() {
     let list = allAccounts.filter((a) =>
       selectedId === UNASSIGNED_ID ? !a.brandId : a.brandId === selectedId
     );
-    if (typeFilter === 'organic') list = list.filter((a) => a.kind === 'organic');
-    if (typeFilter === 'ad') list = list.filter((a) => a.kind === 'adaccount');
     const q = search.trim().toLowerCase();
     if (q) list = list.filter((a) => a.name.toLowerCase().includes(q));
     return list;
-  }, [allAccounts, selectedId, typeFilter, search]);
+  }, [allAccounts, selectedId, search]);
 
   const selectedBrand = brandList.find((b) => b.id === selectedId);
   const groupLabel = selectedId === UNASSIGNED_ID ? 'Unassigned' : selectedBrand?.name ?? '';
@@ -222,8 +226,9 @@ export default function BrandsPage() {
       <div className="mb-6">
         <h2 className="h-section text-ink">Brands</h2>
         <p className="text-sm text-ink-muted mt-0.5 max-w-2xl">
-          Group your ad accounts and social profiles into brands. Drag any account into a
-          brand to assign it. A brand represents one client across both paid and organic.
+          Group your social profiles into brands. Drag any profile into a brand to assign
+          it. A brand represents one client, and scopes what you see across Studio,
+          Pipeline and Analytics.
         </p>
       </div>
 
@@ -254,20 +259,9 @@ export default function BrandsPage() {
               <h3 className="h-sub text-ink">{groupLabel}</h3>
               <span className="text-xs text-ink-subtle">({visibleAccounts.length})</span>
             </div>
-            <div className="flex items-center gap-1 bg-surface-alt rounded-lg p-0.5">
-              {(['all', 'organic', 'ad'] as const).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTypeFilter(t)}
-                  className={[
-                    'px-3 py-1.5 rounded text-xs font-medium transition-colors',
-                    typeFilter === t ? 'bg-white text-ink shadow-subtle' : 'text-ink-muted hover:text-ink',
-                  ].join(' ')}
-                >
-                  {t === 'all' ? 'All' : t === 'organic' ? 'Profiles' : 'Ad accounts'}
-                </button>
-              ))}
-            </div>
+            {/* The ads app had an All / Profiles / Ad accounts filter here.
+                Everything groupable is a social profile now, so the control
+                only ever had one meaningful state — removed. */}
           </div>
 
           <div className="relative mb-4">
@@ -322,8 +316,7 @@ function UnifiedAccountCard({
   onDragStart: (e: DragEvent, a: UnifiedAccount) => void;
 }) {
   const Icon =
-    acct.kind === 'adaccount' ? Megaphone
-    : acct.platform === 'facebook_page' ? Facebook
+    acct.platform === 'facebook_page' ? Facebook
     : acct.platform === 'instagram' ? Instagram
     : AtSign;
   return (
@@ -344,13 +337,8 @@ function UnifiedAccountCard({
         <div className="text-sm font-medium text-ink truncate">{acct.name}</div>
         <div className="text-xs text-ink-subtle">{acct.sub}</div>
       </div>
-      <span
-        className={[
-          'text-2xs px-2 py-0.5 rounded-full shrink-0',
-          acct.kind === 'adaccount' ? 'bg-accent-subtle text-accent' : 'bg-surface-hover text-ink-subtle',
-        ].join(' ')}
-      >
-        {acct.kind === 'adaccount' ? 'Ad account' : 'Profile'}
+      <span className="text-2xs px-2 py-0.5 rounded-full shrink-0 bg-surface-hover text-ink-subtle">
+        Profile
       </span>
     </div>
   );
