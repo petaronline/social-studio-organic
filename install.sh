@@ -83,12 +83,19 @@ else
 
   # Public-facing URL where users access Vass. Used for the OAuth redirect
   # URI (must match exactly what's registered in the Meta App).
-  c_blue ""
-  c_blue "  What's the public URL where Vass will be reachable?"
-  c_blue "  e.g. https://organic.example.com    (no trailing slash, https in prod)"
-  c_blue "  Press Enter to use http://localhost:3031 for local-only setup."
-  read -rp "  URL: " FRONTEND_URL
-  FRONTEND_URL="${FRONTEND_URL:-http://localhost:3031}"
+  # Unattended installs (go-live.sh) pre-set FRONTEND_URL in the environment
+  # so nothing blocks on a prompt. Interactive installs still ask.
+  if [[ -n "${FRONTEND_URL:-}" ]]; then
+    c_blue ""
+    c_blue "  Using FRONTEND_URL from the environment: ${FRONTEND_URL}"
+  else
+    c_blue ""
+    c_blue "  What's the public URL where Vass Organic will be reachable?"
+    c_blue "  e.g. https://organic.example.com    (no trailing slash, https in prod)"
+    c_blue "  Press Enter to use http://localhost:3031 for local-only setup."
+    read -rp "  URL: " FRONTEND_URL
+    FRONTEND_URL="${FRONTEND_URL:-http://localhost:3031}"
+  fi
 
   # NEXT_PUBLIC_API_URL is what the frontend uses to call the backend.
   # In production this is the same host with the /api prefix (the reverse
@@ -185,7 +192,12 @@ step "Checking for existing admin user"
 USER_COUNT=$(docker compose exec -T postgres psql -U vassorganic -d vassorganic -tAc \
   "SELECT COUNT(*) FROM users WHERE deleted_at IS NULL;" 2>/dev/null || echo "?")
 
-if [ "$USER_COUNT" = "0" ]; then
+if [ "$USER_COUNT" = "0" ] && [ -n "${SKIP_ADMIN_USER:-}" ]; then
+  # Set by go-live.sh: users are about to be restored from the ads database
+  # by migrate-from-vass.sh, so creating one here would collide on email.
+  c_blue "  SKIP_ADMIN_USER set — leaving the users table empty for the"
+  c_blue "  data migration to populate."
+elif [ "$USER_COUNT" = "0" ]; then
   c_blue "  No users yet. Create the first admin:"
   read -rp "  Admin email:    " ADMIN_EMAIL
   read -rp "  Admin name:     " ADMIN_NAME
