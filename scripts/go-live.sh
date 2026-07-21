@@ -207,8 +207,12 @@ sleep 3
 # Can the app actually decrypt what it migrated? This is the check that would
 # have caught the SESSION_SECRET mismatch immediately instead of surfacing as
 # a confusing OAuth failure later.
+# NOTE the column: app_settings stores plaintext in `value` and ciphertext in
+# `encrypted_value`. meta.app_id is in the former, meta.app_secret the latter.
+# Reading the wrong one returns empty and looks exactly like a decryption
+# failure — which cost an hour of chasing the wrong bug.
 ENC_SECRET=$(docker exec -i vass-organic-postgres psql -U vassorganic -d vassorganic -tAc \
-  "SELECT value FROM app_settings WHERE key = 'meta.app_secret'" 2>/dev/null | tr -d '[:space:]')
+  "SELECT encrypted_value FROM app_settings WHERE key = 'meta.app_secret'" 2>/dev/null | tr -d '[:space:]')
 if [[ -n "$ENC_SECRET" ]]; then
   printf '    %-46s' "stored Meta app secret decrypts"
   DEC=$(docker exec -i vass-organic-backend node -e '
