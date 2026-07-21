@@ -17,8 +17,10 @@
 #   2. Copy the repo into /opt/vass-organic
 #   3. Install the Apache vhost so the subdomain proxies to the app
 #   4. Build and start the stack, run migrations 001-042
-#   5. Copy the organic data + uploads across from the ads install
-#   6. Verify end to end and print what to check
+#   5. Align SESSION_SECRET with the ads install (see step 5 for why —
+#      without this, every migrated token is undecryptable)
+#   6. Copy the organic data + uploads across from the ads install
+#   7. Verify end to end, including that secrets actually decrypt
 #
 # SAFE TO RE-RUN: every step is guarded. It never writes to the ads database
 # or the ads containers — it only reads from them.
@@ -32,6 +34,7 @@ set -euo pipefail
 
 REPO_SRC="/home/petaronline/public_html/vass-organic/repo"
 INSTALL_ROOT="/opt/vass-organic"
+SRC_STACK="/opt/vass"          # the ads install — read from, never written to
 DOMAIN="organic.petaronline.us"
 FRONTEND_PORT="3031"
 BACKEND_PORT="4041"
@@ -52,7 +55,7 @@ die()     { c_red "ERROR: $*"; exit 1; }
 [[ -d "$REPO_SRC" ]] || die "repo not found at $REPO_SRC"
 
 # ============================================================================
-step "[1/6] Backing up the ads database first"
+step "[1/7] Backing up the ads database first"
 # ============================================================================
 BACKUP="/root/vass-pre-organic-split-${STAMP}.sql.gz"
 if docker ps --format '{{.Names}}' | grep -qx "$SRC_PG"; then
@@ -63,7 +66,7 @@ else
 fi
 
 # ============================================================================
-step "[2/6] Installing the code into $INSTALL_ROOT"
+step "[2/7] Installing the code into $INSTALL_ROOT"
 # ============================================================================
 mkdir -p "$INSTALL_ROOT"
 # Preserve an existing .env across re-runs — it holds SESSION_SECRET, which
@@ -79,7 +82,7 @@ chmod +x "$INSTALL_ROOT"/*.sh "$INSTALL_ROOT"/scripts/*.sh
 c_green "  ✓ code in place"
 
 # ============================================================================
-step "[3/6] Installing the Apache vhost for $DOMAIN"
+step "[3/7] Installing the Apache vhost for $DOMAIN"
 # ============================================================================
 # cPanel owns the generated vhost, so we add an include rather than editing it.
 # Both the SSL and non-SSL userdata dirs get the same proxy rules.
@@ -121,7 +124,7 @@ else
 fi
 
 # ============================================================================
-step "[4/6] Building and starting the stack"
+step "[4/7] Building and starting the stack"
 # ============================================================================
 cd "$INSTALL_ROOT"
 if [[ -f .env ]]; then
@@ -140,7 +143,52 @@ fi
 c_green "  ✓ stack up, migrations 001-042 applied"
 
 # ============================================================================
-step "[5/6] Copying organic data across from the ads install"
+step "[5/7] Aligning SESSION_SECRET with the ads install"
+# ============================================================================
+# Every secret in the database — the Meta app secret, every Page/IG/TikTok/
+# Threads/LinkedIn access token — is encrypted with AES-256-GCM under a key
+# derived as sha256("vass-secret-encryption-v1" + SESSION_SECRET). See
+# backend/src/utils/crypto.ts.
+#
+# install.sh generates a FRESH SESSION_SECRET. Migrated rows were encrypted
+# under the ads app's secret. Different secret, different key, and every one
+# of those values becomes undecryptable: OAuth token exchange fails and no
+# connected account can publish. Nothing errors loudly — it just silently
+# cannot read its own data.
+#
+# So the two installs must share the value. This is a real (small) coupling
+# between the apps, and the alternative — re-encrypting every row under a new
+# key during migration — is more moving parts for no benefit.
+SRC_ENV="${SRC_STACK}/.env"
+DST_ENV="${INSTALL_ROOT}/.env"
+if [[ -f "$SRC_ENV" && -f "$DST_ENV" ]]; then
+  SRC_SECRET=$(grep -m1 '^SESSION_SECRET=' "$SRC_ENV" | cut -d= -f2-)
+  DST_SECRET=$(grep -m1 '^SESSION_SECRET=' "$DST_ENV" | cut -d= -f2-)
+  if [[ -z "$SRC_SECRET" ]]; then
+    c_red "  could not read SESSION_SECRET from $SRC_ENV — skipping"
+  elif [[ "$SRC_SECRET" == "$DST_SECRET" ]]; then
+    c_green "  ✓ already aligned"
+  else
+    cp "$DST_ENV" "/root/vass-organic-env-before-secret-align-${STAMP}"
+    # Rewrite without sed: the secret is base64 and may contain / and +.
+    grep -v '^SESSION_SECRET=' "$DST_ENV" > "${DST_ENV}.tmp"
+    printf 'SESSION_SECRET=%s\n' "$SRC_SECRET" >> "${DST_ENV}.tmp"
+    mv "${DST_ENV}.tmp" "$DST_ENV"
+    chmod 600 "$DST_ENV"
+    c_green "  ✓ SESSION_SECRET now matches the ads install"
+    c_blue  "    (previous .env saved to /root/vass-organic-env-before-secret-align-${STAMP})"
+    ( cd "$INSTALL_ROOT" && docker compose up -d --force-recreate backend >/dev/null 2>&1 )
+    for i in $(seq 1 45); do
+      curl -sf "http://127.0.0.1:${BACKEND_PORT}/health" >/dev/null 2>&1 && break
+      sleep 1
+    done
+  fi
+else
+  c_red "  one of the .env files is missing — skipping"
+fi
+
+# ============================================================================
+step "[6/7] Copying organic data across from the ads install"
 # ============================================================================
 ALREADY=$(docker exec -i vass-organic-postgres \
   psql -U vassorganic -d vassorganic -tAc "SELECT count(*) FROM users" 2>/dev/null || echo 0)
@@ -152,9 +200,31 @@ else
 fi
 
 # ============================================================================
-step "[6/6] Verifying"
+step "[7/7] Verifying"
 # ============================================================================
 sleep 3
+
+# Can the app actually decrypt what it migrated? This is the check that would
+# have caught the SESSION_SECRET mismatch immediately instead of surfacing as
+# a confusing OAuth failure later.
+ENC_SECRET=$(docker exec -i vass-organic-postgres psql -U vassorganic -d vassorganic -tAc \
+  "SELECT value FROM app_settings WHERE key = 'meta.app_secret'" 2>/dev/null | tr -d '[:space:]')
+if [[ -n "$ENC_SECRET" ]]; then
+  printf '    %-46s' "stored Meta app secret decrypts"
+  DEC=$(docker exec -i vass-organic-backend node -e '
+    try {
+      const c = require("/app/dist/utils/crypto");
+      const v = c.decryptSecret(process.argv[1]);
+      console.log(v && v.length > 0 ? "OK" : "EMPTY");
+    } catch (e) { console.log("FAIL"); }
+  ' "$ENC_SECRET" 2>/dev/null | tr -d '[:space:]')
+  if [[ "$DEC" == "OK" ]]; then
+    c_green "OK"
+  else
+    c_red "FAILED — SESSION_SECRET does not match the data ($DEC)"
+  fi
+fi
+
 FAILED=0
 check() {
   printf '    %-46s' "$1"
@@ -207,10 +277,20 @@ Ads database backup: $BACKUP
 
 Two things still need a browser:
 
-  1. Meta App → Facebook Login → Settings → Valid OAuth Redirect URIs,
-     ADD (keep the existing vass. ones):
+  1. Meta App → Facebook Login → Settings → Valid OAuth Redirect URIs.
+     There are SIX callbacks in this app, not one. Add every line you
+     intend to use, keeping the existing vass. entries:
 
+         https://${DOMAIN}/api/settings/meta/callback
          https://${DOMAIN}/api/organic/accounts/callback
+         https://${DOMAIN}/api/organic/threads/callback
+         https://${DOMAIN}/api/organic/tiktok/callback
+         https://${DOMAIN}/api/organic/linkedin/callback
+         https://${DOMAIN}/api/organic/linkedin-org/callback
+
+     Also: Settings → Basic → App Domains must list ${DOMAIN}.
+     The first line is the one "Connect Facebook" in Settings →
+     Connections uses — it is NOT the same as the profile-connect flow.
 
   2. Sign in at https://${DOMAIN} with your existing Vass email and
      password, then check Settings → Social profiles lists your accounts
