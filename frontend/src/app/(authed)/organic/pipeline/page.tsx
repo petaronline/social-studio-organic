@@ -53,6 +53,7 @@ import {
   OrganicPlatform,
   ApiError,
 } from '@/lib/api';
+import { multiPlatformVisual } from '@/lib/platform-visuals';
 import { PageHeader, PAGE_TINTS } from '@/components/PageHeader';
 import { ComposerModal } from '@/components/studio/ComposerModal';
 import {
@@ -839,11 +840,20 @@ function ListRow({ post, onCancel }: { post: CalendarPost; onCancel?: () => void
   return (
     <li
       className={[
-        'flex items-start gap-4 px-5 py-4 transition-colors',
-        rowClick ? 'cursor-pointer hover:bg-white/40' : '',
+        'relative flex items-start gap-4 py-4 pl-6 pr-5 transition-colors',
+        rowClick ? 'cursor-pointer hover:bg-surface-alt' : '',
       ].join(' ')}
       onClick={rowClick}
     >
+      {/* Platform stripe. In a long list the eye needs somewhere to land
+          before reading — this gives the row its network at a glance, in
+          the same colours the calendar uses. Cross-posted rows fall back to
+          neutral rather than picking one platform arbitrarily. */}
+      <span
+        aria-hidden
+        className="absolute bottom-3 left-2.5 top-3 w-1 rounded-full"
+        style={{ backgroundColor: multiPlatformVisual(post.platforms).ink, opacity: 0.55 }}
+      />
       {mediaUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img

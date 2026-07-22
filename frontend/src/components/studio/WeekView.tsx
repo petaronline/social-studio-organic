@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import type { CalendarPost, OrganicPlatform } from '@/lib/api';
 import { uploads } from '@/lib/api';
+import { multiPlatformVisual } from '@/lib/platform-visuals';
 
 // ─── Layout constants ────────────────────────────────────────────────
 /** Vertical space allotted to one post row inside an hour band. */
@@ -377,6 +378,7 @@ function WeekPostCard({
 
   const visual = statusVisuals(post.status);
   const StatusIcon = visual.Icon;
+  const pv = multiPlatformVisual(post.platforms);
   const mediaUrl = resolveMediaUrl(post.mediaUrl);
   const isPublished = post.status === 'published' || post.status === 'partial';
   const isScheduledVass = post.status === 'scheduled' && post.source === 'vass';
@@ -387,8 +389,8 @@ function WeekPostCard({
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       className={[
-        'absolute rounded-lg overflow-hidden group transition-all',
-        'border border-line bg-white hover:shadow-card hover:z-20',
+        'group absolute overflow-hidden rounded-md transition-all',
+        'hover:z-20 hover:shadow-card',
         draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer',
         isDragging ? 'opacity-40' : '',
       ].join(' ')}
@@ -397,16 +399,24 @@ function WeekPostCard({
         left,
         width,
         height: ROW_PX - ROW_GAP_PX + 'px',
-        backgroundColor: visual.tintBg, // very faint status tint
+        // Colour comes from the PLATFORM, not the status — see
+        // lib/platform-visuals.ts for why. A cross-posted item has no single
+        // true colour and falls back to neutral; its per-target dots carry
+        // the detail.
+        backgroundColor: pv.bg,
+        color: pv.ink,
       }}
       onMouseDown={(e) => e.stopPropagation()}
       onClick={onClick}
     >
-      {/* Left accent bar — the only "loud" status color */}
-      <div
-        className="absolute left-0 top-0 bottom-0"
-        style={{ width: '4px', backgroundColor: visual.accent }}
-      />
+      {/* Left stripe carries STATUS. Published needs no stripe — "it worked"
+          is the default and doesn't deserve ink. Anything else does. */}
+      {post.status !== 'published' && (
+        <div
+          className="absolute bottom-0 left-0 top-0"
+          style={{ width: '3px', backgroundColor: visual.accent }}
+        />
+      )}
 
       <div className="h-full pl-3 pr-1.5 py-1 flex items-center gap-2">
         {/* Thumbnail */}
@@ -418,28 +428,29 @@ function WeekPostCard({
             className="w-9 h-9 rounded object-cover bg-black shrink-0"
           />
         ) : (
-          <div className="w-9 h-9 rounded bg-surface-alt flex items-center justify-center shrink-0">
-            <StatusIcon size={14} className="text-ink-subtle" />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded bg-white/50">
+            <StatusIcon size={14} className="opacity-60" />
           </div>
         )}
 
         {/* Text */}
         <div className="flex-1 min-w-0">
+          {/* Text colour is inherited from the card's platform ink, so these
+              deliberately don't set text-ink / text-ink-muted — those would
+              override the tint and drop contrast on the coloured ground. */}
           <div className="flex items-center gap-1.5">
-            <span className="text-2xs font-semibold text-ink">
-              {timeStr}
-            </span>
+            <span className="chip-when">{timeStr}</span>
             <div className="flex items-center gap-0.5">
               {post.platforms.slice(0, 3).map((p) => {
                 const meta = PLATFORM_META[p];
                 if (!meta) return null;
                 const Icon = meta.Icon;
-                return <Icon key={p} size={9} style={{ color: meta.color }} />;
+                return <Icon key={p} size={9} className="opacity-70" />;
               })}
             </div>
           </div>
-          <p className="text-2xs text-ink-muted truncate leading-tight mt-0.5">
-            {post.body || <span className="italic text-ink-subtle">(no text)</span>}
+          <p className="mt-0.5 truncate text-2xs font-medium leading-tight opacity-90">
+            {post.body || <span className="italic opacity-60">(no text)</span>}
           </p>
         </div>
 

@@ -131,14 +131,36 @@ export default function StudioPage() {
     return first || null;
   }, [user]);
 
+  /**
+   * ISO week number for the sticker beside the title. Social teams plan and
+   * talk in week numbers ("push it to week 31"), so it's the one bit of
+   * chrome worth the flourish.
+   *
+   * ISO 8601: weeks start Monday and week 1 is the one containing the first
+   * Thursday of the year — which is why this jumps to the Thursday of the
+   * current week before counting. Naive day-of-year/7 maths is off by one
+   * around New Year.
+   */
+  const weekBadge = useMemo(() => {
+    const d = new Date();
+    const thursday = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    thursday.setUTCDate(thursday.getUTCDate() + 4 - (thursday.getUTCDay() || 7));
+    const yearStart = new Date(Date.UTC(thursday.getUTCFullYear(), 0, 1));
+    const week = Math.ceil(((thursday.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+    return `week ${week}`;
+  }, []);
+
   return (
     <div>
-      {/* Greeting header */}
+      {/* Greeting header. The old title ran to a full sentence, which at the
+          new display weight wrapped to three lines and buried the actions.
+          Short title, sentence moved to the description. */}
       <div className="mb-8">
         <PageHeader
           icon={Sprout}
-          title={`Hi ${firstName ?? 'there'}, welcome to your social studio.`}
-          description="This is your space to compose, preview, and publish across all your connected social profiles."
+          title={firstName ? `Hi ${firstName}` : 'Studio'}
+          badge={weekBadge}
+          description="Compose, preview and publish across every connected profile."
           tint={PAGE_TINTS.studio}
         />
       </div>
@@ -221,11 +243,9 @@ function TodaysPublishingCard({
   onRefresh: () => void;
 }) {
   return (
-    <div className="bg-white/72 backdrop-blur-card border border-white/60 rounded-lg shadow-glass p-5 flex flex-col gap-4">
+    <div className="card flex flex-col gap-4 p-5">
       <div className="flex items-center justify-between">
-        <h2 className="h-sub text-ink-muted uppercase tracking-wider">
-          Today&apos;s Publishing
-        </h2>
+        <h2 className="lab">Today&apos;s publishing</h2>
         <button
           onClick={onRefresh}
           disabled={loading}
@@ -235,21 +255,12 @@ function TodaysPublishingCard({
           <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
         </button>
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <StatBlock
-          loading={loading}
-          value={published}
-          label="published"
-          Icon={CheckCircle2}
-          accentClass="text-success"
-        />
-        <StatBlock
-          loading={loading}
-          value={scheduled}
-          label="scheduled"
-          Icon={Clock}
-          accentClass="text-accent"
-        />
+      {/* `scheduled` gets the inverted hero treatment: on this screen the
+          number you act on is what's still coming, not what already went
+          out. One hero per screen — see globals.css. */}
+      <div className="grid grid-cols-2 gap-3">
+        <StatBlock loading={loading} value={scheduled} label="scheduled" hero />
+        <StatBlock loading={loading} value={published} label="published" />
       </div>
     </div>
   );
@@ -259,26 +270,17 @@ function StatBlock({
   loading,
   value,
   label,
-  Icon,
-  accentClass,
+  hero = false,
 }: {
   loading: boolean;
   value: number;
   label: string;
-  Icon: typeof CheckCircle2;
-  accentClass: string;
+  hero?: boolean;
 }) {
   return (
-    <div className="flex items-center gap-3">
-      <div className={['w-10 h-10 rounded-full bg-surface-alt flex items-center justify-center', accentClass].join(' ')}>
-        <Icon size={18} />
-      </div>
-      <div>
-        <div className="font-display text-3xl font-bold tracking-tight text-ink leading-tight">
-          {loading ? '—' : value}
-        </div>
-        <div className="text-xs text-ink-muted">{label}</div>
-      </div>
+    <div className={['stat', hero ? 'stat-hero' : ''].join(' ')}>
+      <div className="stat-value">{loading ? '—' : value}</div>
+      <div className="lab mt-1.5">{label}</div>
     </div>
   );
 }
@@ -306,21 +308,22 @@ function ActionCard({
       disabled={disabled}
       title={disabled ? disabledHint : undefined}
       className={[
-        'group bg-white/72 backdrop-blur-card border border-white/60 rounded-lg shadow-glass p-5',
-        'flex flex-col items-start gap-3 text-left transition-all',
+        'card group flex flex-col items-start gap-3 p-5 text-left transition-all',
         disabled
-          ? 'opacity-50 cursor-not-allowed'
-          : 'hover:bg-white hover:shadow-lift hover:-translate-y-px',
+          ? 'cursor-not-allowed opacity-50'
+          : 'hover:-translate-y-px hover:border-cherry/40 hover:shadow-card',
       ].join(' ')}
     >
-      <div className="w-10 h-10 rounded-full bg-accent-subtle text-accent flex items-center justify-center group-hover:bg-accent group-hover:text-white transition-colors">
+      {/* The icon fills with cherry on hover — the affordance that says
+          "this whole card is the button", without a second CTA. */}
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cherry-wash text-cherry-ink transition-colors group-hover:bg-cherry group-hover:text-white">
         <Icon size={20} />
       </div>
       <div>
         <h3 className="h-sub text-ink">{title}</h3>
-        <p className="text-xs text-ink-muted mt-1">{description}</p>
+        <p className="mt-1 text-xs text-ink-muted">{description}</p>
         {disabled && disabledHint && (
-          <p className="text-xs text-ink-subtle italic mt-1">{disabledHint}</p>
+          <p className="mt-1 text-xs italic text-ink-subtle">{disabledHint}</p>
         )}
       </div>
     </button>
