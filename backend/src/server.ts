@@ -16,6 +16,7 @@ import cookieParser from 'cookie-parser';
 import { env, isProduction } from './utils/env';
 import { closePool } from './db/pool';
 import { cleanupExpiredSessions } from './services/sessions';
+import { scrubPictures } from './middleware/scrub-pictures';
 
 import { authRouter } from './routes/auth';
 import { healthRouter } from './routes/health';
@@ -49,6 +50,11 @@ app.use(
 
 app.use(express.json({ limit: '4mb' }));
 app.use(cookieParser());
+
+// ---- Placeholder-picture scrubbing ----
+// Applies to every route below it. See middleware/scrub-pictures.ts for why
+// this is global rather than per-endpoint.
+app.use(scrubPictures());
 
 // ---- Request logging (minimal) ----
 app.use((req, _res, next) => {
