@@ -37,16 +37,28 @@ export default async function AuthedLayout({ children }: { children: React.React
   if (!user) redirect('/login');
 
   return (
-    // The authed shell. The base colour is a near-white (#FBFAF8) so the
-    // backdrop (`<AppBackdrop />`) can paint its soft tints + dot grid on
-    // top via fixed layers. Sidebar, top bar, and main content all use
-    // `relative z-10` to stack above those fixed backdrop layers.
-    <div className="relative min-h-screen flex bg-[#FBFAF8]">
+    /*
+     * The authed shell. The app is a white panel FLOATING on the lavender
+     * canvas rather than filling the viewport — that inset is most of what
+     * makes the redesign read as designed, so resist the urge to reclaim
+     * the margin for content.
+     *
+     * The panel scrolls internally (min-h-0 + overflow on <main>) so the
+     * sidebar and top bar stay put and the panel's rounded corners are
+     * always visible. Without min-h-0 the flex child refuses to shrink and
+     * the whole page scrolls instead, which loses the bottom corners.
+     */
+    <div className="relative min-h-screen bg-canvas p-3 sm:p-5">
       <AppBackdrop />
-      <Sidebar user={user} />
-      <div className="flex-1 flex flex-col min-w-0 relative">
-        <TopBar user={user} />
-        <main className="flex-1 px-8 py-8">{children}</main>
+      <div
+        className="relative z-10 flex min-h-[calc(100vh-1.5rem)] sm:min-h-[calc(100vh-2.5rem)]
+                   overflow-hidden rounded-2xl bg-surface shadow-lift"
+      >
+        <Sidebar user={user} />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <TopBar user={user} />
+          <main className="min-h-0 flex-1 overflow-y-auto px-7 py-7">{children}</main>
+        </div>
       </div>
     </div>
   );

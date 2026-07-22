@@ -1,102 +1,36 @@
 'use client';
 
 /**
- * AppBackdrop — fixed, full-viewport decorative layer behind every authed
- * page. Three layers, painted bottom-up:
+ * AppBackdrop — what sits behind the floating app panel.
  *
- *   1. Neutral four-corner soft gradient (always on) — gives the app the
- *      "Sketch-style watercolour" backdrop feel.
- *   2. Per-route hue tint, anchored to a different corner per product so
- *      the page feels like it belongs to that tool.
- *   3. A faint dot grid that fades out near the edges via a radial mask.
- *      Gives the app a "design canvas" feel without being noisy.
+ * The previous design painted a four-corner watercolour gradient plus a
+ * per-route hue, then floated translucent "glass" surfaces on top. The
+ * approved direction replaces all of that with a single flat lavender
+ * canvas (`bg-canvas`, set on <body>) and exactly one flourish: a
+ * halftone dot field in cherry, bleeding off the top-right corner and
+ * faded out with a radial mask.
  *
- * IMPORTANT: layers use POSITIVE z-index, not negative. Negative z-index
- * on fixed-position elements paints behind the root stacking context's
- * background — meaning the layout's own painted background would HIDE
- * them. Positive (or 0) z-index keeps them visible. The actual page
- * content uses `relative z-10` (or higher) to stack above.
+ * That's the whole backdrop. The restraint is deliberate — the app panel
+ * is white and busy, so anything more behind it competes.
  *
- * Ignores pointer events.
+ * Ignores pointer events; sits below the panel at z-0.
  */
-import { usePathname } from 'next/navigation';
-
-/**
- * Hue + corner per route. Hues are kept soft so they whisper.
- *
- * Standalone Organic: the ads app gave each product one hue and Organic as a
- * whole got teal. Now that Organic IS the app, each section takes its own —
- * matching its ACTIVE_* pill in the Sidebar, so the backdrop and the nav
- * always agree on where you are. More specific patterns must come first.
- */
-const ROUTE_TINTS: Array<{ match: RegExp; rgb: string; corner: string }> = [
-  // /organic/studio — teal, bottom-left
-  { match: /^\/organic\/studio(\/|$)/,    rgb: '20, 184, 166',  corner: '0% 100%' },
-  // /organic/pipeline — indigo, top-right
-  { match: /^\/organic\/pipeline(\/|$)/,  rgb: '99, 102, 241',  corner: '100% 0%' },
-  // /organic/drafts — warm amber, top-left
-  { match: /^\/organic\/drafts(\/|$)/,    rgb: '251, 191, 36',  corner: '0% 0%' },
-  // /organic/ideas — lilac, bottom-right
-  { match: /^\/organic\/ideas(\/|$)/,     rgb: '167, 139, 250', corner: '100% 100%' },
-  // /organic/analytics — mint, top-left
-  { match: /^\/organic\/analytics(\/|$)/, rgb: '52, 211, 153',  corner: '0% 0%' },
-  // /organic/accounts — pink-rose, bottom-left
-  { match: /^\/organic\/accounts(\/|$)/,  rgb: '244, 114, 182', corner: '0% 100%' },
-  // /settings — neutral slate, bottom-right (calm utility area)
-  { match: /^\/settings(\/|$)/,           rgb: '148, 163, 184', corner: '100% 100%' },
-  // Any other /organic route (calendar, scheduled, index) — teal
-  { match: /^\/organic(\/|$)/,            rgb: '20, 184, 166',  corner: '0% 100%' },
-];
 
 export function AppBackdrop() {
-  const pathname = usePathname();
-  const tint = ROUTE_TINTS.find((t) => t.match.test(pathname));
-
   return (
-    <>
-      {/* Layer 1: neutral four-corner soft watercolour gradient.
-          Always paints. Sits at z-index 0 (above the layout's own bg
-          fill, below page content). */}
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 z-0"
-        style={{
-          background:
-            'radial-gradient(at 0% 0%, rgba(244, 232, 255, 0.6) 0px, transparent 40%), ' +
-            'radial-gradient(at 100% 0%, rgba(255, 232, 220, 0.55) 0px, transparent 45%), ' +
-            'radial-gradient(at 100% 100%, rgba(220, 240, 255, 0.5) 0px, transparent 45%), ' +
-            'radial-gradient(at 0% 100%, rgba(255, 245, 220, 0.45) 0px, transparent 45%)',
-        }}
-      />
-
-      {/* Layer 2: per-route hue tint. Paints on top of the neutral
-          gradient when the route matches a known tool. */}
-      {tint && (
-        <div
-          aria-hidden
-          className="pointer-events-none fixed inset-0 z-0"
-          style={{
-            background: `radial-gradient(at ${tint.corner}, rgba(${tint.rgb}, 0.22) 0px, transparent 55%)`,
-          }}
-        />
-      )}
-
-      {/* Layer 3: dot grid — 20px spacing. Now actually visible (12%
-          opacity). Soft radial mask fades it out near the edges so the
-          page doesn't feel boxed-in. */}
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 z-0"
-        style={{
-          backgroundImage:
-            'radial-gradient(circle, rgba(15, 23, 42, 0.12) 1px, transparent 1.5px)',
-          backgroundSize: '20px 20px',
-          WebkitMaskImage:
-            'radial-gradient(ellipse at center, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 70%, transparent 100%)',
-          maskImage:
-            'radial-gradient(ellipse at center, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 70%, transparent 100%)',
-        }}
-      />
-    </>
+    <div
+      aria-hidden
+      className="pointer-events-none fixed -top-32 -right-32 z-0 h-[560px] w-[560px]
+                 bg-halftone bg-halftone-grid opacity-[0.18]"
+      style={{
+        // Fade the dot field out toward its edges so it reads as printed
+        // ink bleeding off the page rather than a tiled texture with a
+        // hard boundary.
+        WebkitMaskImage:
+          'radial-gradient(circle at 70% 30%, #000 0%, transparent 68%)',
+        maskImage:
+          'radial-gradient(circle at 70% 30%, #000 0%, transparent 68%)',
+      }}
+    />
   );
 }

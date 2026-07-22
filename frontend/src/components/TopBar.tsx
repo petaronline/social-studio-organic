@@ -35,26 +35,20 @@ export function TopBar({ user }: { user: CurrentUser }) {
   }
 
   return (
-    <header
-      className={[
-        'h-16 px-8 flex items-center justify-between sticky top-0 z-30',
-        // Translucent + backdrop blur so the page tint shows through.
-        // No solid background — the soft app gradient does the heavy lifting.
-        'bg-white/55 backdrop-blur-card border-b border-white/60',
-      ].join(' ')}
-    >
-      {/* Search */}
-      <div className="relative max-w-md flex-1">
+    <header className="sticky top-0 z-30 flex h-[68px] items-center justify-between border-b border-line bg-surface px-7">
+      {/* Search. Sits on surface-alt rather than white so it reads as an
+          inset field on the panel instead of a floating pill. */}
+      <div className="relative max-w-sm flex-1">
         <Search
           size={16}
-          className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-subtle pointer-events-none"
+          className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-subtle"
         />
         <input
           type="search"
           placeholder="Search posts, drafts, ideas…"
-          className="w-full pl-10 pr-3 py-2 text-sm bg-white/60 border border-white/60 rounded-full
-                     placeholder:text-ink-subtle focus:bg-white focus:border-accent
-                     focus:ring-2 focus:ring-accent/15 focus:outline-none transition-colors"
+          className="w-full rounded bg-surface-alt py-2.5 pl-10 pr-3 text-sm text-ink
+                     placeholder:text-ink-subtle transition-colors
+                     focus:bg-surface focus:outline-none focus:ring-2 focus:ring-cherry/25"
         />
       </div>
 
@@ -68,20 +62,20 @@ export function TopBar({ user }: { user: CurrentUser }) {
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setMenuOpen((v) => !v)}
-            className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded hover:bg-white/55 transition-colors"
+            className="flex items-center gap-2 rounded py-1.5 pl-2 pr-3 transition-colors hover:bg-surface-alt"
           >
-            <div className="w-7 h-7 rounded-full bg-accent-subtle text-accent flex items-center justify-center text-xs font-semibold">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-cherry text-xs font-bold text-white">
               {user.name.charAt(0).toUpperCase()}
             </div>
-            <ChevronDown size={14} className="text-ink-muted" />
+            <ChevronDown size={14} className="text-ink-subtle" />
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 mt-2 w-56 bg-surface border border-line rounded-lg shadow-lift py-1.5 animate-fade-in">
-              <div className="px-3 py-2 border-b border-line">
-                <div className="text-sm font-medium text-ink truncate">{user.name}</div>
-                <div className="text-xs text-ink-subtle truncate">{user.email}</div>
-                <div className="text-xs text-accent mt-1 capitalize">{user.role}</div>
+            <div className="animate-fade-in absolute right-0 mt-2 w-56 rounded-xl border border-line bg-surface py-1.5 shadow-lift">
+              <div className="border-b border-line px-3 py-2">
+                <div className="truncate text-sm font-semibold text-ink">{user.name}</div>
+                <div className="truncate text-xs text-ink-subtle">{user.email}</div>
+                <div className="lab mt-1.5">{user.role}</div>
               </div>
               <button
                 onClick={handleLogout}

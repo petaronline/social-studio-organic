@@ -124,13 +124,8 @@ export function Sidebar({ user }: { user: CurrentUser }) {
   }, []);
 
   return (
-    <aside
-      className={[
-        'w-[232px] shrink-0 h-screen sticky top-0 flex flex-col',
-        'bg-white/55 backdrop-blur-card border-r border-white/60',
-      ].join(' ')}
-    >
-      <div className="px-6 pt-7 pb-8">
+    <aside className="hidden w-[230px] shrink-0 flex-col border-r border-line bg-surface md:flex">
+      <div className="px-5 pb-7 pt-6">
         {logoDataUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -139,26 +134,31 @@ export function Sidebar({ user }: { user: CurrentUser }) {
             className="max-h-[28px] max-w-full object-contain"
           />
         ) : (
-          <StudioLogo variant="full" height={26} color="#0A0A0A" />
+          <StudioLogo variant="full" height={26} />
         )}
       </div>
 
-      <nav className="px-3 overflow-y-auto flex-1">
+      {/* The two groups are labelled: "Work" is what you do all day,
+          "Workspace" is what you configure occasionally. Splitting them
+          stops Settings competing with Studio for attention. */}
+      <nav className="flex-1 overflow-y-auto px-3">
+        <div className="lab px-3 pb-2">Work</div>
         <NavList items={primary} pathname={pathname} />
       </nav>
 
-      <nav className="px-3 pb-2 mt-2">
+      <nav className="mt-4 px-3 pb-2">
+        <div className="lab px-3 pb-2">Workspace</div>
         <NavList items={secondary} pathname={pathname} />
       </nav>
 
-      <div className="border-t border-white/60 px-3 py-3">
-        <div className="flex items-center gap-3 px-2.5 py-2">
-          <div className="w-8 h-8 rounded-full bg-accent-subtle text-accent flex items-center justify-center text-xs font-semibold shrink-0">
+      <div className="p-3">
+        <div className="flex items-center gap-3 rounded-lg bg-surface-alt px-3 py-2.5">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cherry text-xs font-bold text-white">
             {user.name.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-medium text-ink truncate">{user.name}</div>
-            <div className="text-xs text-ink-subtle truncate">{user.email}</div>
+            <div className="truncate text-sm font-semibold text-ink">{user.name}</div>
+            <div className="truncate text-xs text-ink-subtle">{user.email}</div>
           </div>
         </div>
       </div>
@@ -187,22 +187,26 @@ function NavList({ items, pathname }: { items: NavItem[]; pathname: string }) {
 function FlatRow({ item, pathname }: { item: FlatNavItem; pathname: string }) {
   const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
   const Icon = item.icon;
-  const active = item.active;
+  // The active item is solid cherry — one of only three places that colour
+  // is allowed to appear (here, the primary button, the brand mark). The
+  // previous design gave every route its own pastel pill; with Organic as
+  // the whole app that just read as noise.
   return (
     <li>
       <Link
         href={item.href}
+        aria-current={isActive ? 'page' : undefined}
         className={[
-          'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-          isActive ? '' : 'text-ink hover:bg-white/55',
+          'flex items-center gap-3 rounded px-3 py-2 text-sm transition-colors',
+          isActive
+            ? 'bg-cherry font-semibold text-white'
+            : 'font-medium text-ink-muted hover:bg-surface-alt hover:text-ink',
         ].join(' ')}
-        style={isActive && active ? { background: active.bg, color: active.fg } : undefined}
       >
         <Icon
           size={17}
           strokeWidth={2}
-          style={isActive && active ? { color: active.fg } : undefined}
-          className={isActive ? '' : 'text-ink-muted'}
+          className={isActive ? 'text-white' : 'text-ink-subtle'}
         />
         <span>{item.label}</span>
       </Link>

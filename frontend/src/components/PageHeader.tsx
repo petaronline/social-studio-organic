@@ -35,6 +35,7 @@ export function PageHeader({
   title,
   description,
   tint,
+  badge,
   actions,
   activeOnly,
   onActiveOnlyChange,
@@ -43,36 +44,42 @@ export function PageHeader({
   title: string;
   description?: string;
   tint?: PageHeaderTint;
+  /** Optional sticker beside the title — e.g. "week 30", "beta". Short. */
+  badge?: string;
   actions?: ReactNode;
   activeOnly?: boolean;
   onActiveOnlyChange?: (v: boolean) => void;
 }) {
-  const t = tint ?? { bg: 'rgba(37, 99, 235, 0.14)', fg: '#1D4ED8' };
+  const t = tint ?? PAGE_TINTS.studio;
   const showToggle = typeof activeOnly === 'boolean' && !!onActiveOnlyChange;
 
   return (
-    <header className="flex items-start justify-between gap-4 mb-6 flex-wrap">
+    <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
       <div className="flex items-start gap-3">
         <div
-          className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
           style={{ background: t.bg, color: t.fg }}
         >
           <Icon size={18} strokeWidth={2} />
         </div>
         <div>
-          <h1 className="h-page">{title}</h1>
+          <h1 className="h-page">
+            {title}
+            {/* One sticker per screen, max — see the note in globals.css. */}
+            {badge && <span className="sticker ml-2.5 align-[6px]">{badge}</span>}
+          </h1>
           {description && (
-            <p className="text-sm text-ink-muted mt-1 max-w-2xl">{description}</p>
+            <p className="mt-1.5 max-w-2xl text-sm text-ink-muted">{description}</p>
           )}
         </div>
       </div>
 
       {(actions || showToggle) && (
-        <div className="flex items-center gap-2 shrink-0 mt-1">
+        <div className="mt-1 flex shrink-0 items-center gap-2">
           {actions}
           {showToggle && (
             <>
-              <span className="text-xs font-medium text-ink-muted select-none">Active only</span>
+              <span className="select-none text-xs font-medium text-ink-muted">Active only</span>
               <Toggle
                 checked={activeOnly!}
                 onChange={onActiveOnlyChange!}
@@ -87,21 +94,21 @@ export function PageHeader({
   );
 }
 
-/** Per-product tints, matching tailwind.config product.* colors. */
+/**
+ * Icon-badge tints, drawn from the platform palette in tailwind.config.js.
+ *
+ * These are NOT accent colours — the badge is a quiet wayfinding mark, so
+ * every tint is a pale platform wash with its matching ink. Cherry is
+ * deliberately absent: it belongs to the primary action, the active nav
+ * item and the brand mark, and putting it here would dilute all three.
+ */
 export const PAGE_TINTS = {
-  launch:     { bg: 'rgba(37, 99, 235, 0.14)',  fg: '#1D4ED8' },
-  bulk:       { bg: 'rgba(251, 191, 36, 0.18)', fg: '#B45309' },
-  sheets:     { bg: 'rgba(251, 146, 60, 0.18)', fg: '#EA580C' },
-  audit:      { bg: 'rgba(52, 211, 153, 0.18)', fg: '#059669' },
-  dashboard:  { bg: 'rgba(99, 102, 241, 0.16)', fg: '#4F46E5' },
-  studio:     { bg: 'rgba(16, 185, 129, 0.16)', fg: '#059669' },
-  pipeline:   { bg: 'rgba(16, 185, 129, 0.16)', fg: '#059669' },
-  drafts:     { bg: 'rgba(100, 116, 139, 0.16)', fg: '#475569' },
-  ideas:      { bg: 'rgba(245, 158, 11, 0.16)', fg: '#B45309' },
-  analytics:  { bg: 'rgba(13, 148, 136, 0.16)', fg: '#0F766E' },
-  templates:  { bg: 'rgba(139, 92, 246, 0.16)', fg: '#6D28D9' },
-  launches:   { bg: 'rgba(37, 99, 235, 0.14)', fg: '#1D4ED8' },
-  team:       { bg: 'rgba(99, 102, 241, 0.16)', fg: '#4F46E5' },
-  accounts:   { bg: 'rgba(16, 185, 129, 0.16)', fg: '#059669' },
-  scheduled:  { bg: 'rgba(16, 185, 129, 0.16)', fg: '#059669' },
+  studio:     { bg: '#FFE1EC', fg: '#B4245C' },  // blush
+  pipeline:   { bg: '#E2E3FF', fg: '#3A3BA8' },  // periwinkle
+  drafts:     { bg: '#EFEDF6', fg: '#413B52' },  // neutral
+  ideas:      { bg: '#ECE2FF', fg: '#5B2FB0' },  // lilac
+  analytics:  { bg: '#D3F3E9', fg: '#0B6B52' },  // mint
+  scheduled:  { bg: '#DDE8FF', fg: '#2547A8' },  // sky
+  accounts:   { bg: '#FFE1EC', fg: '#B4245C' },
+  team:       { bg: '#E2E3FF', fg: '#3A3BA8' },
 } as const satisfies Record<string, PageHeaderTint>;

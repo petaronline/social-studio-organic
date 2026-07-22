@@ -1,149 +1,160 @@
 /** @type {import('tailwindcss').Config} */
+
+/* ============================================================
+   The Social Studio — design tokens
+   ============================================================
+   Direction, approved 2026-07-22:
+
+   ONE loud colour. `cherry` appears on the primary action, the active
+   nav item and the brand mark — nowhere else. That restraint is what
+   makes it read as deliberate rather than decorative. If you find
+   yourself reaching for cherry to make something stand out, the fix is
+   almost always to quiet everything around it instead.
+
+   Content is coloured by PLATFORM, not by status. A week of posts reads
+   by colour before you read a word: blush = Instagram, sky = Facebook,
+   mint = TikTok, periwinkle = LinkedIn, lilac = Threads. Status is
+   carried by form — a dashed outline for drafts, a stripe for failures.
+
+   Semantic red (`danger`) is deliberately ORANGE-leaning while cherry is
+   PINK-leaning, so a destructive button never reads as a brand button.
+   Do not collapse the two.
+
+   Neutrals carry a slight violet bias so they belong to the same family
+   as the lavender canvas — a pure grey here looks unconsidered.
+   ============================================================ */
+
 module.exports = {
   content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
   theme: {
     extend: {
-      // ---- Vass design tokens ----
       colors: {
-        // Brand
-        accent: {
-          DEFAULT: '#2563EB',   // Electric blue — primary actions, active states
-          hover: '#1D4ED8',     // Slightly darker for hover
-          subtle: '#EFF4FE',    // Very pale blue for backgrounds (active row, hover)
-          ring: '#93C5FD',      // For focus rings
+        // ---- The one accent ----
+        cherry: {
+          DEFAULT: '#FF2D55',
+          ink: '#B00A32',      // cherry as text on light, and the 2px "print" shadow under buttons
+          wash: '#FFEDF1',     // faint tint for selected rows / subtle backgrounds
         },
-        // Neutrals
+        // Alias so existing `accent` usages keep working through the migration.
+        // New code should say `cherry`.
+        accent: {
+          DEFAULT: '#FF2D55',
+          hover: '#B00A32',
+          subtle: '#FFEDF1',
+          ring: '#FFA9BC',
+        },
+
+        // ---- Neutrals (violet-biased, chosen not inherited) ----
         ink: {
-          DEFAULT: '#0A0A0A',   // Near-black, primary text
-          muted: '#6B7280',     // Secondary text
-          subtle: '#9CA3AF',    // Tertiary text
+          DEFAULT: '#16131F',  // near-black with a violet lean
+          muted: '#413B52',    // secondary text
+          subtle: '#8A85A0',   // tertiary text, micro-labels ("haze" in the mockup)
+        },
+        canvas: {
+          DEFAULT: '#E7E5F0',  // the lavender ground the app panel floats on
+          deep: '#DCD9E9',
         },
         surface: {
-          DEFAULT: '#FFFFFF',   // Main background
-          alt: '#FAFAFA',       // Sidebar, raised panels
-          hover: '#F5F5F5',     // Hover states on neutral elements
-          // Glass: translucent surfaces over the tinted page background.
-          // Use with backdrop-blur for the liquid-glass effect.
-          glass: 'rgb(255 255 255 / 0.72)',
-          'glass-strong': 'rgb(255 255 255 / 0.88)',
+          DEFAULT: '#FFFFFF',  // the app panel itself
+          alt: '#F7F6FB',      // rails, inset panels, stat tiles
+          hover: '#EFEDF6',    // hover on neutral elements, segmented-control track
         },
         line: {
-          DEFAULT: '#E5E7EB',   // Default borders
-          strong: '#D1D5DB',    // Emphasized borders
-          glass: 'rgb(255 255 255 / 0.6)', // Inner highlight on glass surfaces
+          DEFAULT: '#E4E1EE',
+          strong: '#D3CFE2',
         },
-        // ---- Per-product accent tints ----
-        // Each surface is intentionally soft — they're whispered hues that
-        // tint backgrounds and category cards, not loud brand colors.
-        product: {
-          // Launch (primary action) — electric blue, matches `accent`
-          launch:        '#2563EB',
-          'launch-bg':   '#EEF2FF',
-          'launch-glow': 'rgba(99, 102, 241, 0.18)',
-          // Sheets (bulk import) — warm coral / peach
-          sheets:        '#EA580C',
-          'sheets-bg':   '#FFF1EA',
-          'sheets-glow': 'rgba(251, 146, 60, 0.18)',
-          // Audit (analysis) — emerald
-          audit:         '#059669',
-          'audit-bg':    '#ECFDF5',
-          'audit-glow':  'rgba(52, 211, 153, 0.18)',
-          // Templates — violet
-          templates:        '#7C3AED',
-          'templates-bg':   '#F3EEFF',
-          'templates-glow': 'rgba(167, 139, 250, 0.18)',
-          // Launches history — slate
-          launches:         '#475569',
-          'launches-bg':    '#F1F5F9',
-          'launches-glow':  'rgba(148, 163, 184, 0.18)',
+
+        // ---- Platform tints: content colour, never accent ----
+        platform: {
+          'ig': '#FFE1EC',      'ig-ink': '#B4245C',
+          'fb': '#DDE8FF',      'fb-ink': '#2547A8',
+          'tt': '#D3F3E9',      'tt-ink': '#0B6B52',
+          'li': '#E2E3FF',      'li-ink': '#3A3BA8',
+          'th': '#ECE2FF',      'th-ink': '#5B2FB0',
         },
-        // Semantic
-        success: '#10B981',
-        warning: '#F59E0B',
-        danger: '#EF4444',
+
+        // ---- Semantic (separate from the accent) ----
+        success: '#0F9D63',
+        warning: '#E8A317',
+        danger: '#D2352C',      // orange-leaning on purpose — see the note above
       },
-      // ---- Page background gradient stops ----
-      // Used in app/(authed)/layout.tsx for the soft Sketch-style backdrop.
+
       backgroundImage: {
-        'app-tint':
-          'radial-gradient(at 0% 0%, rgba(244, 232, 255, 0.6) 0px, transparent 40%), ' +
-          'radial-gradient(at 100% 0%, rgba(255, 232, 220, 0.55) 0px, transparent 45%), ' +
-          'radial-gradient(at 100% 100%, rgba(220, 240, 255, 0.5) 0px, transparent 45%), ' +
-          'radial-gradient(at 0% 100%, rgba(255, 245, 220, 0.45) 0px, transparent 45%)',
-        // Per-product subtle backdrop. Designed to sit behind feature cards.
-        'tint-launch':
-          'radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.10) 0px, transparent 60%)',
-        'tint-sheets':
-          'radial-gradient(at 0% 0%, rgba(251, 146, 60, 0.12) 0px, transparent 60%)',
-        'tint-audit':
-          'radial-gradient(at 0% 0%, rgba(52, 211, 153, 0.12) 0px, transparent 60%)',
-        'tint-templates':
-          'radial-gradient(at 0% 0%, rgba(167, 139, 250, 0.12) 0px, transparent 60%)',
-        'tint-launches':
-          'radial-gradient(at 0% 0%, rgba(148, 163, 184, 0.10) 0px, transparent 60%)',
+        // Halftone dot field that bleeds off the canvas corner — the one
+        // pop-culture flourish. See components/AppBackdrop.tsx.
+        'halftone': 'radial-gradient(#FF2D55 1.5px, transparent 1.6px)',
       },
+      backgroundSize: {
+        // Distinct key from the backgroundImage above — Tailwind derives the
+        // class name from the key, so reusing `halftone` here would emit two
+        // different rules both called `bg-halftone` and one would win at random.
+        'halftone-grid': '14px 14px',
+      },
+
       fontFamily: {
-        // Geist Sans for both display and body — clean, modern, very legible
-        // at any size. We keep the `display` alias for headings so existing
-        // `font-display` classes throughout the codebase keep working.
         display: ['var(--font-geist-sans)', 'system-ui', 'sans-serif'],
         sans: ['var(--font-geist-sans)', 'system-ui', 'sans-serif'],
+        // Mono does real work here: micro-labels, timestamps, counters and
+        // every figure in a stat tile. It is what stops this looking like
+        // every other SaaS dashboard.
         mono: ['var(--font-geist-mono)', 'ui-monospace', 'monospace'],
       },
+
       fontSize: {
-        // Tighter scale than Tailwind default — more editorial
-        '2xs': ['0.6875rem', { lineHeight: '1rem' }],   // 11px
+        '2xs': ['0.625rem',  { lineHeight: '0.875rem' }],  // 10px — mono micro-labels
         'xs':  ['0.75rem',   { lineHeight: '1.125rem' }],
-        'sm':  ['0.875rem',  { lineHeight: '1.25rem' }],
-        'base':['0.9375rem', { lineHeight: '1.5rem' }], // 15px — slightly more elegant than 16
-        'lg':  ['1.0625rem', { lineHeight: '1.625rem' }],
-        'xl':  ['1.25rem',   { lineHeight: '1.75rem' }],
-        '2xl': ['1.5rem',    { lineHeight: '2rem' }],
-        '3xl': ['1.875rem',  { lineHeight: '2.25rem' }],
-        '4xl': ['2.25rem',   { lineHeight: '2.5rem', letterSpacing: '-0.02em' }],
-        '5xl': ['3rem',      { lineHeight: '1.1',    letterSpacing: '-0.025em' }],
+        'sm':  ['0.8125rem', { lineHeight: '1.25rem' }],   // 13px
+        'base':['0.9375rem', { lineHeight: '1.5rem' }],    // 15px
+        'lg':  ['1.0625rem', { lineHeight: '1.5rem' }],
+        'xl':  ['1.25rem',   { lineHeight: '1.625rem', letterSpacing: '-0.02em' }],
+        '2xl': ['1.5rem',    { lineHeight: '1.875rem', letterSpacing: '-0.025em' }],
+        '3xl': ['1.875rem',  { lineHeight: '1.15',     letterSpacing: '-0.035em' }],
+        '4xl': ['2.375rem',  { lineHeight: '1.05',     letterSpacing: '-0.04em' }],
+        '5xl': ['3.25rem',   { lineHeight: '1',        letterSpacing: '-0.045em' }],
       },
+
       borderRadius: {
-        // Slightly softer than default — but not bubbly
-        'sm': '0.375rem',  // 6px — inputs
-        'DEFAULT': '0.5rem', // 8px — buttons
-        'md': '0.625rem',
-        'lg': '0.75rem',   // 12px — cards
-        'xl': '1rem',      // 16px — large cards, modals
-        '2xl': '1.25rem',  // 20px — product hero cards
+        // Rounder than before — the direction is friendly, not severe.
+        'sm': '0.5rem',         // 8px  — small chips
+        'DEFAULT': '0.6875rem', // 11px — buttons, nav items
+        'md': '0.75rem',        // 12px — post chips
+        'lg': '0.9375rem',      // 15px — stat tiles, inset panels
+        'xl': '1.375rem',       // 22px — cards
+        '2xl': '1.625rem',      // 26px — the app panel itself
       },
+
       boxShadow: {
-        // Restrained — these aren't "glow" shadows
-        'subtle': '0 1px 2px 0 rgb(0 0 0 / 0.04)',
-        'card':   '0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04)',
-        'lift':   '0 4px 12px -2px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.04)',
-        // Glass: very soft drop shadow plus inset top highlight to fake the
-        // liquid-glass refraction.
-        'glass':
-          '0 1px 2px 0 rgb(0 0 0 / 0.04), ' +
-          '0 8px 24px -8px rgb(0 0 0 / 0.06), ' +
-          'inset 0 1px 0 0 rgb(255 255 255 / 0.7)',
-        'glass-lift':
-          '0 4px 16px -4px rgb(0 0 0 / 0.08), ' +
-          '0 12px 36px -12px rgb(0 0 0 / 0.10), ' +
-          'inset 0 1px 0 0 rgb(255 255 255 / 0.7)',
-        'focus':  '0 0 0 3px rgb(37 99 235 / 0.15)',
+        'subtle': '0 1px 2px rgba(22,19,31,.04)',
+        'card':   '0 1px 2px rgba(22,19,31,.04), 0 12px 32px -12px rgba(22,19,31,.14)',
+        'lift':   '0 2px 6px rgba(22,19,31,.06), 0 24px 60px -20px rgba(22,19,31,.24)',
+        // The "print" shadow under cherry buttons — hard 2px offset, no blur.
+        // Reads as a sticker/screenprint rather than a soft UI drop shadow.
+        'print':  '0 2px 0 #B00A32',
+        'focus':  '0 0 0 3px rgba(255,45,85,.22)',
+
+        // Compatibility aliases. The previous design was a "liquid glass"
+        // look and `shadow-glass` / `shadow-glass-lift` are still on ~11
+        // components. Rather than sweep every file mid-redesign (a large
+        // diff with nothing to show for it), the names now resolve to the
+        // new flatter shadows. Retire them as each component is touched.
+        'glass':      '0 1px 2px rgba(22,19,31,.04), 0 12px 32px -12px rgba(22,19,31,.14)',
+        'glass-lift': '0 2px 6px rgba(22,19,31,.06), 0 24px 60px -20px rgba(22,19,31,.24)',
       },
+
       backdropBlur: {
-        // Used by glass surfaces. Tailwind defaults are fine but we expose
-        // a "card" shorthand to keep usage consistent.
-        'card': '14px',
+        // Same story as the shadow aliases above — `backdrop-blur-card` is
+        // still in use. The new shell is mostly opaque, so this now does
+        // very little, which is the intended end state.
+        'card': '10px',
       },
+
       animation: {
         'fade-in': 'fadeIn 0.2s ease-out',
         'slide-up': 'slideUp 0.3s ease-out',
         'shimmer': 'shimmer 2.4s linear infinite',
       },
       keyframes: {
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
+        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
         slideUp: {
           '0%': { opacity: '0', transform: 'translateY(8px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
