@@ -129,7 +129,22 @@ step "[4/7] Building and starting the stack"
 cd "$INSTALL_ROOT"
 if [[ -f .env ]]; then
   c_blue "  .env already exists — reusing it (SESSION_SECRET preserved)"
-  docker compose up -d --build
+  # ---------------------------------------------------------------------
+  # The frontend MUST be built --no-cache.
+  #
+  # `docker compose up -d --build` happily reuses a cached layer for the
+  # Next.js build, so the container restarts from a STALE image and the UI
+  # is unchanged — the deploy looks like it worked and nothing shipped.
+  # The ads app's deploy.sh has carried this workaround for months; I built
+  # this script without it, and several "you didn't fix it" rounds were
+  # actually "it was never deployed".
+  #
+  # The backend doesn't need this — its Dockerfile copies package files and
+  # source in separate layers, so a source change always invalidates.
+  # ---------------------------------------------------------------------
+  docker compose build --no-cache frontend
+  docker compose build backend
+  docker compose up -d --force-recreate frontend backend
   for i in $(seq 1 60); do
     docker compose exec -T backend echo ok >/dev/null 2>&1 && break
     sleep 1
@@ -234,6 +249,27 @@ check() {
   printf '    %-46s' "$1"
   if eval "$2" >/dev/null 2>&1; then c_green "OK"; else c_red "FAILED"; FAILED=1; fi
 }
+# Did the frontend bundle actually change, or did we restart a stale image?
+# Greps the served JS for a string only present in the current source. This
+# is the check that would have caught a whole afternoon of "still broken"
+# reports that were really "never deployed".
+printf '    %-46s' "frontend bundle is current"
+if grep -rq "rsrc.php" "$INSTALL_ROOT/frontend/src/components/AccountAvatar.tsx" 2>/dev/null; then
+  FOUND=""
+  for u in $(curl -s -m 20 "http://127.0.0.1:${FRONTEND_PORT}/login" \
+             | grep -oE '/_next/static/chunks/[a-zA-Z0-9._/-]+\.js' | sort -u | head -30); do
+    if curl -s -m 10 "http://127.0.0.1:${FRONTEND_PORT}$u" | grep -q "rsrc.php"; then
+      FOUND="yes"; break
+    fi
+  done
+  if [[ -n "$FOUND" ]]; then c_green "OK"; else
+    c_red "STALE — the served bundle predates the source; rebuild did not take"
+    FAILED=1
+  fi
+else
+  c_blue "skipped (marker not in this source)"
+fi
+
 check "backend health (direct)"  "curl -sf http://127.0.0.1:${BACKEND_PORT}/health"
 check "frontend (direct)"        "curl -sf http://127.0.0.1:${FRONTEND_PORT}/login"
 check "https://${DOMAIN}/api/health" "curl -sf https://${DOMAIN}/api/health"
