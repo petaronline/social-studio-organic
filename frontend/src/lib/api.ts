@@ -331,13 +331,37 @@ export interface OrganicAccount {
    ============================================================ */
 const PLACEHOLDER_PICTURE_PATTERNS = [
   '/t1.30497-1/',    // Meta CDN "no profile photo" directory
-  'rsrc.php',        // static.xx.fbcdn.net sprite host (the grey .gif)
+  'rsrc.php',        // sprite host (the grey .gif)
   '/static/images/', // occasional default-avatar path
+];
+
+/**
+ * Host allowlist, which is the rule that actually holds.
+ *
+ * Real profile photos are always served from a `scontent*` CDN host —
+ * scontent.xx.fbcdn.net, scontent-lhr8-1.cdninstagram.com, and so on. The
+ * `static.*` hosts only ever serve application chrome: sprites, icons and
+ * the default-avatar assets. So rather than chase individual placeholder
+ * filenames (which Meta rotates), anything from a static host is treated as
+ * a placeholder outright.
+ *
+ * Belt and braces with the patterns above: a placeholder served from a
+ * scontent host still gets caught by path, and a real photo could never
+ * come from a static host.
+ */
+const STATIC_ASSET_HOSTS = [
+  'static.xx.fbcdn.net',
+  'static.cdninstagram.com',
+  'static.fbcdn.net',
 ];
 
 export function isPlaceholderPictureUrl(url: string | null | undefined): boolean {
   if (!url) return false;
-  return PLACEHOLDER_PICTURE_PATTERNS.some((p) => url.includes(p));
+  if (STATIC_ASSET_HOSTS.some((h) => url.includes(h))) return true;
+  if (PLACEHOLDER_PICTURE_PATTERNS.some((p) => url.includes(p))) return true;
+  // Profile photos are jpg/png/webp. A gif from any Meta CDN is chrome.
+  if (url.includes('fbcdn.net') && url.split('?')[0].endsWith('.gif')) return true;
+  return false;
 }
 
 /** Null out placeholder pictures on a single account. */
