@@ -518,7 +518,18 @@ export interface UpdateBrandInput {
 }
 
 export const brands = {
-  list: () => api.get<{ brands: Brand[] }>('/brands'),
+  list: () =>
+    api.get<{ brands: Brand[] }>('/brands').then((r) => ({
+      ...r,
+      // Brand thumbnails are derived from a profile picture, so they can
+      // carry the same placeholder. Backend filters them too; this is the
+      // belt to that pair of braces.
+      brands: r.brands.map((b) =>
+        isPlaceholderPictureUrl((b as { thumbnailUrl?: string | null }).thumbnailUrl)
+          ? { ...b, thumbnailUrl: null }
+          : b
+      ),
+    })),
   create: (input: CreateBrandInput) =>
     api.post<{ brand: Brand }>('/brands', input),
   update: (id: string, input: UpdateBrandInput) =>

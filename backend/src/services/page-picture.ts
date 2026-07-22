@@ -57,6 +57,30 @@ function isGraphPictureEndpoint(url: string): boolean {
 }
 
 /**
+ * A placeholder we can identify from the URL alone — no round-trip needed.
+ *
+ * Real profile photos are only ever served from a `scontent*` CDN host. The
+ * `static.*` hosts serve application chrome: sprites, icons, default
+ * avatars. A resync can write one of these directly (rather than the graph
+ * redirect endpoint), which is how the grey image came back after
+ * re-syncing Pages — it wasn't a graph URL, so the resolver waved it past.
+ */
+const STATIC_ASSET_HOSTS = [
+  'static.xx.fbcdn.net',
+  'static.cdninstagram.com',
+  'static.fbcdn.net',
+];
+const PLACEHOLDER_PATHS = ['/t1.30497-1/', 'rsrc.php', '/static/images/'];
+
+export function isKnownPlaceholderUrl(url: string): boolean {
+  if (STATIC_ASSET_HOSTS.some((h) => url.includes(h))) return true;
+  if (PLACEHOLDER_PATHS.some((p) => url.includes(p))) return true;
+  // Profile photos are jpg/png/webp; a gif from a Meta CDN is chrome.
+  if (url.includes('fbcdn.net') && url.split('?')[0].endsWith('.gif')) return true;
+  return false;
+}
+
+/**
  * Returns the picture URL to use, or null if Graph reports the Page has no
  * real photo. Anything that isn't a Graph picture endpoint — Instagram and
  * LinkedIn CDN URLs, for instance — passes straight through.
@@ -66,6 +90,8 @@ export async function resolvePictureUrl(
   accessToken?: string | null
 ): Promise<string | null> {
   if (!url) return null;
+  // Cheap check first: some placeholders are identifiable without asking.
+  if (isKnownPlaceholderUrl(url)) return null;
   if (!isGraphPictureEndpoint(url)) return url;
 
   const cacheKey = accessToken ? `tok:${url}` : url;

@@ -46,6 +46,14 @@ export async function listBrands(userId: string): Promise<Brand[]> {
               WHERE oa.brand_id = b.id
                 AND oa.disconnected_at IS NULL
                 AND oa.meta->>'picture_url' IS NOT NULL
+                -- Skip Meta's placeholder assets: a brand whose first
+                -- profile has no photo should fall back to its colour dot,
+                -- not inherit a grey question mark. Mirrors
+                -- isKnownPlaceholderUrl in services/page-picture.ts.
+                AND oa.meta->>'picture_url' NOT LIKE '%static.xx.fbcdn.net%'
+                AND oa.meta->>'picture_url' NOT LIKE '%static.cdninstagram.com%'
+                AND oa.meta->>'picture_url' NOT LIKE '%rsrc.php%'
+                AND oa.meta->>'picture_url' NOT LIKE '%/t1.30497-1/%'
               ORDER BY oa.created_at ASC
               LIMIT 1
             ) AS thumbnail_url

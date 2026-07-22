@@ -42,7 +42,7 @@ import { query } from '../db/pool';
 import { fetchInsightsForTarget } from '../services/organic-insights';
 import * as metaSync from '../services/meta-sync';
 import { env } from '../utils/env';
-import { resolveAccountPictures } from '../services/page-picture';
+import { resolveAccountPictures, isKnownPlaceholderUrl } from '../services/page-picture';
 
 export const organicRouter = Router();
 
@@ -230,10 +230,22 @@ organicRouter.get('/accounts/callback', requireAuth, async (req: Request, res: R
         // Store the STABLE redirect endpoint, not page.picture.data.url — the
         // signed CDN url expires ("URL signature expired"). /{id}/picture
         // 302-redirects to the current image on every request.
-        const picUrl =
-          page.picture?.data && !page.picture.data.is_silhouette
-            ? `https://graph.facebook.com/${page.id}/picture?type=large`
-            : null;
+        /*
+         * `is_silhouette` is OPTIONAL in Graph's response. When the field is
+         * absent, `!undefined` is true, so the old expression stored a
+         * picture URL for every Page — including ones with no photo. That's
+         * why the grey placeholder came back the moment Pages were resynced:
+         * the connect flow itself put it there.
+         *
+         * Require an explicit `false`, and also reject a url that is itself
+         * a known placeholder asset.
+         */
+        const pic = page.picture?.data;
+        const hasRealPhoto =
+          !!pic && pic.is_silhouette === false && !isKnownPlaceholderUrl(pic.url ?? '');
+        const picUrl = hasRealPhoto
+          ? `https://graph.facebook.com/${page.id}/picture?type=large`
+          : null;
 
         await organicConn.saveAccount({
           userId: req.user!.id,
