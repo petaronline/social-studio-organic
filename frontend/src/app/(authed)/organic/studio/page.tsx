@@ -17,15 +17,26 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus, Lightbulb, CheckCircle2, Clock, RefreshCw, Sprout } from 'lucide-react';
+import { Plus, Lightbulb, Sprout } from 'lucide-react';
 import { PageHeader, PAGE_TINTS } from '@/components/PageHeader';
 import {
   auth,
+  organicAccounts,
   organicCalendar,
+  organicDrafts,
+  organicIdeas,
   type CalendarPost,
   type CurrentUser,
+  type OrganicAccount,
 } from '@/lib/api';
+import { buildDashboard, mondayOf, type DashboardModel } from '@/components/studio/DashboardData';
+import {
+  AttentionPanel,
+  CadencePanel,
+  NextUpPanel,
+} from '@/components/studio/DashboardPanels';
 import {
   getActiveBrandId,
   getActiveScope,
@@ -63,53 +74,77 @@ export default function StudioPage() {
     return () => window.removeEventListener(VASS_ACTIVE_SCOPE_EVENT, onChange);
   }, []);
 
-  // ─── Today's publishing stats ───────────────────────────────────
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [todayPosts, setTodayPosts] = useState<CalendarPost[]>([]);
+  // ─── Dashboard data ─────────────────────────────────────────────
+  // One window covers everything on this page: last 7 days for failures and
+  // this week's published count, next 14 for what's coming. Always scoped to
+  // the accounts currently in scope, so every figure answers "for this
+  // brand" — never "across everything you happen to have connected".
+  //
+  // Nothing here reads analytics. Insights are unreliable at the moment and
+  // a dashboard stating wrong engagement numbers confidently is worse than
+  // one that stays quiet about them.
+  const [loading, setLoading] = useState(true);
+  const [dash, setDash] = useState<DashboardModel | null>(null);
+  const [accounts, setAccounts] = useState<OrganicAccount[]>([]);
 
-  const loadStats = useCallback(async () => {
-    setStatsLoading(true);
+  const accountNames = useMemo(() => {
+    const out: Record<string, string> = {};
+    for (const a of accounts) {
+      out[a.id] = a.meta?.name || a.meta?.username || a.externalId;
+    }
+    return out;
+  }, [accounts]);
+
+  const load = useCallback(async () => {
+    setLoading(true);
     try {
       const now = new Date();
-      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const endOfDay = new Date(startOfDay);
-      endOfDay.setDate(endOfDay.getDate() + 1);
-      // Derive scope filter params. accountIds is most-specific; when
-      // it's present the calendar endpoint ignores brandId. For mixed
-      // brand+profile scopes we expand brands to all their accounts
-      // and union the result, so the count is honest.
+      const from = new Date(now);
+      from.setDate(from.getDate() - 7);
+      const to = new Date(now);
+      to.setDate(to.getDate() + 14);
+
       const ids = getActiveAccountIds();
-      const r = await organicCalendar.get({
-        from: startOfDay.toISOString(),
-        to: endOfDay.toISOString(),
-        brandId: null,
-        accountIds: ids ?? undefined,
-        statuses: ['scheduled', 'published'],
-      });
-      setTodayPosts(r.posts);
+
+      const [calendar, accountsRes, draftsRes, ideasRes] = await Promise.all([
+        organicCalendar.get({
+          from: from.toISOString(),
+          to: to.toISOString(),
+          brandId: null,
+          accountIds: ids ?? undefined,
+          statuses: ['scheduled', 'published'],
+        }),
+        organicAccounts.list(),
+        organicDrafts.list(null, ids ?? undefined).catch(() => ({ posts: [] as unknown[] })),
+        organicIdeas.list(ids ? { accountIds: ids } : {}).catch(() => ({ ideas: [] as unknown[] })),
+      ]);
+
+      // Token warnings should only cover profiles in scope, or a quiet
+      // brand inherits another brand's expiring connection.
+      const scoped = ids
+        ? accountsRes.accounts.filter((a) => ids.includes(a.id))
+        : accountsRes.accounts;
+      setAccounts(scoped);
+
+      setDash(
+        buildDashboard({
+          posts: calendar.posts,
+          accounts: scoped,
+          draftCount: (draftsRes as { posts?: unknown[] }).posts?.length ?? 0,
+          ideaCount: (ideasRes as { ideas?: unknown[] }).ideas?.length ?? 0,
+          now,
+        })
+      );
     } catch (err) {
-      console.error('[studio] stats load failed:', err);
-      setTodayPosts([]);
+      console.error('[studio] dashboard load failed:', err);
+      setDash(null);
     } finally {
-      setStatsLoading(false);
+      setLoading(false);
     }
     // Re-fetch whenever the scope changes
   }, [scope]);
 
-  useEffect(() => { loadStats(); }, [loadStats]);
-
-  const stats = useMemo(() => {
-    // Only Vass-tracked posts. Synced rows aren't ours to count.
-    const vassOnly = todayPosts.filter((p) => p.source === 'vass');
-    return {
-      published: vassOnly.filter(
-        (p) => p.status === 'published' || p.status === 'partial'
-      ).length,
-      scheduled: vassOnly.filter(
-        (p) => p.status === 'scheduled' || p.status === 'publishing'
-      ).length,
-    };
-  }, [todayPosts]);
+  useEffect(() => { load(); }, [load]);
 
   // ─── Composer & Idea editor wiring ──────────────────────────────
   const [composerOpen, setComposerOpen] = useState(false);
@@ -146,35 +181,77 @@ export default function StudioPage() {
         />
       </div>
 
-      {/* Three cards row */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1.4fr,1fr,1fr] gap-4 mb-8">
-        <TodaysPublishingCard
-          loading={statsLoading}
-          published={stats.published}
-          scheduled={stats.scheduled}
-          onRefresh={loadStats}
-        />
-        <ActionCard
-          title="Create a post"
-          description="Compose & publish to your profiles."
-          Icon={Plus}
-          onClick={() => setComposerOpen(true)}
-        />
-        <ActionCard
-          title="Drop an idea"
-          description="Capture a quick thought for later."
-          Icon={Lightbulb}
+      {/* Stat row. Volume only — deliberately no reach or engagement while
+          insights are unreliable. `queued` takes the inverted hero treatment
+          because on this screen the number you act on is what's still to
+          come, not what already went out. */}
+      <div className="mb-6 flex flex-wrap gap-2.5">
+        <div className="stat stat-hero">
+          <div className="stat-value">{loading ? '—' : dash?.queuedThisWeek ?? 0}</div>
+          <div className="lab mt-1.5">Queued this week</div>
+        </div>
+        <div className="stat">
+          <div className="stat-value">{loading ? '—' : dash?.publishedThisWeek ?? 0}</div>
+          <div className="lab mt-1.5">Published this week</div>
+        </div>
+        <Link href="/organic/drafts" className="stat transition-colors hover:bg-surface-hover">
+          <div className="stat-value">{loading ? '—' : dash?.draftCount ?? 0}</div>
+          <div className="lab mt-1.5">Drafts waiting</div>
+        </Link>
+        <Link href="/organic/ideas" className="stat transition-colors hover:bg-surface-hover">
+          <div className="stat-value">{loading ? '—' : dash?.ideaCount ?? 0}</div>
+          <div className="lab mt-1.5">Ideas parked</div>
+        </Link>
+        {!loading && (dash?.attention.length ?? 0) > 0 && (
+          <Link href="/organic/pipeline" className="stat transition-colors hover:bg-surface-hover">
+            <div className="stat-value text-danger">{dash?.attention.length}</div>
+            <div className="lab mt-1.5">Need attention</div>
+          </Link>
+        )}
+      </div>
+
+      {/* Two actions, kept small — they're shortcuts, not the point of the
+          page any more. */}
+      <div className="mb-6 flex flex-wrap gap-2">
+        <button onClick={() => setComposerOpen(true)} className="btn-primary">
+          <Plus size={15} /> New post
+        </button>
+        <button
           onClick={() => setIdeaEditorOpen(true)}
           disabled={scope.type === 'all'}
-          disabledHint="Pick a brand or profile to drop ideas under."
-        />
+          title={scope.type === 'all' ? 'Pick a brand or profile to drop ideas under.' : undefined}
+          className="btn-secondary"
+        >
+          <Lightbulb size={15} /> Drop an idea
+        </button>
       </div>
+
+      {loading ? (
+        <div className="card px-6 py-16 text-center text-sm text-ink-subtle">Loading…</div>
+      ) : dash ? (
+        <div className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <NextUpPanel
+            posts={dash.nextUp}
+            accountNames={accountNames}
+            onOpenComposer={() => setComposerOpen(true)}
+          />
+          <div className="flex flex-col gap-4">
+            <AttentionPanel items={dash.attention} />
+            <CadencePanel week={dash.week} emptyDaysAhead={dash.emptyDaysAhead} />
+          </div>
+        </div>
+      ) : (
+        <div className="card px-6 py-16 text-center">
+          <p className="text-sm text-ink-muted">Couldn&apos;t load this week.</p>
+          <button onClick={load} className="btn-secondary btn-sm mt-3">Try again</button>
+        </div>
+      )}
 
       {/* Modals */}
       <ComposerModal
         open={composerOpen}
         onClose={() => setComposerOpen(false)}
-        onPublished={() => loadStats()}
+        onPublished={() => load()}
       />
       <IdeaEditorModal
         open={ideaEditorOpen}
@@ -208,105 +285,4 @@ function scopeIdeaAccountId(scope: ActiveScope): string | null {
   if (scope.items.some((x) => x.type === 'brand')) return null;
   const firstProfile = scope.items.find((x) => x.type === 'profile');
   return firstProfile ? firstProfile.id : null;
-}
-
-// ─── Today's Publishing card ─────────────────────────────────────────
-
-function TodaysPublishingCard({
-  loading,
-  published,
-  scheduled,
-  onRefresh,
-}: {
-  loading: boolean;
-  published: number;
-  scheduled: number;
-  onRefresh: () => void;
-}) {
-  return (
-    <div className="card flex flex-col gap-4 p-5">
-      <div className="flex items-center justify-between">
-        <h2 className="lab">Today&apos;s publishing</h2>
-        <button
-          onClick={onRefresh}
-          disabled={loading}
-          title="Refresh stats"
-          className="btn-ghost btn-icon"
-        >
-          <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
-        </button>
-      </div>
-      {/* `scheduled` gets the inverted hero treatment: on this screen the
-          number you act on is what's still coming, not what already went
-          out. One hero per screen — see globals.css. */}
-      <div className="grid grid-cols-2 gap-3">
-        <StatBlock loading={loading} value={scheduled} label="scheduled" hero />
-        <StatBlock loading={loading} value={published} label="published" />
-      </div>
-    </div>
-  );
-}
-
-function StatBlock({
-  loading,
-  value,
-  label,
-  hero = false,
-}: {
-  loading: boolean;
-  value: number;
-  label: string;
-  hero?: boolean;
-}) {
-  return (
-    <div className={['stat', hero ? 'stat-hero' : ''].join(' ')}>
-      <div className="stat-value">{loading ? '—' : value}</div>
-      <div className="lab mt-1.5">{label}</div>
-    </div>
-  );
-}
-
-// ─── Action card (Create a post / Drop an idea) ──────────────────────
-
-function ActionCard({
-  title,
-  description,
-  Icon,
-  onClick,
-  disabled = false,
-  disabledHint,
-}: {
-  title: string;
-  description: string;
-  Icon: typeof Plus;
-  onClick: () => void;
-  disabled?: boolean;
-  disabledHint?: string;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      title={disabled ? disabledHint : undefined}
-      className={[
-        'card group flex flex-col items-start gap-3 p-5 text-left transition-all',
-        disabled
-          ? 'cursor-not-allowed opacity-50'
-          : 'hover:-translate-y-px hover:border-cherry/40 hover:shadow-card',
-      ].join(' ')}
-    >
-      {/* The icon fills with cherry on hover — the affordance that says
-          "this whole card is the button", without a second CTA. */}
-      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cherry-wash text-cherry-ink transition-colors group-hover:bg-cherry group-hover:text-white">
-        <Icon size={20} />
-      </div>
-      <div>
-        <h3 className="h-sub text-ink">{title}</h3>
-        <p className="mt-1 text-xs text-ink-muted">{description}</p>
-        {disabled && disabledHint && (
-          <p className="mt-1 text-xs italic text-ink-subtle">{disabledHint}</p>
-        )}
-      </div>
-    </button>
-  );
 }
