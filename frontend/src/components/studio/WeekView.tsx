@@ -21,7 +21,7 @@
  * Click a card → parent opens detail drawer (single post, not the day).
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
@@ -51,6 +51,10 @@ const ROW_PX = 96;
 const MIN_BAND_PX = 36;
 /** Inset between the row content and the band edges. */
 const ROW_GAP_PX = 4;
+/** Hours the grid always shows. It grows past these if posts fall outside,
+ *  but 00:00–05:00 is dead space on every social calendar ever made. */
+const DEFAULT_START_HOUR = 6;
+const DEFAULT_END_HOUR = 22;
 
 const PLATFORM_META: Record<OrganicPlatform, { Icon: typeof Facebook; color: string }> = {
   facebook_page: { Icon: Facebook,  color: '#1877F2' },
@@ -110,7 +114,7 @@ export function WeekView({ posts, weekStart, setWeekStart, onCancelSchedule, onP
 
   // ─── Pre-compute placement: (dayIdx, hour) -> sorted posts -> rowInBand
   // Also compute each hour band's height = max(MIN_BAND_PX, maxRows*ROW_PX).
-  const { placements, bandHeights, bandOffsets, totalHeight } = useMemo(() => {
+  const { placements, bandHeights, bandOffsets, totalHeight, hourRange } = useMemo(() => {
     // bucket[dayIdx][hour] = CalendarPost[]
     const bucket: CalendarPost[][][] = Array.from({ length: 7 }, () =>
       Array.from({ length: 24 }, () => [])
@@ -127,6 +131,8 @@ export function WeekView({ posts, weekStart, setWeekStart, onCancelSchedule, onP
     // Sort each bucket by minute ASC and assign rowInBand.
     const placements: PostPlacement[] = [];
     const heights: number[] = new Array(24).fill(MIN_BAND_PX);
+    let earliest = 24;
+    let latest = -1;
     for (let h = 0; h < 24; h++) {
       let maxRowsThisHour = 0;
       for (let d = 0; d < 7; d++) {
@@ -140,40 +146,46 @@ export function WeekView({ posts, weekStart, setWeekStart, onCancelSchedule, onP
       }
       if (maxRowsThisHour > 0) {
         heights[h] = maxRowsThisHour * ROW_PX + ROW_GAP_PX * 2;
+        if (h < earliest) earliest = h;
+        if (h > latest) latest = h;
       }
     }
+
+    /**
+     * Which hours to actually render.
+     *
+     * Rendering all 24 meant an empty week was 864px of nothing, six hours
+     * of which was 00:00–05:00 that nobody posts in. Worse, it forced an
+     * auto-scroll to bring 07:00 into view, and on a short page that scroll
+     * request exceeded the maximum and silently clamped to the bottom — so
+     * the calendar opened showing 23:00 with the header off-screen.
+     *
+     * Now the grid covers the working day and stretches only as far as the
+     * real posts require. Nothing scrolls on load, and the page opens where
+     * you'd expect: at the top.
+     */
+    const from = Math.min(DEFAULT_START_HOUR, earliest === 24 ? DEFAULT_START_HOUR : earliest);
+    const to = Math.max(DEFAULT_END_HOUR, latest);
+    for (let h = 0; h < 24; h++) {
+      if (h < from || h > to) heights[h] = 0;
+    }
+
     // Cumulative offsets — top of hour band h = sum of heights of hours < h.
     const offsets: number[] = new Array(24).fill(0);
     for (let h = 1; h < 24; h++) offsets[h] = offsets[h - 1] + heights[h - 1];
     const total = offsets[23] + heights[23];
-    return { placements, bandHeights: heights, bandOffsets: offsets, totalHeight: total };
+    return {
+      placements,
+      bandHeights: heights,
+      bandOffsets: offsets,
+      totalHeight: total,
+      hourRange: { from, to },
+    };
   }, [posts, days]);
 
-  // Auto-scroll on initial mount / week change — find the hour offset
-  // for 7am so it lines up regardless of band-height variability above.
-  useEffect(() => {
-    // The grid no longer scrolls itself, so scroll whichever ancestor does
-    // (that's <main> in the authed shell) to bring 07:00 into view.
-    //
-    // Measured with getBoundingClientRect, NOT offsetTop: offsetTop is
-    // relative to the nearest positioned ancestor, which here is the app
-    // panel — several hundred pixels above <main>'s own origin. Adding the
-    // band offset to that overshot and dumped you at the bottom of the day.
-    const el = scrollerRef.current;
-    if (!el) return;
-    const scroller = el.closest('main');
-    if (!scroller) return;
-
-    const offsetWithinScroller =
-      el.getBoundingClientRect().top -
-      scroller.getBoundingClientRect().top +
-      scroller.scrollTop;
-
-    // A small lead-in so the 06:00 row stays visible above 07:00 and the
-    // grid doesn't look like it starts mid-cell.
-    const target = offsetWithinScroller + (bandOffsets[7] ?? 0) - 24;
-    scroller.scrollTo({ top: Math.max(0, target), behavior: 'auto' });
-  }, [weekStart, bandOffsets]);
+  // No auto-scroll. The grid now starts at the working day, so 07:00 is
+  // near the top without moving the page — and a scroll on load would only
+  // hide the page header the user just clicked towards.
 
   // ─── Navigation
   const prevWeek = () => {
@@ -265,7 +277,7 @@ export function WeekView({ posts, weekStart, setWeekStart, onCancelSchedule, onP
           {/* Hour-label gutter on the left */}
           <div className="w-[44px] shrink-0 border-r border-line/40 relative">
             {bandOffsets.map((offset, h) =>
-              h === 0 ? null : (
+              h <= hourRange.from || h > hourRange.to ? null : (
                 <span
                   key={h}
                   className="absolute right-1.5 text-2xs text-ink-subtle pointer-events-none select-none"
@@ -281,13 +293,15 @@ export function WeekView({ posts, weekStart, setWeekStart, onCancelSchedule, onP
               can position relative to it. */}
           <div className="flex-1 relative grid grid-cols-7">
             {/* Hour band horizontal dividers — drawn behind the columns */}
-            {bandOffsets.map((offset, h) => (
-              <div
-                key={h}
-                className="absolute left-0 right-0 border-t border-line/30 pointer-events-none"
-                style={{ top: offset + 'px' }}
-              />
-            ))}
+            {bandOffsets.map((offset, h) =>
+              h < hourRange.from || h > hourRange.to ? null : (
+                <div
+                  key={h}
+                  className="pointer-events-none absolute left-0 right-0 border-t border-line/30"
+                  style={{ top: offset + 'px' }}
+                />
+              )
+            )}
 
             {/* Day columns */}
             {days.map((d, dayIdx) => {
@@ -310,6 +324,7 @@ export function WeekView({ posts, weekStart, setWeekStart, onCancelSchedule, onP
                 the dragged post's original minutes. */}
             {dragPostId && onReschedule && days.map((d, dayIdx) =>
               bandOffsets.map((offset, hour) => {
+                if (hour < hourRange.from || hour > hourRange.to) return null;
                 const isHover = hoverSlot?.dayIdx === dayIdx && hoverSlot?.hour === hour;
                 return (
                   <div
