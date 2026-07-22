@@ -23,14 +23,15 @@
  *
  * THE FIX
  *
- * Graph answers the question directly when asked not to redirect:
+ * Not `?redirect=false` + `is_silhouette`. That field is optional and, for
+ * real Pages in this workspace, reports false while the endpoint serves the
+ * placeholder anyway — every fix built on it failed.
  *
- *     GET /<page-id>/picture?type=large&redirect=false
- *     → { "data": { "url": "...", "is_silhouette": true|false, ... } }
- *
- * So we ask, and null the picture out when it's a silhouette. Results are
- * cached in-process because this runs on every accounts list and a Page's
- * photo does not change minute to minute.
+ * Instead: follow the redirect and look at where it lands. The target is a
+ * fact, not a claim. If the final URL is on a `static.*` host or a known
+ * placeholder path, it IS the placeholder. One request settles it, the body
+ * is discarded, and the answer is cached because a Page's photo does not
+ * change minute to minute.
  *
  * Failures are non-fatal: on a network error or a rate limit we return the
  * URL unchanged. Showing a placeholder occasionally beats an accounts list
@@ -98,27 +99,46 @@ export async function resolvePictureUrl(
   const hit = cache.get(cacheKey);
   if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.value;
 
+  /*
+   * FOLLOW THE REDIRECT AND LOOK AT WHERE IT LANDS.
+   *
+   * The previous approach asked Graph `?redirect=false` and trusted
+   * `is_silhouette`. That field is documented, optional, and — for these
+   * Pages — simply wrong: it reports false while the redirect serves the
+   * grey placeholder anyway. Every fix built on it failed for that reason.
+   *
+   * The redirect target is not an opinion. `/{id}/picture` 302s to the
+   * actual image; if that image lives on a `static.*` host or a known
+   * placeholder path, it IS the placeholder, whatever Graph claims. Node's
+   * fetch follows redirects by default and exposes the final URL as
+   * `res.url`, so one request answers it definitively.
+   *
+   * The body is cancelled immediately — we need the URL, not the bytes.
+   */
   const sep = url.includes('?') ? '&' : '?';
-  const probe =
-    `${url}${sep}redirect=false` +
-    (accessToken ? `&access_token=${encodeURIComponent(accessToken)}` : '');
+  const probe = accessToken
+    ? `${url}${sep}access_token=${encodeURIComponent(accessToken)}`
+    : url;
 
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-    const res = await fetch(probe, { signal: controller.signal });
+    const res = await fetch(probe, { redirect: 'follow', signal: controller.signal });
     clearTimeout(timer);
 
-    const body = (await res.json()) as {
-      data?: { is_silhouette?: boolean };
-      error?: unknown;
-    };
+    // Don't download the image itself.
+    try {
+      await res.body?.cancel();
+    } catch {
+      /* already consumed or unsupported — harmless */
+    }
 
-    // If Graph refuses (token scope, rate limit), keep what we have rather
-    // than blanking a picture that may well be fine.
-    if (body.error || !body.data) return url;
+    const finalUrl = res.url || '';
+    // A redirect that lands nowhere useful: keep what we had rather than
+    // blanking a picture that might be fine.
+    if (!res.ok || !finalUrl) return url;
 
-    const value = body.data.is_silhouette ? null : url;
+    const value = isKnownPlaceholderUrl(finalUrl) ? null : url;
     cache.set(cacheKey, { at: Date.now(), value });
     return value;
   } catch {
