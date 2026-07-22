@@ -11,6 +11,7 @@ import { cookies } from 'next/headers';
 import { Sidebar } from '@/components/Sidebar';
 import { TopBar } from '@/components/TopBar';
 import { AppBackdrop } from '@/components/AppBackdrop';
+import { ProfileRail } from '@/components/ProfileRail';
 import { CurrentUser } from '@/lib/api';
 
 async function getCurrentUser(): Promise<CurrentUser | null> {
@@ -50,11 +51,19 @@ export default async function AuthedLayout({ children }: { children: React.React
      */
     <div className="relative min-h-screen bg-canvas p-3 sm:p-5">
       <AppBackdrop />
+      {/*
+       * FIXED height, not min-height. With min-height the panel grew past the
+       * viewport whenever a page was tall, so you got two scrollbars — the
+       * window's and the panel's — and the panel's bottom corners were cut
+       * off below the fold. Pinning it to the viewport makes <main> the only
+       * scroller and keeps all four corners visible.
+       */}
       <div
-        className="relative z-10 flex min-h-[calc(100vh-1.5rem)] sm:min-h-[calc(100vh-2.5rem)]
+        className="relative z-10 flex h-[calc(100vh-1.5rem)] sm:h-[calc(100vh-2.5rem)]
                    overflow-hidden rounded-2xl bg-surface shadow-lift"
       >
         <Sidebar user={user} />
+        <ProfileRail />
         <div className="flex min-w-0 flex-1 flex-col">
           <TopBar user={user} />
           <main className="min-h-0 flex-1 overflow-y-auto px-7 py-7">{children}</main>

@@ -152,9 +152,14 @@ export function WeekView({ posts, weekStart, setWeekStart, onCancelSchedule, onP
   // Auto-scroll on initial mount / week change — find the hour offset
   // for 7am so it lines up regardless of band-height variability above.
   useEffect(() => {
-    if (scrollerRef.current) {
-      scrollerRef.current.scrollTop = bandOffsets[7] ?? 0;
-    }
+    // The grid no longer scrolls itself, so scroll whichever ancestor does
+    // (that's <main> in the authed shell) to bring 07:00 into view.
+    const el = scrollerRef.current;
+    if (!el) return;
+    const scroller = el.closest('main');
+    if (!scroller) return;
+    const target = el.offsetTop + (bandOffsets[7] ?? 0);
+    scroller.scrollTo({ top: Math.max(0, target - 120), behavior: 'auto' });
   }, [weekStart, bandOffsets]);
 
   // ─── Navigation
@@ -233,7 +238,13 @@ export function WeekView({ posts, weekStart, setWeekStart, onCancelSchedule, onP
       </div>
 
       {/* Scrollable grid — flex row: 44px hour gutter + 7-col day grid */}
-      <div ref={scrollerRef} className="overflow-y-auto" style={{ maxHeight: '70vh' }}>
+      {/* No internal scroll. This used to be `overflow-y-auto; max-height:70vh`,
+          which nested a second scroller inside the page's own — you had to
+          scroll the page to reach the calendar and then scroll again inside
+          it. The grid now renders at full height and <main> does the
+          scrolling; the day header above still sticks because `sticky` binds
+          to whichever ancestor actually scrolls. */}
+      <div ref={scrollerRef}>
         <div
           className="relative flex bg-white"
           style={{ height: totalHeight + 'px' }}
