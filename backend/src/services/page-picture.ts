@@ -68,7 +68,8 @@ export async function resolvePictureUrl(
   if (!url) return null;
   if (!isGraphPictureEndpoint(url)) return url;
 
-  const hit = cache.get(url);
+  const cacheKey = accessToken ? `tok:${url}` : url;
+  const hit = cache.get(cacheKey);
   if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.value;
 
   const sep = url.includes('?') ? '&' : '?';
@@ -92,7 +93,7 @@ export async function resolvePictureUrl(
     if (body.error || !body.data) return url;
 
     const value = body.data.is_silhouette ? null : url;
-    cache.set(url, { at: Date.now(), value });
+    cache.set(cacheKey, { at: Date.now(), value });
     return value;
   } catch {
     return url;
@@ -104,15 +105,29 @@ export async function resolvePictureUrl(
  * independent round-trips and a workspace can hold a dozen Pages.
  */
 export async function resolveAccountPictures<
-  T extends { platform: string; meta?: Record<string, unknown> | null }
->(accounts: T[]): Promise<T[]> {
+  T extends { id: string; platform: string; meta?: Record<string, unknown> | null }
+>(accounts: T[], getToken?: (accountId: string) => Promise<string | null>): Promise<T[]> {
   return Promise.all(
     accounts.map(async (a) => {
       const meta = a.meta as { picture_url?: string | null } | null | undefined;
       const current = meta?.picture_url;
       if (a.platform !== 'facebook_page' || !current) return a;
 
-      const resolved = await resolvePictureUrl(current);
+      // Probe WITH the Page's own token when we can get it. Unauthenticated,
+      // Graph returns the silhouette for any Page that isn't publicly
+      // visible — unpublished, restricted by age or country, or still in
+      // review — which would wrongly blank a real photo. With the token we
+      // get the truth.
+      let token: string | null = null;
+      if (getToken) {
+        try {
+          token = await getToken(a.id);
+        } catch {
+          token = null;
+        }
+      }
+
+      const resolved = await resolvePictureUrl(current, token);
       if (resolved === current) return a;
       return { ...a, meta: { ...(a.meta ?? {}), picture_url: resolved } };
     })

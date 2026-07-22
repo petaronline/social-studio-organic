@@ -90,7 +90,12 @@ organicRouter.get('/accounts', requireAuth, async (req: Request, res: Response) 
   // since lost its photo it now redirects to Meta's grey placeholder. Ask
   // Graph which case we're in and null the silhouettes out — see
   // services/page-picture.ts. Cached, concurrent, and non-fatal on failure.
-  res.json({ accounts: await resolveAccountPictures(accounts) });
+  res.json({
+    accounts: await resolveAccountPictures(accounts, async (id) => {
+      const withToken = await organicConn.getAccountWithToken(req.user!.id, id);
+      return withToken?.accessToken ?? null;
+    }),
+  });
 });
 
 // -----------------------------------------------------------------------
