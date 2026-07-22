@@ -42,6 +42,7 @@ import { query } from '../db/pool';
 import { fetchInsightsForTarget } from '../services/organic-insights';
 import * as metaSync from '../services/meta-sync';
 import { env } from '../utils/env';
+import { resolveAccountPictures } from '../services/page-picture';
 
 export const organicRouter = Router();
 
@@ -85,7 +86,11 @@ function getCallbackUri(): string {
 // -----------------------------------------------------------------------
 organicRouter.get('/accounts', requireAuth, async (req: Request, res: Response) => {
   const accounts = await organicConn.listAccounts(req.user!.id);
-  res.json({ accounts });
+  // A stored Page picture is a redirect endpoint, and for a Page that has
+  // since lost its photo it now redirects to Meta's grey placeholder. Ask
+  // Graph which case we're in and null the silhouettes out — see
+  // services/page-picture.ts. Cached, concurrent, and non-fatal on failure.
+  res.json({ accounts: await resolveAccountPictures(accounts) });
 });
 
 // -----------------------------------------------------------------------
