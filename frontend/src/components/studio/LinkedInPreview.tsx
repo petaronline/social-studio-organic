@@ -12,6 +12,7 @@
  * headline/follower line under it.
  */
 import { PdfFirstPage } from './PdfFirstPage';
+import { avatarInitials } from '@/components/AccountAvatar';
 import { useState } from 'react';
 import {
   ThumbsUp,
@@ -57,7 +58,7 @@ export function LinkedInPreview({
             <img src={authorPictureUrl} alt="" className="h-full w-full object-cover" />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-base font-semibold text-gray-500">
-              {name.charAt(0).toUpperCase()}
+              {avatarInitials(name)}
             </div>
           )}
         </div>

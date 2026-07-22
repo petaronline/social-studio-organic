@@ -64,7 +64,7 @@ import { FirstCommentField } from './FirstCommentField';
 import { CoverPicker } from './CoverPicker';
 import { TopicTagField } from './TopicTagField';
 import { ReplyChainComposer } from './ReplyChainComposer';
-import { isPlaceholderPicture } from '@/components/AccountAvatar';
+import { isPlaceholderPicture, avatarInitials } from '@/components/AccountAvatar';
 
 interface Toast { id: number; type: 'success' | 'error'; message: string; }
 let toastCounter = 0;
@@ -1422,7 +1422,7 @@ export function ComposerModal({ open, onClose, onPublished, draftId, ideaSeed, s
                             <img src={a.meta.picture_url} alt="" className="w-full h-full object-cover" />
                           ) : (
                             <span className="block w-full h-full flex items-center justify-center text-2xs font-semibold text-ink-muted">
-                              {(a.meta.name ?? '?').charAt(0).toUpperCase()}
+                              {avatarInitials(a.meta.name ?? a.meta.username ?? a.externalId)}
                             </span>
                           )}
                         </div>
@@ -1607,7 +1607,7 @@ export function ComposerModal({ open, onClose, onPublished, draftId, ideaSeed, s
                               <img src={a.meta.picture_url} alt="" className="w-full h-full object-cover" />
                             ) : (
                               <span className="block w-full h-full flex items-center justify-center text-2xs font-semibold text-ink-muted">
-                                {(a.meta.name ?? '?').charAt(0).toUpperCase()}
+                                {avatarInitials(a.meta.name ?? a.meta.username ?? a.externalId)}
                               </span>
                             )}
                           </div>
@@ -2186,7 +2186,7 @@ function ProfilePickerPopover({
                               <img src={a.meta.picture_url} alt="" className="w-full h-full object-cover" />
                             ) : (
                               <span className="block w-full h-full flex items-center justify-center text-2xs font-semibold text-ink-muted">
-                                {(a.meta.name ?? '?').charAt(0).toUpperCase()}
+                                {avatarInitials(a.meta.name ?? a.meta.username ?? a.externalId)}
                               </span>
                             )}
                           </div>

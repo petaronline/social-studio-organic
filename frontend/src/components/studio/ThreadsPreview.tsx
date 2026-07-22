@@ -14,7 +14,7 @@
  */
 
 import { useState } from 'react';
-import { isPlaceholderPicture } from '@/components/AccountAvatar';
+import { isPlaceholderPicture, avatarInitials } from '@/components/AccountAvatar';
 import {
   Heart,
   MessageCircle,
@@ -107,7 +107,7 @@ function ThreadsCard({
   hasReplyBelow = false,
 }: CardProps) {
   const [carouselIndex, setCarouselIndex] = useState(0);
-  const initial = (username || '?').charAt(0).toUpperCase();
+  const initial = avatarInitials(username);
   const safeBody = body || (isHead ? 'Your post body…' : 'Reply body…');
 
   return (

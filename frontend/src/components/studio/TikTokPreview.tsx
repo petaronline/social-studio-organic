@@ -13,7 +13,7 @@
  * canvas so the layout still reads.
  */
 import { useState } from 'react';
-import { isPlaceholderPicture } from '@/components/AccountAvatar';
+import { isPlaceholderPicture, avatarInitials } from '@/components/AccountAvatar';
 import { Heart, MessageCircle, Bookmark, Share2, Music2, Plus } from 'lucide-react';
 import type { PreviewMediaItem } from './FacebookPreview';
 import { FeedVideo } from './FeedVideo';
@@ -90,7 +90,7 @@ export function TikTokPreview({ username, pictureUrl, body, media }: Props) {
                 <img src={pictureUrl} alt="" className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-gray-600">
-                  {handle.charAt(0).toUpperCase()}
+                  {avatarInitials(handle)}
                 </div>
               )}
             </div>

@@ -7,7 +7,7 @@
  * video. Media is supplied as an ordered array of items.
  */
 import { useState } from 'react';
-import { isPlaceholderPicture } from '@/components/AccountAvatar';
+import { isPlaceholderPicture, avatarInitials } from '@/components/AccountAvatar';
 import {
   ThumbsUp,
   MessageCircle,
@@ -44,7 +44,7 @@ export function FacebookPreview({ pageName, pagePictureUrl, body, media }: Props
             <img src={pagePictureUrl} alt="" className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-sm font-semibold text-gray-500">
-              {pageName.charAt(0).toUpperCase()}
+              {avatarInitials(pageName)}
             </div>
           )}
         </div>

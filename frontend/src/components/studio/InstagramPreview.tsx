@@ -7,7 +7,7 @@
  * card layout is square media + heart/comment/send action row + caption.
  */
 import { useState } from 'react';
-import { isPlaceholderPicture } from '@/components/AccountAvatar';
+import { isPlaceholderPicture, avatarInitials } from '@/components/AccountAvatar';
 import {
   Heart,
   MessageCircle,
@@ -46,7 +46,7 @@ export function InstagramPreview({ username, pictureUrl, body, media }: Props) {
                 <img src={pictureUrl} alt="" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-[10px] font-semibold text-gray-500">
-                  {display.charAt(0).toUpperCase()}
+                  {avatarInitials(display)}
                 </div>
               )}
             </div>
