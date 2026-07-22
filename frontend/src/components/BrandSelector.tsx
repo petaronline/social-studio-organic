@@ -330,6 +330,36 @@ export function BrandSelector() {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const wrapRef = useRef<HTMLDivElement>(null);
 
+  /**
+   * Where to draw the dropdown. Measured from the trigger when it opens,
+   * because the menu is position:fixed (see the note at the render site).
+   * Clamped to the viewport so it never runs off the bottom or the right
+   * edge on a short window.
+   */
+  const [menuPos, setMenuPos] = useState({ left: 0, top: 0, maxHeight: 420 });
+  useEffect(() => {
+    if (!open || !wrapRef.current) return;
+    const update = () => {
+      const el = wrapRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const MENU_W = 320;
+      const GAP = 6;
+      const left = Math.min(Math.max(8, r.left), window.innerWidth - MENU_W - 8);
+      const top = r.bottom + GAP;
+      const maxHeight = Math.max(200, window.innerHeight - top - 12);
+      setMenuPos({ left, top, maxHeight });
+    };
+    update();
+    window.addEventListener('resize', update);
+    // Capture phase: catch scrolls in any ancestor, not just the window.
+    window.addEventListener('scroll', update, true);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', update, true);
+    };
+  }, [open]);
+
   // ─── Initial scope + cross-page sync ─────────────────────────────
   useEffect(() => {
     setScope(getActiveScope());
@@ -448,7 +478,31 @@ export function BrandSelector() {
       const ad = adAccts.find((x) => x.id === item.id);
       return ad ? ad.name : 'Account';
     }
-    return `${scope.items.length} selected`;
+    // Multi-select. Name the thing you actually picked rather than counting
+    // it — "2 selected" tells you nothing about what you're looking at. When
+    // several brands are in play there's no single honest name, so say so.
+    const brandItems = scope.items.filter((i) => i.type === 'brand');
+    const profileItems = scope.items.filter((i) => i.type === 'profile');
+
+    if (brandItems.length === 1) {
+      const b = brands.find((x) => x.id === brandItems[0].id);
+      if (b) return profileItems.length > 0 ? `${b.name} + profiles` : b.name;
+    }
+    if (brandItems.length === 0 && profileItems.length > 0) {
+      // All profiles under one brand? Then the brand is the honest label.
+      const parents = new Set(
+        profileItems
+          .map((i) => accounts.find((a) => a.id === i.id)?.brandId)
+          .filter((x): x is string => !!x)
+      );
+      if (parents.size === 1) {
+        const b = brands.find((x) => x.id === Array.from(parents)[0]);
+        if (b) return `${b.name} · ${profileItems.length} profiles`;
+      }
+      return `${profileItems.length} profiles`;
+    }
+    if (brandItems.length > 1) return `${brandItems.length} brands`;
+    return 'Multiple';
   })();
 
   const triggerCount = scope.type === 'multi' ? scope.items.length : 0;
@@ -500,26 +554,36 @@ export function BrandSelector() {
     <div className="relative" ref={wrapRef}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 pl-2.5 pr-2 py-1.5 rounded-full bg-white/70 border border-white/60 hover:bg-white transition-colors shadow-subtle"
+        className="flex w-full items-center gap-2 rounded-lg border border-line bg-surface py-2 pl-2.5 pr-2 text-left transition-colors hover:bg-surface-alt"
       >
         {scope.type === 'all' ? (
-          <Boxes size={13} className="text-ink-muted" />
+          <Boxes size={13} className="shrink-0 text-ink-subtle" />
         ) : (
-          <Folder size={13} className="text-ink-muted" />
+          <Folder size={13} className="shrink-0 text-ink-subtle" />
         )}
-        <span className="text-xs font-medium text-ink max-w-[170px] truncate">
+        <span className="min-w-0 flex-1 truncate text-xs font-semibold text-ink">
           {triggerLabel}
         </span>
         {triggerCount > 1 && (
-          <span className="text-2xs px-1.5 py-0.5 rounded-full bg-accent-subtle text-accent font-semibold">
+          <span className="rounded-full bg-cherry-wash px-1.5 py-0.5 font-mono text-2xs font-bold text-cherry-ink">
             {triggerCount}
           </span>
         )}
-        <ChevronDown size={13} className="text-ink-subtle" />
+        <ChevronDown size={13} className="shrink-0 text-ink-subtle" />
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 bg-white border border-line rounded-lg shadow-lift z-50 animate-fade-in flex flex-col max-h-[70vh]">
+        /*
+         * Fixed, not absolute. The selector now lives inside the sidebar,
+         * and the app panel around it is `overflow-hidden` to keep its
+         * rounded corners — which clipped an absolutely-positioned dropdown
+         * to a sliver. Fixed positioning takes it out of that clipping
+         * context; `menuPos` is measured from the trigger on open.
+         */
+        <div
+          className="fixed z-50 flex w-80 animate-fade-in flex-col rounded-xl border border-line bg-surface shadow-lift"
+          style={{ left: menuPos.left, top: menuPos.top, maxHeight: menuPos.maxHeight }}
+        >
           {/* Pinned search box */}
           <div className="px-2.5 py-2 border-b border-line/70">
             <div className="relative">

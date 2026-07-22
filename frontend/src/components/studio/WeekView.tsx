@@ -154,12 +154,25 @@ export function WeekView({ posts, weekStart, setWeekStart, onCancelSchedule, onP
   useEffect(() => {
     // The grid no longer scrolls itself, so scroll whichever ancestor does
     // (that's <main> in the authed shell) to bring 07:00 into view.
+    //
+    // Measured with getBoundingClientRect, NOT offsetTop: offsetTop is
+    // relative to the nearest positioned ancestor, which here is the app
+    // panel — several hundred pixels above <main>'s own origin. Adding the
+    // band offset to that overshot and dumped you at the bottom of the day.
     const el = scrollerRef.current;
     if (!el) return;
     const scroller = el.closest('main');
     if (!scroller) return;
-    const target = el.offsetTop + (bandOffsets[7] ?? 0);
-    scroller.scrollTo({ top: Math.max(0, target - 120), behavior: 'auto' });
+
+    const offsetWithinScroller =
+      el.getBoundingClientRect().top -
+      scroller.getBoundingClientRect().top +
+      scroller.scrollTop;
+
+    // A small lead-in so the 06:00 row stays visible above 07:00 and the
+    // grid doesn't look like it starts mid-cell.
+    const target = offsetWithinScroller + (bandOffsets[7] ?? 0) - 24;
+    scroller.scrollTo({ top: Math.max(0, target), behavior: 'auto' });
   }, [weekStart, bandOffsets]);
 
   // ─── Navigation
