@@ -14,6 +14,7 @@
 import { query } from '../db/pool';
 import { decryptSecret } from '../utils/crypto';
 import { env } from '../utils/env';
+import { sanitizeRedirectOverride } from '../utils/redirect-uri';
 
 async function getKeyValue(key: string): Promise<string | null> {
   const { rows } = await query<{ value: string | null }>(
@@ -57,7 +58,7 @@ export async function getTikTokAppCredentials(): Promise<TikTokAppCredentials | 
     clientKey,
     clientSecret,
     redirectUri:
-      redirectOverride ||
+      sanitizeRedirectOverride(redirectOverride, 'tiktok') ||
       `${env.FRONTEND_URL}/api/organic/tiktok/callback`,
   };
 }
@@ -85,7 +86,7 @@ export async function getDisplayableTikTokConfig(): Promise<{
   return {
     clientKey,
     hasSecret: !!secret,
-    redirectUri: redirectOverride || `${env.FRONTEND_URL}/api/organic/tiktok/callback`,
+    redirectUri: sanitizeRedirectOverride(redirectOverride, 'tiktok') || `${env.FRONTEND_URL}/api/organic/tiktok/callback`,
   };
 }
 

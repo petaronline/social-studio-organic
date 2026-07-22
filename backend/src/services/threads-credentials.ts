@@ -13,6 +13,7 @@
 import { query } from '../db/pool';
 import { encryptSecret, decryptSecret } from '../utils/crypto';
 import { env } from '../utils/env';
+import { sanitizeRedirectOverride } from '../utils/redirect-uri';
 
 // ─── Low-level getters ────────────────────────────────────────────────
 
@@ -60,9 +61,8 @@ export async function getThreadsAppCredentials(): Promise<ThreadsAppCredentials 
     appId,
     appSecret,
     redirectUri:
-      redirectOverride && redirectOverride.trim().length > 0
-        ? redirectOverride
-        : `${env.FRONTEND_URL}/api/organic/threads/callback`,
+      sanitizeRedirectOverride(redirectOverride, 'threads') ??
+      `${env.FRONTEND_URL}/api/organic/threads/callback`,
   };
 }
 
@@ -87,9 +87,8 @@ export async function getDisplayableThreadsConfig(): Promise<{
     appId,
     hasSecret: appSecret !== null && appSecret.length > 0,
     redirectUri:
-      redirectOverride && redirectOverride.trim().length > 0
-        ? redirectOverride
-        : `${env.FRONTEND_URL}/api/organic/threads/callback`,
+      sanitizeRedirectOverride(redirectOverride, 'threads') ??
+      `${env.FRONTEND_URL}/api/organic/threads/callback`,
   };
 }
 

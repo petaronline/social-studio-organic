@@ -19,6 +19,7 @@
 import { query } from '../db/pool';
 import { decryptSecret, encryptSecret } from '../utils/crypto';
 import { env } from '../utils/env';
+import { sanitizeRedirectOverride } from '../utils/redirect-uri';
 
 export type LinkedInAppKind = 'profile' | 'org';
 
@@ -88,7 +89,7 @@ export async function getLinkedInAppCredentials(
   return {
     clientId,
     clientSecret,
-    redirectUri: redirectOverride || k.defaultCallback,
+    redirectUri: sanitizeRedirectOverride(redirectOverride, 'linkedin') || k.defaultCallback,
   };
 }
 
@@ -116,7 +117,7 @@ export async function getDisplayableLinkedInConfig(
   return {
     clientId,
     hasSecret: !!secret,
-    redirectUri: redirectOverride || k.defaultCallback,
+    redirectUri: sanitizeRedirectOverride(redirectOverride, 'linkedin') || k.defaultCallback,
   };
 }
 
