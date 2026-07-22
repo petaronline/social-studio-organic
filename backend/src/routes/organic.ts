@@ -61,6 +61,11 @@ const ORGANIC_SCOPES_FB_PAGE = [
   'pages_manage_engagement', // posting comments on owned pages (Patch 4.31 first-comment)
   'pages_read_user_content',  // POST /{video-id}/thumbnails for custom Reel covers (Patch 4.33)
   'pages_show_list',
+  // Facebook Page POST insights (/{post-id}/insights) require read_insights.
+  // It was never requested, so Page analytics could not have worked at any
+  // point — pages_read_engagement covers reactions and comments on the post
+  // object, but not the insights edge.
+  'read_insights',
 ];
 
 const ORGANIC_SCOPES_INSTAGRAM = [
@@ -74,7 +79,6 @@ const ORGANIC_SCOPES_INSTAGRAM = [
   'instagram_content_publish',
   'instagram_manage_comments', // first-comment posting on IG media (Patch 4.31)
   'instagram_manage_insights', // organic analytics — IG media insights (Patch 4.57)
-  'instagram_manage_insights',
 ];
 
 function getCallbackUri(): string {
