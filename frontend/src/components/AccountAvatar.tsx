@@ -1,52 +1,58 @@
 /**
- * Avatar for an ad account.
+ * Avatar for a connected social profile.
  *
- * If a `pictureUrl` is provided, renders that image. Otherwise renders
- * the first letter of the name on a colored circle, deterministic per name.
+ * Renders the profile picture when there is one. When there isn't — which is
+ * often, since Meta withholds Page pictures for plenty of accounts — it falls
+ * back to TWO letters on the platform's own tint, the same treatment the
+ * approved design uses in the profile rail.
  *
- * Handles image-load errors by falling back to initials at runtime.
+ * Two letters, not one: with a dozen Facebook Pages in a workspace, single
+ * initials collide constantly ("T" for Teen Star, Tracara and The Berlin).
+ * The tint comes from the platform rather than a hash of the name, so an
+ * avatar always agrees with the colour that post chips, stripes and the rail
+ * use for the same network — a hashed palette looked arbitrary next to them.
+ *
+ * Falls back at runtime too: a broken image URL flips to initials on error.
  */
 'use client';
 
 import { useState } from 'react';
+import { platformVisual } from '@/lib/platform-visuals';
 
 interface Props {
   name: string;
   pictureUrl: string | null;
+  /** Platform key — drives the fallback tint. Omit for a neutral fallback. */
+  platform?: string | null;
   size?: number;
+  /** `rounded` matches the rail's squircle; `circle` suits inline rows. */
+  shape?: 'circle' | 'rounded';
   className?: string;
 }
 
-// 8 muted tone-on-tone palettes that don't clash with the electric blue accent
-const PALETTES = [
-  { bg: '#FEF2F2', fg: '#B91C1C' }, // red
-  { bg: '#FFF7ED', fg: '#C2410C' }, // orange
-  { bg: '#FEFCE8', fg: '#A16207' }, // yellow
-  { bg: '#F0FDF4', fg: '#15803D' }, // green
-  { bg: '#ECFEFF', fg: '#0E7490' }, // cyan
-  { bg: '#EFF6FF', fg: '#1D4ED8' }, // blue (matches accent)
-  { bg: '#F5F3FF', fg: '#6D28D9' }, // violet
-  { bg: '#FDF4FF', fg: '#A21CAF' }, // fuchsia
-];
-
-function paletteFor(name: string) {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = (hash * 31 + name.charCodeAt(i)) | 0;
+/** Up to two letters: initials of the first two words, else the first two
+ *  characters. Digits are kept — plenty of handles start with them. */
+export function avatarInitials(name: string): string {
+  const trimmed = (name ?? '').trim();
+  if (!trimmed) return '??';
+  const words = trimmed.split(/\s+/).filter(Boolean);
+  if (words.length >= 2) {
+    return (words[0][0] + words[1][0]).toUpperCase();
   }
-  return PALETTES[Math.abs(hash) % PALETTES.length];
+  return trimmed.slice(0, 2).toUpperCase();
 }
 
-function initialOf(name: string): string {
-  const trimmed = name.trim();
-  if (trimmed.length === 0) return '?';
-  return trimmed[0].toUpperCase();
-}
-
-export function AccountAvatar({ name, pictureUrl, size = 24, className }: Props) {
+export function AccountAvatar({
+  name,
+  pictureUrl,
+  platform,
+  size = 24,
+  shape = 'circle',
+  className,
+}: Props) {
   const [imgFailed, setImgFailed] = useState(false);
-
   const showImage = pictureUrl && !imgFailed;
+  const radius = shape === 'circle' ? '9999px' : `${Math.max(6, size * 0.3)}px`;
 
   if (showImage) {
     return (
@@ -56,30 +62,35 @@ export function AccountAvatar({ name, pictureUrl, size = 24, className }: Props)
         width={size}
         height={size}
         onError={() => setImgFailed(true)}
-        className={['rounded-full object-cover shrink-0', className].filter(Boolean).join(' ')}
-        style={{ width: size, height: size }}
+        className={['shrink-0 object-cover', className].filter(Boolean).join(' ')}
+        style={{ width: size, height: size, borderRadius: radius }}
       />
     );
   }
 
-  // Fallback: colored circle with initial
-  const palette = paletteFor(name);
-  const fontSize = Math.max(10, Math.floor(size * 0.45));
+  const pv = platformVisual(platform);
+  // Two glyphs need more room than one, so this runs a touch smaller than a
+  // single-initial avatar would.
+  const fontSize = Math.max(9, Math.floor(size * 0.36));
 
   return (
     <span
       aria-hidden
-      className={['inline-flex items-center justify-center rounded-full shrink-0 font-display font-bold', className].filter(Boolean).join(' ')}
+      className={['inline-flex shrink-0 items-center justify-center font-mono font-bold', className]
+        .filter(Boolean)
+        .join(' ')}
       style={{
         width: size,
         height: size,
-        backgroundColor: palette.bg,
-        color: palette.fg,
+        borderRadius: radius,
+        backgroundColor: pv.bg,
+        color: pv.ink,
         fontSize,
         lineHeight: 1,
+        letterSpacing: '-0.02em',
       }}
     >
-      {initialOf(name)}
+      {avatarInitials(name)}
     </span>
   );
 }

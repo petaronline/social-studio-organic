@@ -349,10 +349,16 @@ function AccountRow({
 
   return (
     <li className="flex items-center gap-4 px-6 py-3.5">
-      {/* Avatar — AccountAvatar falls back to a colored initial if the
-          picture URL fails to load (e.g. an expired Meta signed URL). */}
+      {/* Falls back to two letters on the platform tint when there's no
+          picture, or when a Meta signed URL has expired. */}
       <div className="shrink-0">
-        <AccountAvatar name={displayName ?? '?'} pictureUrl={pictureUrl ?? null} size={36} />
+        <AccountAvatar
+          name={displayName ?? account.externalId}
+          pictureUrl={pictureUrl ?? null}
+          platform={account.platform}
+          size={36}
+          shape="rounded"
+        />
       </div>
 
       {/* Info */}

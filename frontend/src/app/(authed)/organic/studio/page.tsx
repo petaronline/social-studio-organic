@@ -131,24 +131,6 @@ export default function StudioPage() {
     return first || null;
   }, [user]);
 
-  /**
-   * ISO week number for the sticker beside the title. Social teams plan and
-   * talk in week numbers ("push it to week 31"), so it's the one bit of
-   * chrome worth the flourish.
-   *
-   * ISO 8601: weeks start Monday and week 1 is the one containing the first
-   * Thursday of the year — which is why this jumps to the Thursday of the
-   * current week before counting. Naive day-of-year/7 maths is off by one
-   * around New Year.
-   */
-  const weekBadge = useMemo(() => {
-    const d = new Date();
-    const thursday = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-    thursday.setUTCDate(thursday.getUTCDate() + 4 - (thursday.getUTCDay() || 7));
-    const yearStart = new Date(Date.UTC(thursday.getUTCFullYear(), 0, 1));
-    const week = Math.ceil(((thursday.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
-    return `week ${week}`;
-  }, []);
 
   return (
     <div>
@@ -159,7 +141,6 @@ export default function StudioPage() {
         <PageHeader
           icon={Sprout}
           title={firstName ? `Hi ${firstName}` : 'Studio'}
-          badge={weekBadge}
           description="Compose, preview and publish across every connected profile."
           tint={PAGE_TINTS.studio}
         />

@@ -789,9 +789,15 @@ function AccountCard({
       <GripVertical size={14} className="text-ink-subtle shrink-0" />
 
       <div className="relative shrink-0">
-        {/* AccountAvatar falls back to a colored initial if the picture URL
-            fails to load (e.g. an expired Meta signed URL). */}
-        <AccountAvatar name={displayName ?? '?'} pictureUrl={pictureUrl ?? null} size={40} />
+        {/* Falls back to two letters on the platform tint when there's no
+            picture, or when a Meta signed URL has expired. */}
+        <AccountAvatar
+          name={displayName ?? account.externalId}
+          pictureUrl={pictureUrl ?? null}
+          platform={account.platform}
+          size={40}
+          shape="rounded"
+        />
         <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-white flex items-center justify-center border border-white">
           <PlatformIcon size={11} style={{ color: platform?.iconColor }} strokeWidth={2.5} />
         </div>

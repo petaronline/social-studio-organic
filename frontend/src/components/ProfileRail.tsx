@@ -24,6 +24,7 @@ import { usePathname } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import { organicAccounts, ApiError, type OrganicAccount } from '@/lib/api';
 import { platformVisual } from '@/lib/platform-visuals';
+import { AccountAvatar } from '@/components/AccountAvatar';
 import {
   getActiveScope,
   setActiveScope,
@@ -31,14 +32,6 @@ import {
   VASS_ACTIVE_SCOPE_EVENT,
   type ActiveScope,
 } from '@/components/BrandSelector';
-
-/** Two-letter fallback when an account has no picture. */
-function initials(a: OrganicAccount): string {
-  const name = a.meta?.name || a.meta?.username || a.externalId || '?';
-  const words = name.trim().split(/\s+/).filter(Boolean);
-  if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
-}
 
 export function ProfileRail() {
   const pathname = usePathname();
@@ -134,12 +127,13 @@ export function ProfileRail() {
             ].join(' ')}
             style={{ backgroundColor: pv.bg, color: pv.ink }}
           >
-            {pic ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={pic} alt="" className="h-full w-full rounded-[0.4rem] object-cover" />
-            ) : (
-              <span className="font-mono text-2xs font-bold">{initials(a)}</span>
-            )}
+            <AccountAvatar
+              name={name}
+              pictureUrl={pic ?? null}
+              platform={a.platform}
+              size={34}
+              shape="rounded"
+            />
 
             {/* Platform tag, so two profiles of the same brand on different
                 networks stay distinguishable at 38px. */}

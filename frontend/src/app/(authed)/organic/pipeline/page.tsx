@@ -435,10 +435,31 @@ export default function OrganicPipelinePage() {
     setFocusedPost(post);
   };
 
+  /**
+   * ISO week number for the sticker beside the title. It belongs on Pipeline
+   * rather than Studio: this is the page showing a week, and social teams
+   * plan in week numbers ("push it to 31"). Only shown in week view — on a
+   * list or a month it would be describing something you can't see.
+   *
+   * ISO 8601: weeks start Monday and week 1 contains the first Thursday of
+   * the year, which is why this hops to the Thursday of the reference week
+   * before counting. Naive day-of-year/7 maths is off by one around New Year.
+   */
+  const weekBadge = useMemo(() => {
+    if (view !== 'week') return undefined;
+    const d = refWeekStart;
+    const thursday = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    thursday.setUTCDate(thursday.getUTCDate() + 4 - (thursday.getUTCDay() || 7));
+    const yearStart = new Date(Date.UTC(thursday.getUTCFullYear(), 0, 1));
+    const week = Math.ceil(((thursday.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+    return `week ${week}`;
+  }, [view, refWeekStart]);
+
   // ─── Render ───
   return (
     <div>
       <PageHeader
+        badge={weekBadge}
         icon={Workflow}
         title="Pipeline"
         description="Scheduled + published posts across your connected accounts."
@@ -608,23 +629,32 @@ export default function OrganicPipelinePage() {
 
 // ─── View toggle: List · Week · Month ───────────────────────────────
 
+/**
+ * View switcher — the `.seg` segmented control from the design system.
+ *
+ * Was three cherry-filled buttons with icons, which put the loudest colour
+ * in the app on a low-stakes preference and competed with "New post" right
+ * beside it. A segmented control reads as "pick one of three" on sight, and
+ * the icons are dropped: three words that short don't need them.
+ */
 function ViewToggle({ view, setView }: { view: ViewMode; setView: (v: ViewMode) => void }) {
-  const Btn = ({ v, label, Icon }: { v: ViewMode; label: string; Icon: typeof List }) => (
-    <button
-      onClick={() => setView(v)}
-      className={[
-        'flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-colors',
-        view === v ? 'bg-accent text-white shadow-card' : 'text-ink-muted hover:text-ink',
-      ].join(' ')}
-    >
-      <Icon size={13} /> {label}
-    </button>
-  );
+  const items: Array<{ v: ViewMode; label: string }> = [
+    { v: 'list', label: 'List' },
+    { v: 'week', label: 'Week' },
+    { v: 'month', label: 'Month' },
+  ];
   return (
-    <div className="flex items-center bg-white/72 backdrop-blur-card border border-white/60 rounded-lg p-0.5 shadow-subtle">
-      <Btn v="list"  label="List"  Icon={List} />
-      <Btn v="week"  label="Week"  Icon={CalendarRange} />
-      <Btn v="month" label="Month" Icon={CalendarIcon} />
+    <div className="seg" role="group" aria-label="View">
+      {items.map(({ v, label }) => (
+        <button
+          key={v}
+          onClick={() => setView(v)}
+          aria-pressed={view === v}
+          className={['seg-item', view === v ? 'seg-item-on' : ''].join(' ')}
+        >
+          {label}
+        </button>
+      ))}
     </div>
   );
 }
