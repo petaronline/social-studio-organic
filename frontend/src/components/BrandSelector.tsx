@@ -62,6 +62,7 @@ import {
   ApiError,
 } from '@/lib/api';
 import { Megaphone } from 'lucide-react';
+import { isPlaceholderPicture } from '@/components/AccountAvatar';
 
 // ─── Storage keys & event names ──────────────────────────────────────
 
@@ -746,7 +747,9 @@ function MemberAvatar({
   name: string;
 }) {
   const [failed, setFailed] = useState(false);
-  if (pictureUrl && !failed) {
+  // Meta serves a real image for pictureless profiles (their grey "?"), so
+  // it never triggers onError — see isPlaceholderPicture.
+  if (pictureUrl && !failed && !isPlaceholderPicture(pictureUrl)) {
     // eslint-disable-next-line @next/next/no-img-element
     return (
       <img

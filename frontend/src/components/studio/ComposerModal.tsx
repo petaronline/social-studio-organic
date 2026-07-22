@@ -64,6 +64,7 @@ import { FirstCommentField } from './FirstCommentField';
 import { CoverPicker } from './CoverPicker';
 import { TopicTagField } from './TopicTagField';
 import { ReplyChainComposer } from './ReplyChainComposer';
+import { isPlaceholderPicture } from '@/components/AccountAvatar';
 
 interface Toast { id: number; type: 'success' | 'error'; message: string; }
 let toastCounter = 0;
@@ -1416,7 +1417,7 @@ export function ComposerModal({ open, onClose, onPublished, draftId, ideaSeed, s
                     >
                       <div className="relative">
                         <div className="w-6 h-6 rounded-full overflow-hidden bg-white">
-                          {a.meta.picture_url ? (
+                          {a.meta.picture_url && !isPlaceholderPicture(a.meta.picture_url) ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={a.meta.picture_url} alt="" className="w-full h-full object-cover" />
                           ) : (
@@ -1601,7 +1602,7 @@ export function ComposerModal({ open, onClose, onPublished, draftId, ideaSeed, s
                           title={a.meta.name ?? a.meta.username ?? PLATFORM_BY_ID[a.platform]?.label ?? a.externalId}
                         >
                           <div className="w-full h-full bg-surface-hover">
-                            {a.meta.picture_url ? (
+                            {a.meta.picture_url && !isPlaceholderPicture(a.meta.picture_url) ? (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img src={a.meta.picture_url} alt="" className="w-full h-full object-cover" />
                             ) : (
@@ -2180,7 +2181,7 @@ function ProfilePickerPopover({
                       >
                         <div className="relative shrink-0">
                           <div className="w-7 h-7 rounded-full overflow-hidden bg-surface-hover">
-                            {a.meta.picture_url ? (
+                            {a.meta.picture_url && !isPlaceholderPicture(a.meta.picture_url) ? (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img src={a.meta.picture_url} alt="" className="w-full h-full object-cover" />
                             ) : (

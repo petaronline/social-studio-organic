@@ -32,6 +32,7 @@ import {
   UNASSIGNED_ID,
 } from '@/components/settings/BrandGroupingRail';
 import { BrandHashtagsSection } from '@/components/settings/BrandHashtagsSection';
+import { AccountAvatar } from '@/components/AccountAvatar';
 
 interface Toast { id: number; type: 'success' | 'error'; message: string; }
 let toastCounter = 0;
@@ -325,14 +326,17 @@ function UnifiedAccountCard({
       onDragStart={(e) => onDragStart(e, acct)}
       className="flex items-center gap-3 bg-surface border border-line rounded-lg shadow-subtle px-4 py-3 cursor-grab active:cursor-grabbing"
     >
-      {acct.pictureUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={acct.pictureUrl} alt="" className="w-9 h-9 rounded-full shrink-0 object-cover" />
-      ) : (
-        <div className="w-9 h-9 rounded-full shrink-0 bg-surface-alt flex items-center justify-center">
-          <Icon size={15} className="text-ink-subtle" />
-        </div>
-      )}
+      {/* AccountAvatar handles both "no picture" and "Meta's placeholder
+          picture", so a pictureless Page shows letters rather than a grey
+          question mark. */}
+      <AccountAvatar
+        name={acct.name}
+        pictureUrl={acct.pictureUrl}
+        platform={acct.kind === 'organic' ? acct.platform : null}
+        size={36}
+        shape="rounded"
+      />
+
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium text-ink truncate">{acct.name}</div>
         <div className="text-xs text-ink-subtle">{acct.sub}</div>

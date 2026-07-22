@@ -622,7 +622,7 @@ function BrandRow({
       onDrop={onDrop}
       className={[
         'group flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer transition-colors',
-        isActive ? 'bg-cherry-wash text-cherry-ink' : 'text-ink hover:bg-white/60',
+        isActive ? 'bg-cherry-wash text-cherry-ink' : 'text-ink hover:bg-surface',
         isDragOver ? 'ring-2 ring-accent/50 bg-cherry-wash' : '',
       ].join(' ')}
       onClick={onClick}
@@ -1035,7 +1035,7 @@ function BrandHashtagsSection({
             }}
             onBlur={commitDraft}
             placeholder={tags.length === 0 ? 'Type a tag and press Enter…' : '+ add hashtag'}
-            className="flex-1 min-w-[140px] px-2 py-1 text-xs bg-white/60 border border-dashed border-line rounded-full focus:outline-none focus:border-accent focus:bg-white placeholder:text-ink-subtle"
+            className="flex-1 min-w-[140px] px-2 py-1 text-xs bg-surface border border-dashed border-line rounded-full focus:outline-none focus:border-accent focus:bg-white placeholder:text-ink-subtle"
           />
         )}
       </div>

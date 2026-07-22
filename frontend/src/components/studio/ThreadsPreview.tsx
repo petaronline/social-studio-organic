@@ -14,6 +14,7 @@
  */
 
 import { useState } from 'react';
+import { isPlaceholderPicture } from '@/components/AccountAvatar';
 import {
   Heart,
   MessageCircle,
@@ -116,7 +117,7 @@ function ThreadsCard({
             a reply chain. */}
         <div className="flex flex-col items-center shrink-0">
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 overflow-hidden flex items-center justify-center">
-            {pictureUrl ? (
+            {pictureUrl && !isPlaceholderPicture(pictureUrl) ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={pictureUrl} alt={username} className="w-full h-full object-cover" />
             ) : (

@@ -67,7 +67,7 @@ export function BrandRow({
       onDrop={onDrop}
       className={[
         'group flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer transition-colors',
-        isActive ? 'bg-cherry-wash text-cherry-ink' : 'text-ink hover:bg-white/60',
+        isActive ? 'bg-cherry-wash text-cherry-ink' : 'text-ink hover:bg-surface',
         isDragOver ? 'ring-2 ring-accent/50 bg-cherry-wash' : '',
       ].join(' ')}
       onClick={onClick}

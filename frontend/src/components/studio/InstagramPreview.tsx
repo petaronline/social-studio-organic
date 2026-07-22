@@ -7,6 +7,7 @@
  * card layout is square media + heart/comment/send action row + caption.
  */
 import { useState } from 'react';
+import { isPlaceholderPicture } from '@/components/AccountAvatar';
 import {
   Heart,
   MessageCircle,
@@ -40,7 +41,7 @@ export function InstagramPreview({ username, pictureUrl, body, media }: Props) {
         <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-tr from-[#fdd835] via-[#e1306c] to-[#833ab4] p-[1.5px] shrink-0">
           <div className="w-full h-full rounded-full bg-white p-[1.5px]">
             <div className="w-full h-full rounded-full overflow-hidden bg-gray-200">
-              {pictureUrl ? (
+              {pictureUrl && !isPlaceholderPicture(pictureUrl) ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={pictureUrl} alt="" className="w-full h-full object-cover" />
               ) : (

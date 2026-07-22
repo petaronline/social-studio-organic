@@ -13,6 +13,7 @@
  * canvas so the layout still reads.
  */
 import { useState } from 'react';
+import { isPlaceholderPicture } from '@/components/AccountAvatar';
 import { Heart, MessageCircle, Bookmark, Share2, Music2, Plus } from 'lucide-react';
 import type { PreviewMediaItem } from './FacebookPreview';
 import { FeedVideo } from './FeedVideo';
@@ -84,7 +85,7 @@ export function TikTokPreview({ username, pictureUrl, body, media }: Props) {
         <div className="absolute bottom-3 right-2 flex flex-col items-center gap-4 text-white pointer-events-none">
           <div className="relative mb-1">
             <div className="h-10 w-10 overflow-hidden rounded-full border-2 border-white bg-gray-300">
-              {pictureUrl ? (
+              {pictureUrl && !isPlaceholderPicture(pictureUrl) ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={pictureUrl} alt="" className="h-full w-full object-cover" />
               ) : (

@@ -406,8 +406,8 @@ export default function TeamPage() {
  */
 function TesterOnboardingInfo() {
   return (
-    <div className="rounded-lg border border-blue-200 bg-blue-50/70 p-5 mb-6 flex gap-3">
-      <div className="shrink-0 w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
+    <div className="rounded-lg border border-line bg-surface-alt p-5 mb-6 flex gap-3">
+      <div className="shrink-0 w-7 h-7 rounded-lg bg-platform-fb text-platform-fb-ink flex items-center justify-center">
         <Info size={14} />
       </div>
       <div className="flex-1 text-sm leading-relaxed space-y-3">
@@ -433,7 +433,7 @@ function TesterOnboardingInfo() {
             Send them the email + temporary password out of band.
           </li>
         </ol>
-        <div className="rounded-lg bg-white/60 border border-blue-100 px-3 py-2 text-xs text-ink-muted">
+        <div className="rounded-lg bg-surface border border-line px-3 py-2 text-xs text-ink-muted">
           <span className="font-medium text-ink">Their pages stay theirs.</span>{' '}
           When they click "Connect Facebook", they sign in with their own Facebook account.
           They see only their own pages and profiles — yours stay invisible to them.
@@ -461,9 +461,9 @@ function CreatedCredentialsCard({
   const both = `Email: ${email}\nPassword: ${password}\nSign in at: ${typeof window !== 'undefined' ? window.location.origin : ''}/login`;
 
   return (
-    <div className="rounded-lg border border-green-200 bg-green-50/70 p-5 mb-6">
+    <div className="rounded-lg border border-success/30 bg-success/5 p-5 mb-6">
       <div className="flex items-start gap-3">
-        <div className="shrink-0 w-7 h-7 rounded-lg bg-green-100 text-green-700 flex items-center justify-center">
+        <div className="shrink-0 w-7 h-7 rounded-lg bg-success/15 text-success flex items-center justify-center">
           <CheckCircle2 size={14} />
         </div>
         <div className="flex-1">
@@ -501,7 +501,7 @@ function CredRow({
   copied: boolean;
 }) {
   return (
-    <div className="flex items-center gap-2 bg-white/60 border border-green-100 rounded-lg px-3 py-1.5">
+    <div className="flex items-center gap-2 bg-surface border border-success/25 rounded-lg px-3 py-1.5">
       <span className="text-ink-subtle uppercase tracking-wider w-[70px] shrink-0">{label}</span>
       <span className="text-ink flex-1 truncate select-all">{value}</span>
       <button

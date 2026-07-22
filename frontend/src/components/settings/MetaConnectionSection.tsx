@@ -339,7 +339,7 @@ function SettingsCard({ children }: { children: React.ReactNode }) {
 
 function ConnectedBadge({ userName }: { userName: string }) {
   return (
-    <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-sm px-3 py-2 text-sm">
+    <div className="inline-flex items-center gap-2 bg-success/5 border border-success/30 rounded-sm px-3 py-2 text-sm">
       <CheckCircle2 size={16} className="text-success" />
       <span className="text-ink">
         Connected as <strong>{userName}</strong>
@@ -374,7 +374,7 @@ function Banner({
 }) {
   const cls =
     kind === 'success'
-      ? 'bg-green-50 border-green-200 text-ink'
+      ? 'bg-success/5 border-success/30 text-ink'
       : 'bg-red-50 border-red-200 text-ink';
   return (
     <div

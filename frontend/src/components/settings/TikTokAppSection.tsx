@@ -110,8 +110,8 @@ export function TikTokAppSection() {
       )}
 
       {saved && (
-        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-ink flex items-center gap-2">
-          <CheckCircle2 size={14} className="text-green-600" />
+        <div className="rounded-lg border border-success/30 bg-success/5 px-4 py-3 text-sm text-ink flex items-center gap-2">
+          <CheckCircle2 size={14} className="text-success" />
           Saved. Members can now connect TikTok.
         </div>
       )}
@@ -121,7 +121,7 @@ export function TikTokAppSection() {
         <div className="flex items-center gap-2 text-sm">
           {status?.hasCredentials ? (
             <>
-              <CheckCircle2 size={14} className="text-green-600" />
+              <CheckCircle2 size={14} className="text-success" />
               <span className="text-ink">TikTok App configured</span>
             </>
           ) : (
