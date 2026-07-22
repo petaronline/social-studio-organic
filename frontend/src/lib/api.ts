@@ -312,8 +312,54 @@ export interface OrganicAccount {
   updatedAt: string;
 }
 
+
+/* ============================================================
+   Placeholder profile pictures
+   ============================================================
+   Meta serves a REAL image for profiles that have no picture — a grey
+   silhouette or question mark from their static asset host. It loads fine,
+   so no <img onError> ever fires, and every component that renders a
+   picture happily shows their placeholder instead of our initials.
+
+   Guarding each render site does not work: there are a dozen of them and
+   any new one starts out wrong. So the URL is stripped HERE, at the single
+   point where account data enters the app. Downstream code sees
+   `picture_url: null` and takes its own initials path, whichever component
+   it is.
+
+   Matching on path, not filename — Meta rotates the asset ids.
+   ============================================================ */
+const PLACEHOLDER_PICTURE_PATTERNS = [
+  '/t1.30497-1/',    // Meta CDN "no profile photo" directory
+  'rsrc.php',        // static.xx.fbcdn.net sprite host (the grey .gif)
+  '/static/images/', // occasional default-avatar path
+];
+
+export function isPlaceholderPictureUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  return PLACEHOLDER_PICTURE_PATTERNS.some((p) => url.includes(p));
+}
+
+/** Null out placeholder pictures on a single account. */
+function scrubAccount<T extends { meta?: { picture_url?: string | null } | null }>(a: T): T {
+  if (a?.meta && isPlaceholderPictureUrl(a.meta.picture_url)) {
+    return { ...a, meta: { ...a.meta, picture_url: null } };
+  }
+  return a;
+}
+
+/** Null out placeholder pictures across a list response. */
+function scrubAccounts<T extends { meta?: { picture_url?: string | null } | null }>(
+  list: T[]
+): T[] {
+  return list.map(scrubAccount);
+}
+
 export const organicAccounts = {
-  list: () => api.get<{ accounts: OrganicAccount[] }>('/organic/accounts'),
+  list: () =>
+    api
+      .get<{ accounts: OrganicAccount[] }>('/organic/accounts')
+      .then((r) => ({ ...r, accounts: scrubAccounts(r.accounts) })),
   getOAuthUrl: (platform: OrganicPlatform) =>
     api.get<{ url: string }>(`/organic/accounts/oauth-url?platform=${platform}`),
   disconnect: (id: string) =>
