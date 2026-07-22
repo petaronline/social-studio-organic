@@ -2,7 +2,7 @@
 
 /**
  * BrandSelector — the canonical multi-select scope picker in the
- * TopBar (Patch 4.37.5 rework).
+ * sidebar, under the logo (Patch 4.37.5 rework, relocated in the redesign).
  *
  * The selector lets the user pick ANY combination of:
  *   - Brands (Groups)

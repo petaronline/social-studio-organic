@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Notifications bell for the TopBar.
+ * Notifications bell. Lives in the sidebar user card — the app has no top bar.
  *
  * Polls /notifications every 60s, shows an unread badge, and opens a dropdown
  * listing recent events (launch finished/failed, Comment Guard hides, expiring

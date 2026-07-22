@@ -22,9 +22,11 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Settings,
   Users,
+  LogOut,
   Sprout,
   ChevronDown,
   PenLine,
@@ -35,7 +37,9 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { StudioLogo } from './StudioLogo';
-import { branding, CurrentUser } from '@/lib/api';
+import { NotificationsBell } from './NotificationsBell';
+import { BrandSelector } from './BrandSelector';
+import { auth, branding, CurrentUser } from '@/lib/api';
 
 // ─── Active style palette ────────────────────────────────────────────────────
 
@@ -98,6 +102,16 @@ const SECONDARY_NAV: NavItem[] = [
 
 export function Sidebar({ user }: { user: CurrentUser }) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  async function handleLogout() {
+    try {
+      await auth.logout();
+    } finally {
+      router.push('/login');
+      router.refresh();
+    }
+  }
 
   const filterByRole = (items: NavItem[]) =>
     items.filter((item) => !item.adminOnly || user.role === 'admin');
@@ -138,6 +152,13 @@ export function Sidebar({ user }: { user: CurrentUser }) {
         )}
       </div>
 
+      {/* Brand scope. It belongs beside the nav, not in a top bar: it governs
+          every view below it, and the profile rail to its right is the same
+          filter one level finer. */}
+      <div className="px-3 pb-4">
+        <BrandSelector />
+      </div>
+
       {/* The two groups are labelled: "Work" is what you do all day,
           "Workspace" is what you configure occasionally. Splitting them
           stops Settings competing with Studio for attention. */}
@@ -151,8 +172,12 @@ export function Sidebar({ user }: { user: CurrentUser }) {
         <NavList items={secondary} pathname={pathname} />
       </nav>
 
+      {/* User card. The app has no top bar — the approved direction put the
+          identity and its controls down here, and the page's own header owns
+          the actions. Notifications and sign-out live on this row so the
+          work surface stays entirely content. */}
       <div className="p-3">
-        <div className="flex items-center gap-3 rounded-lg bg-surface-alt px-3 py-2.5">
+        <div className="flex items-center gap-2 rounded-lg bg-surface-alt px-3 py-2.5">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cherry text-xs font-bold text-white">
             {user.name.charAt(0).toUpperCase()}
           </div>
@@ -160,6 +185,15 @@ export function Sidebar({ user }: { user: CurrentUser }) {
             <div className="truncate text-sm font-semibold text-ink">{user.name}</div>
             <div className="truncate text-xs text-ink-subtle">{user.email}</div>
           </div>
+          <NotificationsBell />
+          <button
+            onClick={handleLogout}
+            title="Sign out"
+            aria-label="Sign out"
+            className="shrink-0 rounded p-1.5 text-ink-subtle transition-colors hover:bg-surface hover:text-danger"
+          >
+            <LogOut size={15} />
+          </button>
         </div>
       </div>
     </aside>

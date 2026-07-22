@@ -9,7 +9,6 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { Sidebar } from '@/components/Sidebar';
-import { TopBar } from '@/components/TopBar';
 import { AppBackdrop } from '@/components/AppBackdrop';
 import { ProfileRail } from '@/components/ProfileRail';
 import { CurrentUser } from '@/lib/api';
@@ -64,10 +63,10 @@ export default async function AuthedLayout({ children }: { children: React.React
       >
         <Sidebar user={user} />
         <ProfileRail />
-        <div className="flex min-w-0 flex-1 flex-col">
-          <TopBar user={user} />
-          <main className="min-h-0 flex-1 overflow-y-auto px-7 py-7">{children}</main>
-        </div>
+        {/* No top bar. The approved direction has the nav rail carry identity
+            and scope, and each page's own header carry its actions — so the
+            work surface is entirely content. */}
+        <main className="min-h-0 flex-1 overflow-y-auto px-7 py-7">{children}</main>
       </div>
     </div>
   );

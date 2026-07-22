@@ -27,6 +27,7 @@ import { platformVisual } from '@/lib/platform-visuals';
 import {
   getActiveScope,
   setActiveScope,
+  getActiveAccountIds,
   VASS_ACTIVE_SCOPE_EVENT,
   type ActiveScope,
 } from '@/components/BrandSelector';
@@ -89,7 +90,24 @@ export function ProfileRail() {
     [isPicked, scope]
   );
 
-  if (!visible || accounts.length === 0) return null;
+  /**
+   * Only the profiles belonging to the brand currently in scope.
+   *
+   * The rail showed every connected account regardless of the brand picked
+   * in the selector, which on a workspace with a dozen profiles turned it
+   * into an unreadable column of near-identical avatars — and contradicted
+   * the brand filter sitting right above it. `getActiveAccountIds` returns
+   * null for "all brands", which is the one case where showing everything
+   * is correct.
+   */
+  const visibleAccounts = (() => {
+    const ids = getActiveAccountIds(accounts);
+    if (ids === null) return accounts;
+    const set = new Set(ids);
+    return accounts.filter((a) => set.has(a.id));
+  })();
+
+  if (!visible || visibleAccounts.length === 0) return null;
 
   return (
     <aside
@@ -97,7 +115,7 @@ export function ProfileRail() {
                  border-r border-line bg-surface-alt py-5 lg:flex"
       aria-label="Connected profiles"
     >
-      {accounts.map((a) => {
+      {visibleAccounts.map((a) => {
         const pv = platformVisual(a.platform);
         const picked = isPicked(a.id);
         const name = a.meta?.name || a.meta?.username || a.externalId;

@@ -55,23 +55,20 @@ export function PageHeader({
 
   return (
     <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
-      <div className="flex items-start gap-3">
-        <div
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
-          style={{ background: t.bg, color: t.fg }}
-        >
-          <Icon size={18} strokeWidth={2} />
-        </div>
-        <div>
-          <h1 className="h-page">
-            {title}
-            {/* One sticker per screen, max — see the note in globals.css. */}
-            {badge && <span className="sticker ml-2.5 align-[6px]">{badge}</span>}
-          </h1>
-          {description && (
-            <p className="mt-1.5 max-w-2xl text-sm text-ink-muted">{description}</p>
-          )}
-        </div>
+      {/* No icon badge. The nav already tells you which page you're on, so a
+          coloured square repeating it beside the title was decoration
+          competing with the one accent colour. `icon` and `tint` are still
+          accepted so the ~8 call sites don't need touching, and so a future
+          compact/breadcrumb header can use them. */}
+      <div>
+        <h1 className="h-page">
+          {title}
+          {/* One sticker per screen, max — see the note in globals.css. */}
+          {badge && <span className="sticker ml-2.5 align-[6px]">{badge}</span>}
+        </h1>
+        {description && (
+          <p className="mt-1.5 max-w-2xl text-sm text-ink-muted">{description}</p>
+        )}
       </div>
 
       {(actions || showToggle) && (
