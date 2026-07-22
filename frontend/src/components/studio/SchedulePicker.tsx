@@ -208,7 +208,7 @@ export function SchedulePicker({ open, value, onClose, onConfirm, minDate }: Pro
       className="fixed inset-0 z-[55] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="w-[min(520px,92vw)] bg-white rounded-lg shadow-glass-lift border border-white/60 overflow-hidden animate-slide-up">
+      <div className="w-[min(520px,92vw)] bg-white rounded-lg shadow-lift border border-line overflow-hidden animate-slide-up">
         <div className="flex items-center justify-between px-5 py-4 border-b border-line">
           <h2 className="h-sub text-ink leading-tight">
             Schedule post
@@ -272,7 +272,7 @@ export function SchedulePicker({ open, value, onClose, onConfirm, minDate }: Pro
             <button
               type="button"
               onClick={() => setAdvanced((v) => !v)}
-              className="text-xs font-medium text-accent hover:underline flex items-center gap-1"
+              className="text-xs font-medium text-cherry-ink hover:underline flex items-center gap-1"
             >
               <Globe size={11} />
               {advanced ? 'Hide advanced' : 'Advanced (timezone)'}
@@ -297,8 +297,8 @@ export function SchedulePicker({ open, value, onClose, onConfirm, minDate }: Pro
 
           {/* Preview */}
           {previewStr && (
-            <div className="px-3 py-2.5 bg-accent-subtle border border-accent/20 rounded-lg">
-              <div className="text-2xs uppercase tracking-wider font-semibold text-accent mb-0.5">
+            <div className="px-3 py-2.5 bg-cherry-wash border border-accent/20 rounded-lg">
+              <div className="text-2xs uppercase tracking-wider font-semibold text-cherry-ink mb-0.5">
                 Will publish at
               </div>
               <div className="text-sm font-medium text-ink">

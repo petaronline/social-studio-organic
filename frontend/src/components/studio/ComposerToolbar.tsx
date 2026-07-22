@@ -144,7 +144,7 @@ export function ComposerToolbar({
           onClick={() => { setEmojiOpen((v) => !v); setHashtagOpen(false); }}
           className={[
             'p-1.5 rounded-lg transition-colors',
-            emojiOpen ? 'text-ink bg-white/80' : 'text-ink-muted hover:text-ink hover:bg-white/55',
+            emojiOpen ? 'text-ink bg-white/80' : 'text-ink-muted hover:text-ink hover:bg-surface-alt',
           ].join(' ')}
           title="Insert emoji"
         >
@@ -158,7 +158,7 @@ export function ComposerToolbar({
           onClick={() => { handleHashtagClick(); setEmojiOpen(false); }}
           className={[
             'p-1.5 rounded-lg transition-colors relative',
-            hashtagOpen ? 'text-ink bg-white/80' : 'text-ink-muted hover:text-ink hover:bg-white/55',
+            hashtagOpen ? 'text-ink bg-white/80' : 'text-ink-muted hover:text-ink hover:bg-surface-alt',
           ].join(' ')}
           title={brandHashtags.length > 0 ? `${brandHashtags.length} brand hashtag${brandHashtags.length === 1 ? '' : 's'}` : 'Insert hashtag'}
         >
@@ -226,7 +226,7 @@ export function ComposerToolbar({
           <button
             type="button"
             onClick={insertAll}
-            className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm font-medium text-accent hover:bg-accent-subtle transition-colors border-b border-line"
+            className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm font-medium text-cherry-ink hover:bg-cherry-wash transition-colors border-b border-line"
           >
             <Sparkles size={13} />
             Insert all

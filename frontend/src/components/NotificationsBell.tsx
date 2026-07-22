@@ -102,7 +102,7 @@ export function NotificationsBell() {
       <button
         aria-label="Notifications"
         onClick={() => setOpen((v) => !v)}
-        className="relative p-2 rounded hover:bg-white/55 text-ink-muted hover:text-ink transition-colors"
+        className="relative p-2 rounded hover:bg-surface-alt text-ink-muted hover:text-ink transition-colors"
       >
         <Bell size={18} strokeWidth={2} />
         {unread > 0 && (
@@ -119,7 +119,7 @@ export function NotificationsBell() {
             {unread > 0 && (
               <button
                 onClick={markAllRead}
-                className="text-xs text-accent hover:underline flex items-center gap-1"
+                className="text-xs text-cherry-ink hover:underline flex items-center gap-1"
               >
                 <Check size={12} /> Mark all read
               </button>

@@ -47,6 +47,7 @@ import {
   type ActiveScope,
 } from '@/components/BrandSelector';
 import { PageHeader, PAGE_TINTS } from '@/components/PageHeader';
+import { platformVisual } from '@/lib/platform-visuals';
 import {
   DateRangePicker,
   rangeForPreset,
@@ -202,7 +203,7 @@ export default function AnalyticsPage() {
               type="button"
               onClick={() => load({ refresh: true })}
               disabled={refreshing || loading}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg bg-white/72 backdrop-blur-card border border-white/60 shadow-subtle text-ink hover:bg-white disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg bg-surface border border-line shadow-subtle text-ink hover:bg-surface-alt disabled:opacity-50"
             >
               <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
               Refresh
@@ -218,10 +219,13 @@ export default function AnalyticsPage() {
             type="button"
             onClick={() => setNetworkFilter('all')}
             className={[
-              'px-3 py-1.5 text-sm rounded-lg border transition-colors',
+              'rounded border px-3 py-1.5 text-sm font-medium transition-colors',
               networkFilter === 'all'
-                ? 'bg-accent text-white border-accent'
-                : 'bg-white/72 backdrop-blur-card border-white/60 text-ink-muted hover:text-ink',
+                // Selected reads as ink-on-paper, not cherry. Cherry is for
+                // the primary action; a filter is a preference, and filling
+                // several of these with it made the page shout.
+                ? 'border-ink bg-ink text-white'
+                : 'border-line bg-surface text-ink-muted hover:text-ink',
             ].join(' ')}
           >
             All networks
@@ -236,13 +240,20 @@ export default function AnalyticsPage() {
                 type="button"
                 onClick={() => setNetworkFilter(p)}
                 className={[
-                  'flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border transition-colors',
+                  'flex items-center gap-1.5 rounded border px-3 py-1.5 text-sm font-medium transition-colors',
+                  // Selected takes the platform's own tint — the filter then
+                  // matches the colour of the data it's filtering to.
                   activeF
-                    ? 'bg-accent text-white border-accent'
-                    : 'bg-white/72 backdrop-blur-card border-white/60 text-ink-muted hover:text-ink',
+                    ? 'border-transparent'
+                    : 'border-line bg-surface text-ink-muted hover:text-ink',
                 ].join(' ')}
+                style={
+                  activeF
+                    ? { backgroundColor: platformVisual(p).bg, color: platformVisual(p).ink }
+                    : undefined
+                }
               >
-                {Icon && <Icon size={14} style={{ color: activeF ? undefined : meta?.color }} />}
+                {Icon && <Icon size={14} className={activeF ? 'opacity-70' : ''} style={{ color: activeF ? undefined : meta?.color }} />}
                 {meta?.label ?? p}
               </button>
             );
@@ -262,7 +273,7 @@ export default function AnalyticsPage() {
       {loading ? (
         <div className="text-sm text-ink-muted py-12 text-center">Loading analytics…</div>
       ) : !data || data.postCount === 0 ? (
-        <div className="rounded-lg bg-white/72 backdrop-blur-card border border-white/60 rounded-lg shadow-glass px-6 py-12 text-center">
+        <div className="rounded-lg bg-surface border border-line rounded-lg shadow-subtle px-6 py-12 text-center">
           <BarChart3 size={28} className="mx-auto text-ink-subtle mb-2" />
           <p className="text-sm text-ink-muted">
             No published posts with analytics in this window. Publish to a connected
@@ -276,7 +287,7 @@ export default function AnalyticsPage() {
             {statTiles.map((t) => (
               <div
                 key={t.label}
-                className="bg-white/72 backdrop-blur-card border border-white/60 rounded-lg shadow-glass p-4"
+                className="bg-surface border border-line rounded-lg shadow-subtle p-4"
               >
                 <div className="flex items-center gap-1.5 text-ink-muted mb-1">
                   <t.Icon size={14} />
@@ -293,7 +304,7 @@ export default function AnalyticsPage() {
           <EngagementChart posts={sortedPosts} />
 
           {/* Per-post table */}
-          <div className="bg-white/72 backdrop-blur-card border border-white/60 rounded-lg shadow-glass overflow-hidden">
+          <div className="bg-surface border border-line rounded-lg shadow-subtle overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -312,7 +323,7 @@ export default function AnalyticsPage() {
                     const meta = PLATFORM_META[p.platform];
                     const Icon = meta?.Icon ?? Facebook;
                     return (
-                      <tr key={p.targetId} className="border-b border-line/60 last:border-0 hover:bg-black/[0.015]">
+                      <tr key={p.targetId} className="border-b border-line last:border-0 hover:bg-black/[0.015]">
                         <td className="px-4 py-3 max-w-xs">
                           <div className="flex items-center gap-2">
                             <Icon size={14} style={{ color: meta?.color }} className="shrink-0" />
@@ -421,7 +432,7 @@ function EngagementChart({ posts }: { posts: AnalyticsPost[] }) {
   const max = Math.max(...top.map((p) => p.metrics.engagement ?? 0), 1);
 
   return (
-    <div className="bg-white/72 backdrop-blur-card border border-white/60 rounded-lg shadow-glass p-5 mb-6">
+    <div className="bg-surface border border-line rounded-lg shadow-subtle p-5 mb-6">
       <h3 className="text-sm font-semibold text-ink mb-4">Top posts by engagement</h3>
       <div className="space-y-2">
         {top.map((p) => {

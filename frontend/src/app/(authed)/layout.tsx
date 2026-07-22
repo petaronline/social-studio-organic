@@ -59,7 +59,7 @@ export default async function AuthedLayout({ children }: { children: React.React
        */}
       <div
         className="relative z-10 flex h-[calc(100vh-1.5rem)] sm:h-[calc(100vh-2.5rem)]
-                   overflow-hidden rounded-2xl bg-surface shadow-lift"
+ overflow-hidden rounded-2xl bg-surface shadow-lift"
       >
         <Sidebar user={user} />
         <ProfileRail />

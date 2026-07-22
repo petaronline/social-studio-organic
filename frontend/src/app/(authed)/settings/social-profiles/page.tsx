@@ -406,7 +406,7 @@ export default function SocialProfilesPage() {
         <button
           onClick={() => { setLoading(true); loadAll(); }}
           disabled={loading}
-          className="flex items-center gap-2 px-3 py-1.5 text-sm text-ink-muted hover:text-ink rounded-lg hover:bg-white/55 transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-3 py-1.5 text-sm text-ink-muted hover:text-ink rounded-lg hover:bg-surface-alt transition-colors disabled:opacity-50"
         >
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
           Refresh
@@ -416,7 +416,7 @@ export default function SocialProfilesPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6">
         {/* ═══ Left rail — Connect a profile only ══════════════════════════ */}
         <aside className="space-y-5 self-start">
-          <div className="bg-white/72 backdrop-blur-card border border-white/60 rounded-lg shadow-glass p-3">
+          <div className="bg-surface border border-line rounded-lg shadow-subtle p-3">
             <div className="px-2 py-1.5 text-2xs uppercase tracking-wider font-semibold text-ink-subtle">
               Connect a profile
             </div>
@@ -429,7 +429,7 @@ export default function SocialProfilesPage() {
                     <button
                       onClick={() => handleConnect(platform.id)}
                       disabled={isConnecting || !!connecting}
-                      className="flex items-center gap-3 w-full px-2.5 py-2 rounded-lg text-sm font-medium text-ink hover:bg-white/55 transition-colors disabled:opacity-50"
+                      className="flex items-center gap-3 w-full px-2.5 py-2 rounded-lg text-sm font-medium text-ink hover:bg-surface-alt transition-colors disabled:opacity-50"
                     >
                       <div
                         className="w-6 h-6 rounded flex items-center justify-center shrink-0"
@@ -454,7 +454,7 @@ export default function SocialProfilesPage() {
                 <button
                   onClick={() => handleConnect('linkedin_org')}
                   disabled={!!connecting}
-                  className="flex items-center gap-3 w-full px-2.5 py-2 rounded-lg text-sm font-medium text-ink hover:bg-white/55 transition-colors disabled:opacity-50"
+                  className="flex items-center gap-3 w-full px-2.5 py-2 rounded-lg text-sm font-medium text-ink hover:bg-surface-alt transition-colors disabled:opacity-50"
                 >
                   <div
                     className="w-6 h-6 rounded flex items-center justify-center shrink-0"
@@ -477,9 +477,9 @@ export default function SocialProfilesPage() {
           </div>
 
           {/* Grouping hint — points to the Brands page */}
-          <div className="px-3 py-2.5 rounded-lg bg-white/40 border border-white/60 text-2xs text-ink-muted leading-relaxed">
+          <div className="px-3 py-2.5 rounded-lg bg-surface border border-line text-2xs text-ink-muted leading-relaxed">
             Organize these profiles into brands in{' '}
-            <a href="/settings/brands" className="text-accent hover:underline">Settings → Brands</a>.
+            <a href="/settings/brands" className="text-cherry-ink hover:underline">Settings → Brands</a>.
           </div>
         </aside>
 
@@ -518,7 +518,7 @@ export default function SocialProfilesPage() {
                 placeholder="Search by name or @handle…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm bg-white/70 border border-white/60 rounded-lg placeholder:text-ink-subtle focus:bg-white focus:border-accent focus:ring-2 focus:ring-accent/15 focus:outline-none transition-colors"
+                className="w-full pl-9 pr-3 py-2 text-sm bg-white/70 border border-line rounded-lg placeholder:text-ink-subtle focus:bg-white focus:border-accent focus:ring-2 focus:ring-accent/15 focus:outline-none transition-colors"
               />
               {searchQuery && (
                 <button
@@ -558,7 +558,7 @@ export default function SocialProfilesPage() {
           )}
 
           {/* Permissions note (at the very bottom) */}
-          <div className="mt-6 flex items-start gap-3 px-4 py-3 rounded-lg bg-white/40 border border-white/60 text-xs text-ink-muted">
+          <div className="mt-6 flex items-start gap-3 px-4 py-3 rounded-lg bg-surface border border-line text-xs text-ink-muted">
             <AlertCircle size={14} className="shrink-0 mt-0.5 text-ink-subtle" />
             <p>
               These connections use your workspace Meta App. For production use beyond
@@ -570,7 +570,7 @@ export default function SocialProfilesPage() {
                 href="https://developers.facebook.com/docs/app-review"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-accent hover:underline inline-flex items-center gap-1"
+                className="text-cherry-ink hover:underline inline-flex items-center gap-1"
               >
                 Learn more <ExternalLink size={10} />
               </a>
@@ -622,8 +622,8 @@ function BrandRow({
       onDrop={onDrop}
       className={[
         'group flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer transition-colors',
-        isActive ? 'bg-accent-subtle text-accent' : 'text-ink hover:bg-white/60',
-        isDragOver ? 'ring-2 ring-accent/50 bg-accent-subtle' : '',
+        isActive ? 'bg-cherry-wash text-cherry-ink' : 'text-ink hover:bg-white/60',
+        isDragOver ? 'ring-2 ring-accent/50 bg-cherry-wash' : '',
       ].join(' ')}
       onClick={onClick}
     >
@@ -745,7 +745,7 @@ function FilterItem({
         <span className="w-2.5 h-2.5 rounded-full bg-ink-subtle shrink-0" />
       )}
       <span className="flex-1 text-ink">{label}</span>
-      {active && <Check size={12} className="text-accent" />}
+      {active && <Check size={12} className="text-cherry-ink" />}
     </button>
   );
 }
@@ -784,7 +784,7 @@ function AccountCard({
     <li
       draggable
       onDragStart={(e) => onDragStart(e, account.id)}
-      className="flex items-center gap-3 px-4 py-3 bg-white/70 backdrop-blur-card border border-white/60 rounded-lg shadow-subtle hover:shadow-card transition-shadow cursor-grab active:cursor-grabbing"
+      className="flex items-center gap-3 px-4 py-3 bg-surface border border-line rounded-lg shadow-subtle hover:shadow-card transition-shadow cursor-grab active:cursor-grabbing"
     >
       <GripVertical size={14} className="text-ink-subtle shrink-0" />
 
@@ -989,7 +989,7 @@ function BrandHashtagsSection({
   const atCap = tags.length >= MAX_TAGS;
 
   return (
-    <div className="mt-6 bg-white/40 border border-white/60 rounded-lg px-5 py-4">
+    <div className="mt-6 bg-surface border border-line rounded-lg px-5 py-4">
       <div className="flex items-center justify-between mb-1">
         <h3 className="text-xs font-medium uppercase tracking-wider text-ink-subtle">
           Brand hashtags
@@ -1007,7 +1007,7 @@ function BrandHashtagsSection({
         {tags.map((t, i) => (
           <span
             key={t}
-            className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-accent-subtle text-accent border border-accent/15"
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-cherry-wash text-cherry-ink border border-accent/15"
           >
             #{t}
             <button

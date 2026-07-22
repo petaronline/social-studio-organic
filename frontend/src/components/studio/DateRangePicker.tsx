@@ -126,14 +126,14 @@ export function DateRangePicker({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg bg-white/72 backdrop-blur-card border border-white/60 shadow-subtle text-ink hover:bg-white"
+        className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg bg-surface border border-line shadow-subtle text-ink hover:bg-white"
       >
         <CalendarIcon size={14} className="text-ink-muted" />
         {label}
       </button>
 
       {open && (
-        <div className="absolute right-0 z-50 mt-2 flex rounded-xl border border-line bg-white shadow-glass overflow-hidden">
+        <div className="absolute right-0 z-50 mt-2 flex rounded-xl border border-line bg-white shadow-subtle overflow-hidden">
           {/* Presets */}
           <div className="w-44 border-r border-line py-2">
             {PRESETS.map((p) => (
@@ -143,7 +143,7 @@ export function DateRangePicker({
                 onClick={() => choosePreset(p.id)}
                 className={[
                   'flex w-full items-center justify-between px-4 py-2 text-sm text-left hover:bg-black/[0.03]',
-                  preset === p.id ? 'text-accent font-medium' : 'text-ink',
+                  preset === p.id ? 'text-cherry-ink font-medium' : 'text-ink',
                 ].join(' ')}
               >
                 {p.label}

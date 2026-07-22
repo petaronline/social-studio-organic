@@ -716,29 +716,29 @@ function MonthView({
   };
 
   return (
-    <div className="bg-white/72 backdrop-blur-card border border-white/60 rounded-lg shadow-glass overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-line/60">
+    <div className="overflow-hidden rounded-xl border border-line bg-surface shadow-subtle">
+      <div className="flex items-center justify-between border-b border-line px-4 py-3">
         <div className="flex items-center gap-1">
-          <button onClick={prevMonth} className="p-1.5 rounded hover:bg-surface-hover text-ink-muted hover:text-ink" aria-label="Previous month">
+          <button onClick={prevMonth} className="rounded p-1.5 text-ink-subtle hover:bg-surface-alt hover:text-ink" aria-label="Previous month">
             <ChevronLeft size={16} />
           </button>
-          <button onClick={today} className="text-xs font-medium text-ink-muted hover:text-ink px-2 py-1 rounded hover:bg-surface-hover transition-colors">
+          <button onClick={today} className="lab rounded px-2 py-1 transition-colors hover:bg-surface-alt hover:text-ink">
             Today
           </button>
-          <button onClick={nextMonth} className="p-1.5 rounded hover:bg-surface-hover text-ink-muted hover:text-ink" aria-label="Next month">
+          <button onClick={nextMonth} className="rounded p-1.5 text-ink-subtle hover:bg-surface-alt hover:text-ink" aria-label="Next month">
             <ChevronRight size={16} />
           </button>
         </div>
-        <h2 className="h-sub text-ink">{monthLabel}</h2>
+        <h2 className="h-sub">{monthLabel}</h2>
         <div className="w-[100px]" />
       </div>
 
-      {/* Monday-first header */}
-      <div className="grid grid-cols-7 border-b border-line/50">
+      {/* Monday-first header. Left-aligned to match the week view's day
+          columns — centred labels over left-aligned cells read as a
+          different grid. */}
+      <div className="grid grid-cols-7 border-b border-line">
         {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => (
-          <div key={d} className="px-2 py-2 text-2xs uppercase tracking-wider font-semibold text-ink-subtle text-center">
-            {d}
-          </div>
+          <div key={d} className="lab px-3 py-2.5">{d}</div>
         ))}
       </div>
 
@@ -752,9 +752,12 @@ function MonthView({
             <div
               key={i}
               className={[
-                'min-h-[100px] border-r border-b border-line/30 px-2 py-1.5 flex flex-col gap-1',
-                inMonth ? 'bg-white/40' : 'bg-surface-alt/30',
-                isToday ? 'bg-accent-subtle/40' : '',
+                'flex min-h-[112px] flex-col gap-1 border-b border-r border-line px-2 py-2',
+                // Out-of-month days recede rather than getting their own
+                // colour — the month should read as one surface with quiet
+                // edges, not a patchwork.
+                inMonth ? 'bg-surface' : 'bg-surface-alt/50',
+                isToday ? 'bg-cherry-wash' : '',
               ].join(' ')}
             >
               <button
@@ -767,13 +770,15 @@ function MonthView({
                 ].join(' ')}
               >
                 <span className={[
-                  'text-xs',
-                  isToday ? 'font-bold text-accent' : inMonth ? 'text-ink' : 'text-ink-subtle',
+                  'font-display text-sm font-bold tabular-nums',
+                  isToday ? 'text-cherry' : inMonth ? 'text-ink' : 'text-ink-subtle',
                 ].join(' ')}>
                   {date.getDate()}
                 </span>
                 {hasAny && (
-                  <span className="text-2xs text-ink-subtle">{dayPosts.length}</span>
+                  <span className="font-mono text-2xs font-semibold text-ink-subtle">
+                    {dayPosts.length}
+                  </span>
                 )}
               </button>
               <div className="flex flex-col gap-0.5 overflow-hidden">
@@ -784,7 +789,7 @@ function MonthView({
                   <button
                     onMouseDown={(e) => e.stopPropagation()}
                     onClick={() => onDayClick(date)}
-                    className="text-2xs text-ink-muted font-medium px-1.5 py-0.5 rounded hover:bg-surface-hover hover:text-ink text-left transition-colors"
+                    className="lab rounded px-1.5 py-0.5 text-left transition-colors hover:bg-surface-hover hover:text-ink"
                   >
                     +{dayPosts.length - 3} more
                   </button>
@@ -818,23 +823,24 @@ function MonthPostCard({ post, onCancel }: { post: CalendarPost; onCancel: (id: 
     : undefined;
 
   const isPublished = post.status === 'published';
-  const cardClass = isPublished
-    ? `${bg} ${text}`
-    : `bg-white ${border} border ${text}`;
+  // Same rule as the week view: hue is the PLATFORM, form is the status.
+  // A month cell is too small for two colour systems to coexist.
+  const pv = multiPlatformVisual(post.platforms);
 
   return (
     <div
       onClick={onClick}
       className={[
-        'group rounded px-1.5 py-1 text-2xs leading-tight truncate transition-all',
-        cardClass,
+        'group truncate rounded-sm px-1.5 py-1 text-2xs leading-tight transition-all',
+        isPublished ? '' : 'border border-dashed border-current/30',
         onClick ? 'cursor-pointer hover:opacity-80' : 'cursor-default',
       ].join(' ')}
+      style={{ backgroundColor: pv.bg, color: pv.ink }}
       title={post.body || '(no text)'}
     >
       <div className="flex items-center gap-1">
-        <Icon size={9} className="shrink-0" />
-        <span className="font-medium truncate flex-1">{timeStr || label}</span>
+        <Icon size={9} className="shrink-0 opacity-70" />
+        <span className="chip-when flex-1 truncate">{timeStr || label}</span>
         {isPublished && post.permalink && (
           <ExternalLink size={9} className="opacity-50 group-hover:opacity-100 shrink-0" />
         )}
@@ -878,17 +884,15 @@ function ListView({
 
   if (sorted.length === 0) {
     return (
-      <div className="bg-white/72 backdrop-blur-card border border-white/60 rounded-lg shadow-glass px-6 py-16 text-center">
-        <p className="text-sm text-ink-muted">
-          No posts in this window.
-        </p>
+      <div className="card px-6 py-16 text-center">
+        <p className="text-sm text-ink-muted">No posts in this window.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white/72 backdrop-blur-card border border-white/60 rounded-lg shadow-glass overflow-hidden">
-      <ul className="divide-y divide-line/50">
+    <div className="overflow-hidden rounded-xl border border-line bg-surface shadow-subtle">
+      <ul className="divide-y divide-line">
         {slice.map((p) => (
           <ListRow
             key={`${p.source}:${p.id}`}
@@ -898,10 +902,10 @@ function ListView({
         ))}
       </ul>
       {hasMore && (
-        <div className="px-5 py-4 border-t border-line/60 flex justify-center">
+        <div className="flex justify-center border-t border-line px-5 py-4">
           <button
             onClick={onLoadMore}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-ink-muted hover:text-ink hover:bg-surface-hover transition-colors"
+            className="lab inline-flex items-center gap-1.5 rounded px-3 py-1.5 transition-colors hover:bg-surface-alt hover:text-ink"
           >
             Load {Math.min(LIST_PAGE_SIZE, sorted.length - visibleCount)} more
           </button>
@@ -954,7 +958,7 @@ function ListRow({ post, onCancel }: { post: CalendarPost; onCancel?: () => void
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1 flex-wrap">
-          <span className={['text-2xs uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded', bg, text].join(' ')}>
+          <span className={['rounded-sm px-1.5 py-0.5 font-mono text-2xs font-bold uppercase tracking-[0.1em]', bg, text].join(' ')}>
             {label}
           </span>
           {post.platforms.length > 0 && (
@@ -1019,7 +1023,7 @@ function statusVisuals(status: CalendarPostStatus): {
 } {
   switch (status) {
     case 'scheduled':
-      return { bg: 'bg-accent-subtle', text: 'text-accent', border: 'border-accent/40', Icon: Clock, label: 'Scheduled' };
+      return { bg: 'bg-cherry-wash', text: 'text-cherry-ink', border: 'border-accent/40', Icon: Clock, label: 'Scheduled' };
     case 'published':
       return { bg: 'bg-success/15', text: 'text-success', border: 'border-success/40', Icon: CheckCircle2, label: 'Published' };
     case 'partial':
@@ -1029,7 +1033,7 @@ function statusVisuals(status: CalendarPostStatus): {
     case 'cancelled':
       return { bg: 'bg-surface-hover', text: 'text-ink-subtle', border: 'border-line', Icon: XCircle, label: 'Cancelled' };
     case 'publishing':
-      return { bg: 'bg-accent-subtle', text: 'text-accent', border: 'border-accent/40', Icon: RefreshCw, label: 'Publishing' };
+      return { bg: 'bg-cherry-wash', text: 'text-cherry-ink', border: 'border-accent/40', Icon: RefreshCw, label: 'Publishing' };
     default:
       return { bg: 'bg-surface-hover', text: 'text-ink-subtle', border: 'border-line', Icon: Clock, label: 'Draft' };
   }

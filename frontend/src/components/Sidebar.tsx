@@ -297,7 +297,7 @@ function GroupRow({ item, pathname }: { item: GroupNavItem; pathname: string }) 
       <div
         className={[
           'flex items-center gap-1 rounded-lg text-sm font-medium transition-colors',
-          isInside ? '' : 'text-ink hover:bg-white/55',
+          isInside ? '' : 'text-ink hover:bg-surface-alt',
         ].join(' ')}
         style={isInside && active ? { background: active.bg, color: active.fg } : undefined}
       >
@@ -331,7 +331,7 @@ function GroupRow({ item, pathname }: { item: GroupNavItem; pathname: string }) 
       </div>
 
       {expanded && (
-        <ul className="mt-0.5 ml-3 pl-3 border-l border-line/50 space-y-0.5">
+        <ul className="mt-0.5 ml-3 pl-3 border-l border-line space-y-0.5">
           {item.children.map((child) => {
             const isActive = pathname === child.href || pathname.startsWith(`${child.href}/`);
             const ChildIcon = child.icon;
@@ -341,7 +341,7 @@ function GroupRow({ item, pathname }: { item: GroupNavItem; pathname: string }) 
                   href={child.href}
                   className={[
                     'flex items-center gap-2.5 px-2.5 py-1.5 rounded text-sm transition-colors',
-                    isActive ? 'font-semibold' : 'text-ink-muted hover:text-ink hover:bg-white/55',
+                    isActive ? 'font-semibold' : 'text-ink-muted hover:text-ink hover:bg-surface-alt',
                   ].join(' ')}
                   style={isActive && active ? { color: active.fg } : undefined}
                 >

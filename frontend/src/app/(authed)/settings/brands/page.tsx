@@ -323,7 +323,7 @@ function UnifiedAccountCard({
     <div
       draggable
       onDragStart={(e) => onDragStart(e, acct)}
-      className="flex items-center gap-3 bg-white/72 backdrop-blur-card border border-white/60 rounded-lg shadow-glass px-4 py-3 cursor-grab active:cursor-grabbing"
+      className="flex items-center gap-3 bg-surface border border-line rounded-lg shadow-subtle px-4 py-3 cursor-grab active:cursor-grabbing"
     >
       {acct.pictureUrl ? (
         // eslint-disable-next-line @next/next/no-img-element

@@ -21,7 +21,7 @@ export function AppBackdrop() {
     <div
       aria-hidden
       className="pointer-events-none fixed -top-32 -right-32 z-0 h-[560px] w-[560px]
-                 bg-halftone bg-halftone-grid opacity-[0.18]"
+ bg-halftone bg-halftone-grid opacity-[0.18]"
       style={{
         // Fade the dot field out toward its edges so it reads as printed
         // ink bleeding off the page rather than a tiled texture with a

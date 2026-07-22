@@ -149,7 +149,7 @@ export default function BrandingPage() {
       {/* Header */}
       <section className="card space-y-3">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-accent-subtle text-accent flex items-center justify-center">
+          <div className="w-7 h-7 rounded-lg bg-cherry-wash text-cherry-ink flex items-center justify-center">
             <ImageIcon size={14} />
           </div>
           <h2 className="h-sub text-ink">Workspace logo</h2>
@@ -203,7 +203,7 @@ export default function BrandingPage() {
           className={[
             'rounded-lg border-2 border-dashed px-4 py-6 flex flex-col items-center gap-2 transition-colors',
             isDragging
-              ? 'border-accent bg-accent-subtle'
+              ? 'border-accent bg-cherry-wash'
               : 'border-line bg-surface-alt/30 hover:bg-surface-alt/60',
           ].join(' ')}
         >
@@ -225,7 +225,7 @@ export default function BrandingPage() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="text-accent hover:text-accent-hover font-medium"
+              className="text-cherry-ink hover:text-cherry-ink-hover font-medium"
             >
               pick a file
             </button>
@@ -235,8 +235,8 @@ export default function BrandingPage() {
 
         {/* Pending preview + save */}
         {pending && (
-          <div className="rounded-lg border border-accent bg-accent-subtle px-4 py-3">
-            <div className="text-2xs font-medium text-accent uppercase tracking-wider mb-2">
+          <div className="rounded-lg border border-accent bg-cherry-wash px-4 py-3">
+            <div className="text-2xs font-medium text-cherry-ink uppercase tracking-wider mb-2">
               Preview — not yet saved
             </div>
             <div className="flex items-center gap-3">

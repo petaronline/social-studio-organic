@@ -221,7 +221,7 @@ export default function DraftsPage() {
 
 function EmptyDrafts({ onCreate }: { onCreate: () => void }) {
   return (
-    <div className="bg-white/72 backdrop-blur-card border border-white/60 rounded-lg shadow-glass px-8 py-16 text-center">
+    <div className="bg-surface border border-line rounded-lg shadow-subtle px-8 py-16 text-center">
       <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-surface-alt mb-3">
         <FileText size={20} className="text-ink-subtle" />
       </div>
@@ -304,7 +304,7 @@ function DraftCard({
       {/* Hover-only delete */}
       <button
         onClick={(e) => { e.stopPropagation(); onDelete(); }}
-        className="absolute top-2 right-2 p-1.5 rounded bg-white/90 backdrop-blur text-ink-subtle hover:text-danger hover:bg-white opacity-0 group-hover:opacity-100 transition-opacity shadow-subtle"
+        className="absolute top-2 right-2 p-1.5 rounded bg-white/90 backdrop-blur text-ink-subtle hover:text-danger hover:bg-surface-alt opacity-0 group-hover:opacity-100 transition-opacity shadow-subtle"
         title="Delete draft"
       >
         <Trash2 size={12} />

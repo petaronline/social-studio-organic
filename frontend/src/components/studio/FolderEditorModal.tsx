@@ -138,7 +138,7 @@ export function FolderEditorModal({
         ref={panelRef}
         className="bg-white border border-line rounded-lg shadow-card w-full max-w-md flex flex-col overflow-hidden"
       >
-        <div className="flex items-center justify-between px-5 py-3 border-b border-line/60">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-line">
           <h2 className="h-sub text-ink">
             {folder ? 'Edit folder' : 'New folder'}
           </h2>
@@ -217,7 +217,7 @@ export function FolderEditorModal({
           )}
         </div>
 
-        <div className="flex items-center justify-between px-5 py-3 border-t border-line/60">
+        <div className="flex items-center justify-between px-5 py-3 border-t border-line">
           <div>
             {folder && (
               <button

@@ -105,7 +105,7 @@ export function ProfileRail() {
   return (
     <aside
       className="hidden w-[68px] shrink-0 flex-col items-center gap-2.5 overflow-y-auto
-                 border-r border-line bg-surface-alt py-5 lg:flex"
+ border-r border-line bg-surface-alt py-5 lg:flex"
       aria-label="Connected profiles"
     >
       {visibleAccounts.map((a) => {
@@ -139,7 +139,7 @@ export function ProfileRail() {
                 networks stay distinguishable at 38px. */}
             <span
               className="absolute -bottom-1 -right-1 rounded-full bg-surface px-1 font-mono
-                         text-[8px] font-bold leading-[13px] shadow-subtle"
+ text-[8px] font-bold leading-[13px] shadow-subtle"
               style={{ color: pv.ink }}
             >
               {pv.tag}
@@ -152,7 +152,7 @@ export function ProfileRail() {
         href="/settings/social-profiles"
         title="Connect a profile"
         className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-md
-                   border-2 border-dashed border-line text-ink-subtle
+ border-2 border-dashed border-line text-ink-subtle
                    hover:border-cherry hover:text-cherry"
       >
         <Plus size={17} />

@@ -30,6 +30,31 @@ interface Props {
   className?: string;
 }
 
+/**
+ * Facebook and Instagram hand back a REAL image for profiles that have no
+ * picture — a grey silhouette or question mark — so it loads fine and
+ * `onError` never fires. We'd happily render their placeholder instead of
+ * ours, which looks broken next to profiles that do have art.
+ *
+ * These are the CDN paths those stand-ins come from. `t1.30497-1` is Meta's
+ * "no photo" directory; `rsrc.php` is the static asset host that serves the
+ * silhouette sprites. Matching on path rather than exact filename keeps this
+ * working when they rotate the asset id, which they do.
+ *
+ * If Meta ever serves a real picture from one of these paths we'd show
+ * initials instead — strictly better than the reverse.
+ */
+const PLACEHOLDER_PATTERNS = [
+  '/t1.30497-1/',      // Meta CDN "no profile photo"
+  'rsrc.php',          // static.xx.fbcdn.net sprite host
+  '/static/images/',   // occasional default-avatar path
+];
+
+export function isPlaceholderPicture(url: string | null | undefined): boolean {
+  if (!url) return true;
+  return PLACEHOLDER_PATTERNS.some((p) => url.includes(p));
+}
+
 /** Up to two letters: initials of the first two words, else the first two
  *  characters. Digits are kept — plenty of handles start with them. */
 export function avatarInitials(name: string): string {
@@ -51,7 +76,9 @@ export function AccountAvatar({
   className,
 }: Props) {
   const [imgFailed, setImgFailed] = useState(false);
-  const showImage = pictureUrl && !imgFailed;
+  // Two ways to end up on initials: the image 404s (expired signed URL), or
+  // it loads perfectly and happens to be Meta's own grey placeholder.
+  const showImage = pictureUrl && !imgFailed && !isPlaceholderPicture(pictureUrl);
   const radius = shape === 'circle' ? '9999px' : `${Math.max(6, size * 0.3)}px`;
 
   if (showImage) {

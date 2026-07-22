@@ -420,7 +420,7 @@ function TesterOnboardingInfo() {
               href="https://developers.facebook.com/apps/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-accent hover:text-accent-hover underline inline-flex items-center gap-0.5"
+              className="text-cherry-ink hover:text-cherry-ink-hover underline inline-flex items-center gap-0.5"
             >
               developers.facebook.com <ExternalLink size={11} />
             </a>{' '}

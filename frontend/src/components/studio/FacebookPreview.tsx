@@ -154,7 +154,7 @@ function FbMedia({
       {carouselIndex > 0 && (
         <button
           onClick={() => setCarouselIndex(carouselIndex - 1)}
-          className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 hover:bg-white shadow-sm flex items-center justify-center"
+          className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 hover:bg-surface-alt shadow-sm flex items-center justify-center"
           aria-label="Previous"
         >
           <ChevronLeft size={16} />
@@ -163,7 +163,7 @@ function FbMedia({
       {carouselIndex < media.length - 1 && (
         <button
           onClick={() => setCarouselIndex(carouselIndex + 1)}
-          className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 hover:bg-white shadow-sm flex items-center justify-center"
+          className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 hover:bg-surface-alt shadow-sm flex items-center justify-center"
           aria-label="Next"
         >
           <ChevronRight size={16} />

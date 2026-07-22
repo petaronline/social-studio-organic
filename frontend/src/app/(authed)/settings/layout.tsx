@@ -68,7 +68,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                       className={[
                         'flex items-center gap-3 px-3 py-2 rounded text-sm font-medium transition-colors',
                         isActive
-                          ? 'bg-accent-subtle text-accent'
+                          ? 'bg-cherry-wash text-cherry-ink'
                           : 'text-ink-muted hover:bg-surface-hover hover:text-ink',
                       ].join(' ')}
                     >

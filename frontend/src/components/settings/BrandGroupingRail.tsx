@@ -67,8 +67,8 @@ export function BrandRow({
       onDrop={onDrop}
       className={[
         'group flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer transition-colors',
-        isActive ? 'bg-accent-subtle text-accent' : 'text-ink hover:bg-white/60',
-        isDragOver ? 'ring-2 ring-accent/50 bg-accent-subtle' : '',
+        isActive ? 'bg-cherry-wash text-cherry-ink' : 'text-ink hover:bg-white/60',
+        isDragOver ? 'ring-2 ring-accent/50 bg-cherry-wash' : '',
       ].join(' ')}
       onClick={onClick}
     >
@@ -169,7 +169,7 @@ export function BrandGroupingRail({
 
   return (
     <aside className="space-y-5 self-start">
-      <div className="bg-white/72 backdrop-blur-card border border-white/60 rounded-lg shadow-glass p-3">
+      <div className="bg-surface border border-line rounded-lg shadow-subtle p-3">
         <div className="px-2 py-1.5 text-2xs uppercase tracking-wider font-semibold text-ink-subtle">
           Groupings
         </div>
@@ -295,7 +295,7 @@ export function BrandGroupingRail({
             <li className="mt-2">
               <button
                 onClick={() => setCreating(true)}
-                className="w-full flex items-center gap-2 px-2.5 py-2 text-sm text-ink-muted hover:text-ink hover:bg-white/55 rounded-lg transition-colors"
+                className="w-full flex items-center gap-2 px-2.5 py-2 text-sm text-ink-muted hover:text-ink hover:bg-surface-alt rounded-lg transition-colors"
               >
                 <Plus size={14} />
                 New brand

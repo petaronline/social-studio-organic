@@ -1263,7 +1263,7 @@ export function ComposerModal({ open, onClose, onPublished, draftId, ideaSeed, s
                   <button
                     type="button"
                     onClick={() => setCoverPickerOpen(true)}
-                    className="text-xs font-medium text-accent hover:underline"
+                    className="text-xs font-medium text-cherry-ink hover:underline"
                   >
                     Change cover
                   </button>
@@ -1324,7 +1324,7 @@ export function ComposerModal({ open, onClose, onPublished, draftId, ideaSeed, s
             ) : (
               <>
                 <ImageIcon size={20} />
-                <span>Drag &amp; drop or <span className="text-accent font-medium">select a file</span></span>
+                <span>Drag &amp; drop or <span className="text-cherry-ink font-medium">select a file</span></span>
               </>
             )}
           </label>
@@ -1358,7 +1358,7 @@ export function ComposerModal({ open, onClose, onPublished, draftId, ideaSeed, s
         ))}
       </div>
 
-      <div className="w-[min(1180px,96vw)] h-[min(92vh,860px)] bg-surface rounded-lg shadow-glass-lift border border-white/60 flex flex-col overflow-hidden animate-slide-up">
+      <div className="w-[min(1180px,96vw)] h-[min(92vh,860px)] bg-surface rounded-lg shadow-lift border border-line flex flex-col overflow-hidden animate-slide-up">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-line">
           <div>
@@ -1410,7 +1410,7 @@ export function ComposerModal({ open, onClose, onPublished, draftId, ideaSeed, s
                         'group flex items-center gap-2 pl-1 pr-1.5 py-1 rounded-full border transition-all',
                         isEditorTarget
                           ? 'bg-accent text-white border-accent shadow-card'
-                          : 'bg-accent-subtle border-accent/30 text-accent hover:bg-accent/20',
+                          : 'bg-cherry-wash border-accent/30 text-cherry-ink hover:bg-accent/20',
                       ].join(' ')}
                       title={customizePerNetwork ? 'Click to edit this profile\'s copy' : 'Click to deselect'}
                     >
@@ -1470,7 +1470,7 @@ export function ComposerModal({ open, onClose, onPublished, draftId, ideaSeed, s
                   className={[
                     'mt-3 inline-flex items-center gap-2 text-sm font-medium px-3 py-2 rounded-lg border transition-colors',
                     customizePerNetwork
-                      ? 'bg-accent-subtle text-accent border-accent/40'
+                      ? 'bg-cherry-wash text-cherry-ink border-accent/40'
                       : 'text-ink border-line hover:bg-surface-hover hover:border-ink-subtle',
                   ].join(' ')}
                 >
@@ -1723,7 +1723,7 @@ export function ComposerModal({ open, onClose, onPublished, draftId, ideaSeed, s
               <button
                 onClick={() => setSchedulePickerOpen(true)}
                 disabled={publishing}
-                className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-accent-subtle text-accent text-xs font-medium hover:bg-accent/20 transition-colors"
+                className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-cherry-wash text-cherry-ink text-xs font-medium hover:bg-accent/20 transition-colors"
               >
                 <CalendarClock size={11} />
                 {new Date(scheduledFor).toLocaleString(undefined, {
@@ -1999,7 +1999,7 @@ function CollaboratorsField({
           {value.map((u, i) => (
             <span
               key={u}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-accent-subtle text-accent border border-accent/15"
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-cherry-wash text-cherry-ink border border-accent/15"
             >
               @{u}
               <button
@@ -2202,7 +2202,7 @@ function ProfilePickerPopover({
                           )}
                         </div>
                         {isSelected && (
-                          <Check size={14} className="text-accent shrink-0" />
+                          <Check size={14} className="text-cherry-ink shrink-0" />
                         )}
                       </button>
                     </li>

@@ -197,7 +197,7 @@ function ThreadsCard({
                         key={i}
                         className={[
                           'block w-1.5 h-1.5 rounded-full transition-colors',
-                          i === carouselIndex ? 'bg-white' : 'bg-white/40',
+                          i === carouselIndex ? 'bg-white' : 'bg-surface',
                         ].join(' ')}
                       />
                     ))}

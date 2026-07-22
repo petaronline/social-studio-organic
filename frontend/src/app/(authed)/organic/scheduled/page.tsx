@@ -4,7 +4,7 @@ import { Clock } from 'lucide-react';
 export default function OrganicScheduledPage() {
   return (
     <div className="flex flex-col items-center justify-center py-24 text-center">
-      <div className="w-14 h-14 rounded-lg bg-white/70 border border-white/60 shadow-card flex items-center justify-center mb-5">
+      <div className="w-14 h-14 rounded-lg bg-white/70 border border-line shadow-card flex items-center justify-center mb-5">
         <Clock size={26} strokeWidth={1.5} className="text-ink-muted" />
       </div>
       <h2 className="h-section text-ink mb-2">Scheduled posts</h2>

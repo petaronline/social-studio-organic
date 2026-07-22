@@ -622,10 +622,10 @@ export function BrandSelector() {
               <Boxes size={13} className="text-ink-muted shrink-0" />
               <span className="flex-1 text-ink">All brands</span>
               <span className="text-2xs text-ink-subtle">{totalMembersInContext}</span>
-              {scope.type === 'all' && <Check size={13} className="text-accent ml-1" />}
+              {scope.type === 'all' && <Check size={13} className="text-cherry-ink ml-1" />}
             </button>
 
-            {filteredBrands.length > 0 && <div className="my-1 border-t border-line/60" />}
+            {filteredBrands.length > 0 && <div className="my-1 border-t border-line" />}
 
             {/* Brands (groups) — each row is selectable + expandable */}
             {filteredBrands.map((b) => {
@@ -663,7 +663,7 @@ export function BrandSelector() {
                       )}
                       <span className="flex-1 text-ink truncate">{b.name}</span>
                       <span className="text-2xs text-ink-subtle">{members.length}</span>
-                      {isBrandActive && <Check size={13} className="text-accent ml-1" />}
+                      {isBrandActive && <Check size={13} className="text-cherry-ink ml-1" />}
                     </button>
                   </div>
                   {isExpanded && members.map((m) => {
@@ -678,7 +678,7 @@ export function BrandSelector() {
                         <MemberAvatar pictureUrl={m.pictureUrl} icon={Icon} name={m.name} />
                         <span className="flex-1 text-ink truncate">{m.name}</span>
                         <span className="text-2xs text-ink-subtle">{m.sub}</span>
-                        {isMemberActive && <Check size={12} className="text-accent ml-1" />}
+                        {isMemberActive && <Check size={12} className="text-cherry-ink ml-1" />}
                       </button>
                     );
                   })}
@@ -689,7 +689,7 @@ export function BrandSelector() {
             {/* Ungrouped */}
             {filteredUngrouped.length > 0 && (
               <>
-                <div className="my-1 border-t border-line/60" />
+                <div className="my-1 border-t border-line" />
                 <div className="px-3 pt-1.5 pb-1 text-2xs uppercase tracking-wider font-semibold text-ink-subtle">
                   Ungrouped
                 </div>
@@ -705,7 +705,7 @@ export function BrandSelector() {
                       <MemberAvatar pictureUrl={m.pictureUrl} icon={Icon} name={m.name} />
                       <span className="flex-1 text-ink truncate">{m.name}</span>
                       <span className="text-2xs text-ink-subtle">{m.sub}</span>
-                      {isMemberActive && <Check size={12} className="text-accent ml-1" />}
+                      {isMemberActive && <Check size={12} className="text-cherry-ink ml-1" />}
                     </button>
                   );
                 })}
@@ -717,7 +717,7 @@ export function BrandSelector() {
                 {searching ? 'No matches.' : (
                   <>
                     No brands or profiles yet. Connect one in{' '}
-                    <a href="/settings/social-profiles" className="text-accent hover:underline">
+                    <a href="/settings/social-profiles" className="text-cherry-ink hover:underline">
                       Settings → Social profiles
                     </a>.
                   </>

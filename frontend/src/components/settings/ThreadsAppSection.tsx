@@ -141,7 +141,7 @@ export function ThreadsAppSection() {
             href="https://developers.facebook.com/apps"
             target="_blank"
             rel="noreferrer"
-            className="text-accent hover:underline"
+            className="text-cherry-ink hover:underline"
           >
             developers.facebook.com
           </a>
@@ -183,7 +183,7 @@ export function ThreadsAppSection() {
                 <button
                   type="button"
                   onClick={() => setShowSecretForm(true)}
-                  className="text-xs text-accent hover:underline"
+                  className="text-xs text-cherry-ink hover:underline"
                 >
                   Replace secret
                 </button>

@@ -99,7 +99,7 @@ export function BrandHashtagsSection({
   const atCap = tags.length >= MAX_TAGS;
 
   return (
-    <div className="mt-6 bg-white/40 border border-white/60 rounded-lg px-5 py-4">
+    <div className="mt-6 bg-surface border border-line rounded-lg px-5 py-4">
       <div className="flex items-center justify-between mb-1">
         <h3 className="text-xs font-medium uppercase tracking-wider text-ink-subtle">
           Brand hashtags
@@ -117,7 +117,7 @@ export function BrandHashtagsSection({
         {tags.map((t, i) => (
           <span
             key={t}
-            className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-accent-subtle text-accent border border-accent/15"
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-cherry-wash text-cherry-ink border border-accent/15"
           >
             #{t}
             <button

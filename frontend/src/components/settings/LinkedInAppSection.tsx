@@ -168,7 +168,7 @@ export function LinkedInAppSection({ kind = 'profile' }: Props) {
             href="https://www.linkedin.com/developers/apps"
             target="_blank"
             rel="noreferrer"
-            className="text-accent hover:underline"
+            className="text-cherry-ink hover:underline"
           >
             linkedin.com/developers/apps
           </a>
@@ -209,7 +209,7 @@ export function LinkedInAppSection({ kind = 'profile' }: Props) {
                 <button
                   type="button"
                   onClick={() => setShowSecretForm(true)}
-                  className="text-xs text-accent hover:underline"
+                  className="text-xs text-cherry-ink hover:underline"
                 >
                   Replace secret
                 </button>

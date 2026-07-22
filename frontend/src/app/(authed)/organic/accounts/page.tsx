@@ -203,7 +203,7 @@ export default function OrganicAccountsPage() {
         <button
           onClick={() => { setLoading(true); loadAccounts(); }}
           disabled={loading}
-          className="flex items-center gap-2 px-3 py-1.5 text-sm text-ink-muted hover:text-ink rounded-lg hover:bg-white/55 transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-3 py-1.5 text-sm text-ink-muted hover:text-ink rounded-lg hover:bg-surface-alt transition-colors disabled:opacity-50"
         >
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
           Refresh
@@ -220,10 +220,10 @@ export default function OrganicAccountsPage() {
           return (
             <div
               key={platform.id}
-              className="bg-white/72 backdrop-blur-card border border-white/60 rounded-lg shadow-glass overflow-hidden"
+              className="bg-surface border border-line rounded-lg shadow-subtle overflow-hidden"
             >
               {/* Platform header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-line/60">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-line">
                 <div className="flex items-center gap-3">
                   <div
                     className="w-9 h-9 rounded-lg flex items-center justify-center"
@@ -240,7 +240,7 @@ export default function OrganicAccountsPage() {
                         </span>
                       )}
                       {connected.length > 0 && (
-                        <span className="px-1.5 py-0.5 text-2xs font-semibold rounded-full bg-accent-subtle text-accent">
+                        <span className="px-1.5 py-0.5 text-2xs font-semibold rounded-full bg-cherry-wash text-cherry-ink">
                           {connected.length} connected
                         </span>
                       )}
@@ -272,7 +272,7 @@ export default function OrganicAccountsPage() {
 
               {/* Connected accounts list */}
               {connected.length > 0 ? (
-                <ul className="divide-y divide-line/50">
+                <ul className="divide-y divide-line">
                   {connected.map((account) => (
                     <AccountRow
                       key={account.id}
@@ -305,7 +305,7 @@ export default function OrganicAccountsPage() {
       </div>
 
       {/* Permissions note */}
-      <div className="mt-6 flex items-start gap-3 px-4 py-3 rounded-lg bg-white/40 border border-white/60 text-sm text-ink-muted">
+      <div className="mt-6 flex items-start gap-3 px-4 py-3 rounded-lg bg-surface border border-line text-sm text-ink-muted">
         <AlertCircle size={15} className="shrink-0 mt-0.5 text-ink-subtle" />
         <p>
           Connecting accounts uses the same Meta App as your ads. For production use (outside of
@@ -317,7 +317,7 @@ export default function OrganicAccountsPage() {
             href="https://developers.facebook.com/docs/app-review"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-accent hover:underline inline-flex items-center gap-1"
+            className="text-cherry-ink hover:underline inline-flex items-center gap-1"
           >
             Learn more <ExternalLink size={11} />
           </a>

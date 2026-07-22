@@ -452,9 +452,9 @@ function AddIdeaCard({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="group flex flex-col items-center justify-center gap-3 bg-white/40 hover:bg-white border border-dashed border-line hover:border-ink-subtle rounded-lg px-4 py-8 h-full min-h-[320px] text-ink-muted hover:text-ink transition-colors"
+      className="group flex flex-col items-center justify-center gap-3 bg-surface hover:bg-surface-alt border border-dashed border-line hover:border-ink-subtle rounded-lg px-4 py-8 h-full min-h-[320px] text-ink-muted hover:text-ink transition-colors"
     >
-      <div className="w-12 h-12 rounded-full bg-surface-alt group-hover:bg-accent-subtle flex items-center justify-center transition-colors">
+      <div className="w-12 h-12 rounded-full bg-surface-alt group-hover:bg-cherry-wash flex items-center justify-center transition-colors">
         <Plus size={22} />
       </div>
       <span className="text-sm font-medium">Add new idea</span>
@@ -524,7 +524,7 @@ function IdeaCard({
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center gap-1 text-2xs text-accent hover:underline truncate"
+            className="inline-flex items-center gap-1 text-2xs text-cherry-ink hover:underline truncate"
           >
             <LinkIcon size={10} />
             {idea.linkUrl}
@@ -552,7 +552,7 @@ function IdeaCard({
           onMenuOpen(!menuOpen);
           setMoveOpen(false);
         }}
-        className="absolute top-2 right-2 p-1.5 rounded bg-white/90 backdrop-blur text-ink-subtle hover:text-ink hover:bg-white opacity-0 group-hover:opacity-100 transition-opacity shadow-subtle"
+        className="absolute top-2 right-2 p-1.5 rounded bg-white/90 backdrop-blur text-ink-subtle hover:text-ink hover:bg-surface-alt opacity-0 group-hover:opacity-100 transition-opacity shadow-subtle"
         title="More"
       >
         <MoreVertical size={12} />
@@ -582,7 +582,7 @@ function IdeaCard({
                 onClick={(e) => { e.stopPropagation(); onMoveToFolder(null); onMenuOpen(false); setMoveOpen(false); }}
                 className={[
                   'w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-surface-hover text-left',
-                  idea.folderId === null ? 'text-accent font-semibold' : 'text-ink-muted',
+                  idea.folderId === null ? 'text-cherry-ink font-semibold' : 'text-ink-muted',
                 ].join(' ')}
               >
                 <FolderIcon size={11} /> Unfiled
@@ -593,7 +593,7 @@ function IdeaCard({
                   onClick={(e) => { e.stopPropagation(); onMoveToFolder(f.id); onMenuOpen(false); setMoveOpen(false); }}
                   className={[
                     'w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-surface-hover text-left',
-                    idea.folderId === f.id ? 'text-accent font-semibold' : 'text-ink-muted',
+                    idea.folderId === f.id ? 'text-cherry-ink font-semibold' : 'text-ink-muted',
                   ].join(' ')}
                 >
                   {f.color && (

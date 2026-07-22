@@ -157,7 +157,7 @@ export function AccountPicker({ accounts, selected, onChange }: Props) {
           <div className="flex items-center justify-between px-3 py-1.5 border-b border-line bg-surface-alt/30">
             <button
               onClick={selectAll}
-              className="text-xs font-medium text-accent hover:underline"
+              className="text-xs font-medium text-cherry-ink hover:underline"
             >
               Select all
             </button>

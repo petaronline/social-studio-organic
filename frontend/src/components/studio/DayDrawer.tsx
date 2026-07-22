@@ -211,7 +211,7 @@ function DayDrawerPostCard({
               href={post.permalink}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
+              className="inline-flex items-center gap-1 text-xs text-cherry-ink hover:underline"
             >
               <ExternalLink size={11} /> Open on platform
             </a>
@@ -249,13 +249,13 @@ function statusVisuals(status: CalendarPost['status']): {
 } {
   switch (status) {
     case 'scheduled':
-      return { bg: 'bg-accent-subtle', text: 'text-accent', Icon: Clock, label: 'Scheduled' };
+      return { bg: 'bg-cherry-wash', text: 'text-cherry-ink', Icon: Clock, label: 'Scheduled' };
     case 'published':
       return { bg: 'bg-success/15', text: 'text-success', Icon: CheckCircle2, label: 'Published' };
     case 'partial':
       return { bg: 'bg-warning/15', text: 'text-warning', Icon: AlertCircle, label: 'Partial' };
     case 'publishing':
-      return { bg: 'bg-accent-subtle', text: 'text-accent', Icon: RefreshCw, label: 'Publishing' };
+      return { bg: 'bg-cherry-wash', text: 'text-cherry-ink', Icon: RefreshCw, label: 'Publishing' };
     default:
       // Failed / cancelled / draft shouldn't appear in the calendar at all,
       // but keep a safe fallback so we don't crash if they slip through.

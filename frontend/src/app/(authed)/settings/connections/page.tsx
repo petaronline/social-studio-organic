@@ -50,7 +50,7 @@ export default function ConnectionsPage() {
               className={[
                 'px-3.5 py-2 text-sm font-medium transition-colors border-b-2 -mb-px',
                 isActive
-                  ? 'border-accent text-accent'
+                  ? 'border-accent text-cherry-ink'
                   : 'border-transparent text-ink-muted hover:text-ink',
               ].join(' ')}
             >

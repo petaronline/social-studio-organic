@@ -38,7 +38,7 @@ export function HelpTip({ children, label = 'More info' }: Props) {
         onFocus={show}
         onBlur={hide}
         onClick={() => setOpen((v) => !v)}
-        className="text-ink-subtle hover:text-ink transition-colors focus:outline-none focus-visible:text-accent"
+        className="text-ink-subtle hover:text-ink transition-colors focus:outline-none focus-visible:text-cherry-ink"
       >
         <HelpCircle size={14} strokeWidth={2} />
       </button>

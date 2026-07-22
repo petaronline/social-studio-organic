@@ -162,7 +162,7 @@ export function MetaConnectionSection() {
                 href="https://developers.facebook.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-accent hover:text-accent-hover underline"
+                className="text-cherry-ink hover:text-cherry-ink-hover underline"
               >
                 developers.facebook.com
               </a>

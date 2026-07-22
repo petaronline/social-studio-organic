@@ -229,7 +229,7 @@ export function WeekView({ posts, weekStart, setWeekStart, onCancelSchedule, onP
       {/* Day-of-week header — sticky on top of the scrolling grid.
           Left-padded by the hour-gutter width so day columns line up
           with the grid below. */}
-      <div className="flex border-b border-line/60 sticky top-0 z-10 bg-white">
+      <div className="flex border-b border-line sticky top-0 z-10 bg-white">
         <div className="w-[44px] shrink-0 border-r border-line/40" />
         <div className="flex-1 grid grid-cols-7">
           {days.map((d, i) => {
@@ -311,7 +311,7 @@ export function WeekView({ posts, weekStart, setWeekStart, onCancelSchedule, onP
                   key={dayIdx}
                   className={[
                     'relative border-l border-line/40 first:border-l-0',
-                    isToday ? 'bg-accent-subtle/[0.04]' : '',
+                    isToday ? 'bg-cherry-wash/[0.04]' : '',
                   ].join(' ')}
                 />
               );

@@ -261,7 +261,7 @@ export function IdeaEditorModal({
         className="bg-white border border-line rounded-lg shadow-card w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-line/60">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-line">
           <h2 className="h-sub text-ink">
             {idea ? 'Edit idea' : 'New idea'}
           </h2>
@@ -322,7 +322,7 @@ export function IdeaEditorModal({
                 )}
                 <button
                   onClick={clearMedia}
-                  className="absolute top-2 right-2 p-1.5 rounded bg-white/90 text-ink-subtle hover:text-danger hover:bg-white shadow-subtle"
+                  className="absolute top-2 right-2 p-1.5 rounded bg-white/90 text-ink-subtle hover:text-danger hover:bg-surface-alt shadow-subtle"
                   title="Remove media"
                 >
                   <Trash2 size={12} />
@@ -407,7 +407,7 @@ export function IdeaEditorModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-5 py-3 border-t border-line/60">
+        <div className="flex items-center justify-between px-5 py-3 border-t border-line">
           <div>
             {idea && (
               <button
