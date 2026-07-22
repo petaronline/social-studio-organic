@@ -57,7 +57,7 @@ import {
   Brand,
   ApiError,
 } from '@/lib/api';
-import { AccountAvatar } from '@/components/AccountAvatar';
+import { AccountAvatar, isPlaceholderPicture } from '@/components/AccountAvatar';
 
 // ─── Platform config ─────────────────────────────────────────────────────────
 
@@ -629,7 +629,7 @@ function BrandRow({
     >
       {icon ? (
         <span className="shrink-0 text-ink-muted">{icon}</span>
-      ) : thumbnailUrl ? (
+      ) : thumbnailUrl && !isPlaceholderPicture(thumbnailUrl) ? (
         // First-profile thumbnail with a brand-colored ring so the brand
         // color still reads at a glance.
         <div

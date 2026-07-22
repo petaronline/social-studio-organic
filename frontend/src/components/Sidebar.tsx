@@ -92,10 +92,16 @@ const PRIMARY_NAV: NavItem[] = [
   { kind: 'flat', label: 'Analytics', href: '/organic/analytics', icon: BarChart3, active: ACTIVE_MINT },
 ];
 
+/**
+ * Workspace nav is one item now.
+ *
+ * "Accounts" was a weaker duplicate of Settings → Social profiles, and
+ * "Team" is workspace administration rather than daily work — both now live
+ * inside Settings. Two nav entries that lead to the same job is how one of
+ * them ends up stale.
+ */
 const SECONDARY_NAV: NavItem[] = [
-  { kind: 'flat', label: 'Accounts', href: '/organic/accounts', icon: Sprout,   active: ACTIVE_ROSE },
-  { kind: 'flat', label: 'Team',     href: '/team',             icon: Users,    adminOnly: true, active: ACTIVE_SLATE },
-  { kind: 'flat', label: 'Settings', href: '/settings',         icon: Settings, active: ACTIVE_SLATE },
+  { kind: 'flat', label: 'Settings', href: '/settings', icon: Settings, active: ACTIVE_SLATE },
 ];
 
 // ─── Sidebar ─────────────────────────────────────────────────────────────────

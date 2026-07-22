@@ -651,7 +651,7 @@ export function BrandSelector() {
                       onClick={() => toggleBrand(b.id)}
                       className="flex-1 flex items-center gap-2.5 text-left pr-3 py-2 text-sm hover:bg-surface-hover transition-colors"
                     >
-                      {b.thumbnailUrl ? (
+                      {b.thumbnailUrl && !isPlaceholderPicture(b.thumbnailUrl) ? (
                         <span
                           className="w-4 h-4 rounded-full shrink-0 overflow-hidden"
                           style={{ boxShadow: `0 0 0 1.5px ${b.color}` }}

@@ -7,6 +7,7 @@
  * video. Media is supplied as an ordered array of items.
  */
 import { useState } from 'react';
+import { isPlaceholderPicture } from '@/components/AccountAvatar';
 import {
   ThumbsUp,
   MessageCircle,
@@ -38,7 +39,7 @@ export function FacebookPreview({ pageName, pagePictureUrl, body, media }: Props
       {/* Header */}
       <div className="flex items-start gap-2 px-4 pt-3 pb-2">
         <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 shrink-0">
-          {pagePictureUrl ? (
+          {pagePictureUrl && !isPlaceholderPicture(pagePictureUrl) ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={pagePictureUrl} alt="" className="w-full h-full object-cover" />
           ) : (

@@ -16,6 +16,7 @@
  */
 
 import { useState, type DragEvent, type ReactNode } from 'react';
+import { isPlaceholderPicture } from '@/components/AccountAvatar';
 import { Plus, Check, X, Edit2, Trash2, Inbox } from 'lucide-react';
 
 export const BRAND_COLORS = [
@@ -74,7 +75,7 @@ export function BrandRow({
     >
       {icon ? (
         <span className="shrink-0 text-ink-muted">{icon}</span>
-      ) : thumbnailUrl ? (
+      ) : thumbnailUrl && !isPlaceholderPicture(thumbnailUrl) ? (
         <div
           className="w-5 h-5 rounded-full shrink-0 overflow-hidden ring-2"
           style={{ boxShadow: `0 0 0 2px ${color}` }}

@@ -10,7 +10,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Layers, User, Sliders, Image as ImageIcon, Share2, Boxes, Plug } from 'lucide-react';
+import { Layers, User, Users, Sliders, Image as ImageIcon, Share2, Boxes, Plug } from 'lucide-react';
 import { auth } from '@/lib/api';
 
 interface SubNavItem {
@@ -25,6 +25,7 @@ const SUB_NAV: SubNavItem[] = [
   { label: 'Brands',           href: '/settings/brands',          icon: Boxes },
   { label: 'Social profiles',  href: '/settings/social-profiles', icon: Share2 },
   { label: 'Branding',         href: '/settings/branding',        icon: ImageIcon, adminOnly: true },
+  { label: 'Team',             href: '/settings/team',            icon: Users,     adminOnly: true },
   { label: 'Profile',          href: '/settings/profile',         icon: User },
 ];
 
@@ -45,10 +46,14 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
   const tabs = SUB_NAV.filter((t) => !t.adminOnly || isAdmin);
 
   return (
-    <div className="max-w-6xl mx-auto">
+    /* Full width, like every other page. This was `max-w-6xl mx-auto`, which
+       centred Settings inside the work surface and left a band of empty
+       canvas down both sides — it read as a different, narrower app than the
+       page you'd just navigated from. The panel already provides the margin. */
+    <div>
       <div className="mb-8">
         <h1 className="h-page">Settings</h1>
-        <p className="text-sm text-ink-muted mt-1">
+        <p className="mt-1.5 text-sm text-ink-muted">
           Configure how The Social Studio connects to each network, and how your team is organised.
         </p>
       </div>
