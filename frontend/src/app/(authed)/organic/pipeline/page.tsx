@@ -140,6 +140,19 @@ export default function OrganicPipelinePage() {
   // load posts yet (loading with empty ids for a brand scope would wrongly
   // fall back to "all").
   const [accountsLoaded, setAccountsLoaded] = useState(false);
+
+  /**
+   * id → display name, for the "who is this going out as" line on calendar
+   * cards. A social manager thinks in profile names ("1xBet"), not
+   * platforms, so this is what the card footer shows when we have it.
+   */
+  const accountNames = useMemo(() => {
+    const out: Record<string, string> = {};
+    for (const a of accounts) {
+      out[a.id] = a.meta?.name || a.meta?.username || a.externalId;
+    }
+    return out;
+  }, [accounts]);
   useEffect(() => {
     setActiveBrandId(getActiveBrandId());
     const onChange = (e: Event) => {
@@ -183,6 +196,22 @@ export default function OrganicPipelinePage() {
     return accounts.filter((a) => set.has(a.id));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accounts, scope]);
+
+  /** Summary of the posts currently loaded, for the strip above the grid. */
+  const viewCounts = useMemo(() => {
+    let scheduled = 0;
+    let published = 0;
+    let attention = 0;
+    for (const p of posts) {
+      if (p.status === 'scheduled' || p.status === 'publishing') scheduled++;
+      else if (p.status === 'published') published++;
+      // 'partial' means some targets landed and some didn't — that's the
+      // state worth surfacing, since it looks published until you look.
+      if (p.status === 'partial' || p.status === 'failed') attention++;
+    }
+    return { scheduled, published, attention, accounts: brandAccounts.length };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [posts, brandAccounts.length]);
 
   const effectiveAccountIds = useMemo(() => {
     const candidate = brandAccounts.map((a) => a.id);
@@ -455,8 +484,33 @@ export default function OrganicPipelinePage() {
           {refreshing ? 'Refreshing…' : 'Refresh'}
         </button>
         {refreshFeedback && (
-          <span className="text-xs text-ink-muted ml-1">{refreshFeedback}</span>
+          <span className="ml-1 text-xs text-ink-muted">{refreshFeedback}</span>
         )}
+      </div>
+
+      {/* Counts for what's currently in view. Deliberately reads off the
+          already-loaded `posts` rather than firing its own query — these are
+          a summary of what you're looking at, not a second source of truth
+          that could disagree with the grid underneath it. */}
+      <div className="mb-4 flex flex-wrap gap-2.5">
+        <div className="stat stat-hero">
+          <div className="stat-value">{viewCounts.scheduled}</div>
+          <div className="lab mt-1.5">Scheduled</div>
+        </div>
+        <div className="stat">
+          <div className="stat-value">{viewCounts.published}</div>
+          <div className="lab mt-1.5">Published</div>
+        </div>
+        {viewCounts.attention > 0 && (
+          <div className="stat">
+            <div className="stat-value text-danger">{viewCounts.attention}</div>
+            <div className="lab mt-1.5">Need attention</div>
+          </div>
+        )}
+        <div className="stat">
+          <div className="stat-value">{viewCounts.accounts}</div>
+          <div className="lab mt-1.5">Profiles in scope</div>
+        </div>
       </div>
 
       {loading ? (
@@ -477,6 +531,7 @@ export default function OrganicPipelinePage() {
           onPostClick={openPostDrawer}
           onReschedule={handleReschedule}
           onEditPost={handleEditPost}
+          accountNames={accountNames}
         />
       ) : (
         <>

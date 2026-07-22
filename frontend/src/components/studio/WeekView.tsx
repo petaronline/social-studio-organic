@@ -43,8 +43,10 @@ import { uploads } from '@/lib/api';
 import { multiPlatformVisual } from '@/lib/platform-visuals';
 
 // ─── Layout constants ────────────────────────────────────────────────
-/** Vertical space allotted to one post row inside an hour band. */
-const ROW_PX = 56;
+/** Vertical space allotted to one post row inside an hour band.
+ *  Tall enough for the time line, two lines of copy and the footer —
+ *  the card is text-forward now, so it needs the room. */
+const ROW_PX = 96;
 /** Minimum height of an empty hour band (just for the label line). */
 const MIN_BAND_PX = 36;
 /** Inset between the row content and the band edges. */
@@ -72,6 +74,10 @@ interface Props {
   /** Patch 4.41.0: edit a scheduled post. Renders a pencil on
    *  scheduled Vass cards; clicking opens the composer pre-filled. */
   onEditPost?: (post: CalendarPost) => void;
+  /** id → display name for connected accounts, so a card can say "1xBet"
+   *  rather than "Instagram". Optional: without it cards fall back to the
+   *  platform label. */
+  accountNames?: Record<string, string>;
 }
 
 interface PostPlacement {
@@ -84,7 +90,7 @@ interface PostPlacement {
   rowInBand: number;
 }
 
-export function WeekView({ posts, weekStart, setWeekStart, onCancelSchedule, onPostClick, onReschedule, onEditPost }: Props) {
+export function WeekView({ posts, weekStart, setWeekStart, onCancelSchedule, onPostClick, onReschedule, onEditPost, accountNames }: Props) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   // Patch 4.40.0: drag-to-reschedule. Tracks the post being dragged and
   // the slot currently hovered, so we can highlight the drop target.
@@ -172,14 +178,14 @@ export function WeekView({ posts, weekStart, setWeekStart, onCancelSchedule, onP
   const todayDate = new Date();
 
   return (
-    <div className="bg-white border border-line rounded-lg shadow-card overflow-hidden">
+    <div className="overflow-hidden rounded-xl border border-line bg-surface shadow-subtle">
       {/* Top toolbar */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-line/60">
+      <div className="flex items-center justify-between border-b border-line px-4 py-3">
         <div className="flex items-center gap-1">
-          <button onClick={prevWeek} className="p-1.5 rounded hover:bg-surface-hover text-ink-muted hover:text-ink" aria-label="Previous week">
+          <button onClick={prevWeek} className="rounded p-1.5 text-ink-subtle hover:bg-surface-alt hover:text-ink" aria-label="Previous week">
             <ChevronLeft size={16} />
           </button>
-          <button onClick={today} className="text-xs font-medium text-ink-muted hover:text-ink px-2 py-1 rounded hover:bg-surface-hover transition-colors">
+          <button onClick={today} className="lab rounded px-2 py-1 transition-colors hover:bg-surface-alt hover:text-ink">
             Today
           </button>
           <button onClick={nextWeek} className="p-1.5 rounded hover:bg-surface-hover text-ink-muted hover:text-ink" aria-label="Next week">
@@ -199,20 +205,23 @@ export function WeekView({ posts, weekStart, setWeekStart, onCancelSchedule, onP
           {days.map((d, i) => {
             const isToday = sameLocalDay(d, todayDate);
             return (
+              /* Mono weekday label over a large date, with today underlined
+                 in cherry rather than given a tinted cell — a filled block
+                 behind the header competed with the post colours below. */
               <div
                 key={i}
-                className={[
-                  'flex flex-col items-center justify-center px-2 py-2 border-l border-line/40 first:border-l-0',
-                  isToday ? 'bg-accent-subtle/30' : '',
-                ].join(' ')}
+                className="flex flex-col items-start gap-0.5 border-l border-line/40 px-3 pb-2 pt-2.5 first:border-l-0"
               >
-                <span className="text-2xs uppercase tracking-wider font-semibold text-ink-subtle">
+                <span className={['lab', isToday ? 'text-cherry' : ''].join(' ')}>
                   {d.toLocaleDateString(undefined, { weekday: 'short' })}
+                  {isToday && ' · today'}
                 </span>
                 <span
                   className={[
-                    'text-sm font-semibold',
-                    isToday ? 'text-accent' : 'text-ink',
+                    'font-display text-lg font-bold leading-none tabular-nums',
+                    isToday
+                      ? 'text-cherry underline decoration-cherry decoration-2 underline-offset-4'
+                      : 'text-ink',
                   ].join(' ')}
                 >
                   {d.getDate()}
@@ -324,6 +333,7 @@ export function WeekView({ posts, weekStart, setWeekStart, onCancelSchedule, onP
                 key={`${pl.post.source}:${pl.post.id}`}
                 placement={pl}
                 bandOffset={bandOffsets[pl.hour]}
+                accountNames={accountNames}
                 onClick={() => onPostClick(pl.post)}
                 onCancel={() => onCancelSchedule(pl.post.id)}
                 onEdit={onEditPost ? () => onEditPost(pl.post) : undefined}
@@ -349,6 +359,7 @@ export function WeekView({ posts, weekStart, setWeekStart, onCancelSchedule, onP
 function WeekPostCard({
   placement,
   bandOffset,
+  accountNames,
   onClick,
   onCancel,
   onEdit,
@@ -359,6 +370,7 @@ function WeekPostCard({
 }: {
   placement: PostPlacement;
   bandOffset: number;
+  accountNames?: Record<string, string>;
   onClick: () => void;
   onCancel: () => void;
   onEdit?: () => void;
@@ -370,6 +382,23 @@ function WeekPostCard({
   const { post, dayIdx, rowInBand } = placement;
   const ts = new Date(post.timestamp);
   const timeStr = ts.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+
+  /**
+   * Footer label: who this goes out as.
+   *
+   * Prefers the connected account's own name (what the mockup shows, and
+   * what a social manager actually thinks in — "1xBet", not "Instagram").
+   * Falls back to the platform label when the parent hasn't supplied the
+   * lookup, and to a count when a post fans out to several accounts.
+   */
+  const footerLabel = (() => {
+    const names = post.accountIds
+      .map((id) => accountNames?.[id])
+      .filter((n): n is string => !!n);
+    if (names.length === 1) return names[0];
+    if (names.length > 1) return `${names[0]} +${names.length - 1}`;
+    return multiPlatformVisual(post.platforms).label;
+  })();
 
   // Position
   const top = bandOffset + ROW_GAP_PX + rowInBand * ROW_PX;
@@ -418,74 +447,68 @@ function WeekPostCard({
         />
       )}
 
-      <div className="h-full pl-3 pr-1.5 py-1 flex items-center gap-2">
-        {/* Thumbnail */}
-        {mediaUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={mediaUrl}
-            alt=""
-            className="w-9 h-9 rounded object-cover bg-black shrink-0"
-          />
-        ) : (
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded bg-white/50">
-            <StatusIcon size={14} className="opacity-60" />
-          </div>
-        )}
+      {/* Text-forward card: time, then the copy, then who it's going out as.
+          The old layout led with a 36px thumbnail and squeezed the body into
+          a single truncated line, which made a week unreadable — you could
+          see there were posts but not what they said. The thumbnail is now a
+          small marker in the footer; the words get the space. */}
+      <div className="flex h-full flex-col gap-1 py-2 pl-3 pr-2">
+        {/* Colour is inherited from the card's platform ink — these
+            deliberately don't set text-ink/text-ink-muted, which would
+            override the tint and drop contrast on the coloured ground. */}
+        <div className="flex items-center gap-1.5">
+          <span className="chip-when">{timeStr}</span>
+          {post.status !== 'published' && post.status !== 'scheduled' && (
+            <StatusIcon size={10} className="opacity-70" />
+          )}
 
-        {/* Text */}
-        <div className="flex-1 min-w-0">
-          {/* Text colour is inherited from the card's platform ink, so these
-              deliberately don't set text-ink / text-ink-muted — those would
-              override the tint and drop contrast on the coloured ground. */}
-          <div className="flex items-center gap-1.5">
-            <span className="chip-when">{timeStr}</span>
-            <div className="flex items-center gap-0.5">
-              {post.platforms.slice(0, 3).map((p) => {
-                const meta = PLATFORM_META[p];
-                if (!meta) return null;
-                const Icon = meta.Icon;
-                return <Icon key={p} size={9} className="opacity-70" />;
-              })}
-            </div>
+          {/* Hover actions sit on the time line so they never cover copy. */}
+          <div className="ml-auto flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+            {isPublished && post.permalink && (
+              <a
+                href={post.permalink}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="rounded p-1 opacity-70 hover:bg-white/50 hover:opacity-100"
+                title="Open on platform"
+              >
+                <ExternalLink size={11} />
+              </a>
+            )}
+            {isScheduledVass && onEdit && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onEdit(); }}
+                className="rounded p-1 opacity-70 hover:bg-white/50 hover:opacity-100"
+                title="Edit"
+              >
+                <Pencil size={11} />
+              </button>
+            )}
+            {isScheduledVass && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onCancel(); }}
+                className="rounded p-1 opacity-70 hover:bg-white/50 hover:text-danger hover:opacity-100"
+                title="Cancel"
+              >
+                <Trash2 size={11} />
+              </button>
+            )}
           </div>
-          <p className="mt-0.5 truncate text-2xs font-medium leading-tight opacity-90">
-            {post.body || <span className="italic opacity-60">(no text)</span>}
-          </p>
         </div>
 
-        {/* Hover actions */}
-        <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 transition-opacity">
-          {isPublished && post.permalink && (
-            <a
-              href={post.permalink}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="p-1 rounded text-ink-subtle hover:text-ink hover:bg-surface-hover"
-              title="Open on platform"
-            >
-              <ExternalLink size={11} />
-            </a>
+        <p className="line-clamp-2 text-xs font-medium leading-snug">
+          {post.body || <span className="italic opacity-60">(no text)</span>}
+        </p>
+
+        <div className="mt-auto flex items-center gap-1.5 overflow-hidden">
+          {mediaUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={mediaUrl} alt="" className="h-4 w-4 shrink-0 rounded-sm bg-black object-cover" />
+          ) : (
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-current opacity-70" />
           )}
-          {isScheduledVass && onEdit && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onEdit(); }}
-              className="p-1 rounded text-ink-subtle hover:text-accent hover:bg-accent/10"
-              title="Edit"
-            >
-              <Pencil size={11} />
-            </button>
-          )}
-          {isScheduledVass && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onCancel(); }}
-              className="p-1 rounded text-ink-subtle hover:text-danger hover:bg-danger/10"
-              title="Cancel"
-            >
-              <Trash2 size={11} />
-            </button>
-          )}
+          <span className="chip-when truncate">{footerLabel}</span>
         </div>
       </div>
     </div>
