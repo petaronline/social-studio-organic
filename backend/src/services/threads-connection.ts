@@ -26,6 +26,31 @@ const THREADS_TOKEN_URL = 'https://graph.threads.net/oauth/access_token';
 const THREADS_LONG_LIVED_URL = 'https://graph.threads.net/access_token';
 const THREADS_GRAPH_BASE = 'https://graph.threads.net/v1.0';
 
+/**
+ * Pull a human-readable reason out of whichever error envelope Threads used,
+ * or null when the payload doesn't look like an error at all.
+ */
+function extractThreadsError(parsed: unknown, raw: string, status: number): string | null {
+  if (parsed && typeof parsed === 'object') {
+    const o = parsed as {
+      error_message?: string;
+      error_type?: string;
+      error?: { message?: string; type?: string; code?: number };
+    };
+    if (o.error_message) return o.error_message;
+    if (o.error?.message) {
+      const code = o.error.code !== undefined ? ` (code ${o.error.code})` : '';
+      return `${o.error.message}${code}`;
+    }
+    if (o.error_type) return o.error_type;
+  }
+  if (status >= 400) {
+    const snippet = raw.trim().slice(0, 200);
+    return snippet ? `HTTP ${status}: ${snippet}` : `HTTP ${status}`;
+  }
+  return null;
+}
+
 /** Scopes we need for organic publishing. threads_basic gives us
  *  identity + read of own posts; threads_content_publish lets us
  *  POST containers and publish them. */
@@ -92,13 +117,22 @@ export async function exchangeCodeForLongLivedToken(args: {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: shortForm,
   });
-  const shortData = (await shortResp.json()) as
-    | ShortLivedTokenResponse
-    | { error_type?: string; error_message?: string; code?: number };
-  if (!shortResp.ok || 'error_type' in shortData) {
-    const msg =
-      'error_message' in shortData ? shortData.error_message : `HTTP ${shortResp.status}`;
-    throw new Error(`Threads token exchange failed: ${msg}`);
+  const shortRaw = await shortResp.text();
+  let shortData: unknown = null;
+  try {
+    shortData = shortRaw ? JSON.parse(shortRaw) : null;
+  } catch {
+    shortData = null;
+  }
+  const shortErr = extractThreadsError(shortData, shortRaw, shortResp.status);
+  if (!shortResp.ok || shortErr) {
+    console.error('[threads] code exchange failed', {
+      status: shortResp.status,
+      body: shortRaw.slice(0, 500),
+    });
+    throw new Error(
+      `Threads token exchange failed: ${shortErr ?? `HTTP ${shortResp.status}`}`
+    );
   }
   const shortToken = (shortData as ShortLivedTokenResponse).access_token;
   const userId = String((shortData as ShortLivedTokenResponse).user_id);
@@ -114,16 +148,44 @@ export async function exchangeCodeForLongLivedToken(args: {
   const longResp = await fetch(`${THREADS_LONG_LIVED_URL}?${longParams}`, {
     method: 'GET',
   });
-  const longData = (await longResp.json()) as
-    | LongLivedTokenResponse
-    | { error_type?: string; error_message?: string };
-  if (!longResp.ok || 'error_type' in longData) {
-    const msg =
-      'error_message' in longData ? longData.error_message : `HTTP ${longResp.status}`;
-    throw new Error(`Threads long-lived token exchange failed: ${msg}`);
+  /*
+   * Threads returns errors in TWO different shapes depending on which
+   * endpoint you hit:
+   *
+   *   { "error_type": "...", "error_message": "..." }              (oauth)
+   *   { "error": { "message": "...", "type": "...", "code": 190 } } (graph)
+   *
+   * This only understood the first, so a graph-shaped error fell through to
+   * a bare `HTTP 400` and Meta's actual explanation was discarded — which is
+   * exactly the message that made this impossible to diagnose. Read the body
+   * once as text, then try both shapes, and fall back to a snippet of the
+   * raw response so there is always something to act on.
+   */
+  const longRaw = await longResp.text();
+  let longData: unknown = null;
+  try {
+    longData = longRaw ? JSON.parse(longRaw) : null;
+  } catch {
+    longData = null;
+  }
+
+  const longErr = extractThreadsError(longData, longRaw, longResp.status);
+  if (!longResp.ok || longErr) {
+    console.error('[threads] long-lived exchange failed', {
+      status: longResp.status,
+      body: longRaw.slice(0, 500),
+    });
+    throw new Error(
+      `Threads long-lived token exchange failed: ${longErr ?? `HTTP ${longResp.status}`}`
+    );
   }
   const longToken = (longData as LongLivedTokenResponse).access_token;
   const expiresIn = (longData as LongLivedTokenResponse).expires_in;
+  if (!longToken) {
+    throw new Error(
+      `Threads long-lived token exchange returned no token (HTTP ${longResp.status}): ${longRaw.slice(0, 200)}`
+    );
+  }
   const expiresAt = new Date(Date.now() + expiresIn * 1000);
 
   return { accessToken: longToken, userId, expiresAt };
