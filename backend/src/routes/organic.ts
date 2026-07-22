@@ -42,7 +42,7 @@ import { query } from '../db/pool';
 import { fetchInsightsForTarget } from '../services/organic-insights';
 import * as metaSync from '../services/meta-sync';
 import { env } from '../utils/env';
-import { resolveAccountPictures, isKnownPlaceholderUrl } from '../services/page-picture';
+import { resolveAccountPictures, isKnownPlaceholderUrl, resolvePictureUrl } from '../services/page-picture';
 
 export const organicRouter = Router();
 
@@ -2097,23 +2097,29 @@ organicRouter.get('/posts/:id', requireAuth, async (req: Request, res: Response)
       widthPx: m.width_px,
       heightPx: m.height_px,
     })),
-    targets: targetRows.map((t) => ({
-      id: t.id,
-      accountId: t.account_id,
-      platform: t.platform,
-      bodyOverride: t.body_override,
-      status: t.status,
-      externalPostId: t.external_post_id,
-      externalPostUrl: t.external_post_url,
-      errorMessage: t.error_message,
-      errorCode: t.error_code,
-      publishedAt: t.published_at,
-      account: {
-        name: t.account_name,
-        username: t.account_username,
-        pictureUrl: t.account_picture_url,
-      },
-    })),
+    // Account pictures here are the same graph.facebook.com redirect
+    // endpoints as everywhere else, so they get the same treatment —
+    // otherwise a post's target chips show the grey placeholder while the
+    // rest of the app shows initials.
+    targets: await Promise.all(
+      targetRows.map(async (t) => ({
+        id: t.id,
+        accountId: t.account_id,
+        platform: t.platform,
+        bodyOverride: t.body_override,
+        status: t.status,
+        externalPostId: t.external_post_id,
+        externalPostUrl: t.external_post_url,
+        errorMessage: t.error_message,
+        errorCode: t.error_code,
+        publishedAt: t.published_at,
+        account: {
+          name: t.account_name,
+          username: t.account_username,
+          pictureUrl: await resolvePictureUrl(t.account_picture_url),
+        },
+      }))
+    ),
   });
 });
 

@@ -11,6 +11,7 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../middleware/auth';
+import { resolvePictureUrl } from '../services/page-picture';
 import * as brandsSvc from '../services/brands';
 
 export const brandsRouter = Router();
@@ -22,7 +23,23 @@ const HEX_COLOR = /^#[0-9A-Fa-f]{6}$/;
 // ------------------------------------------------------------
 brandsRouter.get('/', requireAuth, async (req: Request, res: Response) => {
   const brands = await brandsSvc.listBrands(req.user!.id);
-  res.json({ brands });
+  /*
+   * A brand's thumbnail is the first profile picture in that brand, taken
+   * straight from the accounts table. The SQL filter there can only match
+   * on the STORED url — and the stored url is a graph.facebook.com redirect
+   * endpoint, which looks perfectly innocent. Following it is the only way
+   * to know, so run each thumbnail through the same resolver the accounts
+   * list uses. Nulls become the brand's colour dot.
+   */
+  const resolved = await Promise.all(
+    brands.map(async (b) => {
+      const thumb = (b as { thumbnailUrl?: string | null }).thumbnailUrl;
+      if (!thumb) return b;
+      const value = await resolvePictureUrl(thumb);
+      return value === thumb ? b : { ...b, thumbnailUrl: value };
+    })
+  );
+  res.json({ brands: resolved });
 });
 
 // ------------------------------------------------------------
