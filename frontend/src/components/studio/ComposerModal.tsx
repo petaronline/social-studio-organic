@@ -159,6 +159,11 @@ interface Props {
    *  deleting the old one. Mutually exclusive with draftId/ideaSeed;
    *  if set, it takes precedence. */
   scheduledPostId?: string | null;
+  /** Preset schedule time (ISO). Opens the composer with this date already
+   *  chosen — used by the notable-dates overlay so "create post for this
+   *  date" lands with the day filled in. Ignored when editing an existing
+   *  draft or scheduled post, which carry their own time. */
+  initialScheduledFor?: string | null;
 }
 
 /** A snapshot of an Idea, suitable for prefilling the composer. The
@@ -178,7 +183,7 @@ export interface ComposerIdeaSeed {
   mediaKind: 'image' | 'video' | 'document' | null;
 }
 
-export function ComposerModal({ open, onClose, onPublished, draftId, ideaSeed, scheduledPostId }: Props) {
+export function ComposerModal({ open, onClose, onPublished, draftId, ideaSeed, scheduledPostId, initialScheduledFor }: Props) {
   // Patch 4.41.0: the post id we're editing, whether it came in as a
   // draft or a scheduled post. The load effect uses this to fetch +
   // prefill; the save path branches on `isScheduledEdit`.
@@ -377,7 +382,9 @@ export function ComposerModal({ open, onClose, onPublished, draftId, ideaSeed, s
     setPickerOpen(false);
     setPickerQuery('');
     setBrandHashtagList([]);
-    setScheduledFor(null);
+    // A preset date (from the notable-dates overlay) survives the reset;
+    // an edit of an existing post overrides it in the loader effect below.
+    setScheduledFor(initialScheduledFor ?? null);
     setSchedulePickerOpen(false);
     setFirstComment('');
     setCollaborators([]);
@@ -391,7 +398,7 @@ export function ComposerModal({ open, onClose, onPublished, draftId, ideaSeed, s
     setSeededIdeaId(!draftId && ideaSeed ? ideaSeed.ideaId : null);
     setEditingDraftId(draftId ?? null);
     setSavingDraft(false);
-  }, [open, draftId, ideaSeed]);
+  }, [open, draftId, ideaSeed, initialScheduledFor]);
 
   // Patch 4.37.0: when opening to edit an existing draft, fetch it and
   // prefill all the relevant state. We rely on selectedIds being

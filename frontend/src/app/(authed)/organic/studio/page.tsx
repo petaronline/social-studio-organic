@@ -37,6 +37,7 @@ import {
   CadencePanel,
   NextUpPanel,
 } from '@/components/studio/DashboardPanels';
+import { NotableDatesPanel } from '@/components/studio/NotableDates';
 import {
   getActiveBrandId,
   getActiveScope,
@@ -148,6 +149,9 @@ export default function StudioPage() {
 
   // ─── Composer & Idea editor wiring ──────────────────────────────
   const [composerOpen, setComposerOpen] = useState(false);
+  // Set by the notable-dates overlay so the composer opens with that day
+  // already scheduled. Cleared when the composer closes.
+  const [composerPreset, setComposerPreset] = useState<string | null>(null);
   const [ideaEditorOpen, setIdeaEditorOpen] = useState(false);
 
   // Deep-link: /organic/studio?compose=1 still opens the composer
@@ -238,6 +242,12 @@ export default function StudioPage() {
           <div className="flex flex-col gap-4">
             <AttentionPanel items={dash.attention} />
             <CadencePanel week={dash.week} emptyDaysAhead={dash.emptyDaysAhead} />
+            <NotableDatesPanel
+              onCreateForDate={(iso) => {
+                setComposerPreset(iso);
+                setComposerOpen(true);
+              }}
+            />
           </div>
         </div>
       ) : (
@@ -250,8 +260,9 @@ export default function StudioPage() {
       {/* Modals */}
       <ComposerModal
         open={composerOpen}
-        onClose={() => setComposerOpen(false)}
+        onClose={() => { setComposerOpen(false); setComposerPreset(null); }}
         onPublished={() => load()}
+        initialScheduledFor={composerPreset}
       />
       <IdeaEditorModal
         open={ideaEditorOpen}
