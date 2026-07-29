@@ -155,13 +155,17 @@ function NotableDateOverlay({
         className="animate-slide-up w-full max-w-md overflow-hidden rounded-2xl bg-surface shadow-lift"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* White header so the coral+blue illustration is the hero — a
-            category tint behind it fought the fixed two-tone art. The tint
-            survives only as the small category label. The motif sits large
-            on the right; the title/date sit left. */}
-        <div className="relative overflow-hidden bg-surface p-6">
-          <div className="pointer-events-none absolute -right-2 top-2" aria-hidden>
-            <NotableDateArt title={date.title} category={date.category} size={132} />
+        {/* Category-tinted header — the coloured block the date sits in, with
+            the illustration large on the right. The fixed coral+blue art
+            reads cleanly on the pale tints (checked against blush and gold),
+            so the tint and the art coexist rather than one replacing the
+            other. */}
+        <div
+          className="relative overflow-hidden p-6"
+          style={{ backgroundColor: style.bg }}
+        >
+          <div className="pointer-events-none absolute -right-2 top-3" aria-hidden>
+            <NotableDateArt title={date.title} category={date.category} size={136} />
           </div>
 
           <div className="relative flex items-start justify-between">
@@ -183,13 +187,12 @@ function NotableDateOverlay({
             <button
               onClick={onClose}
               aria-label="Close"
-              className="relative z-10 rounded-full p-1.5 text-ink-subtle transition-colors hover:bg-surface-alt hover:text-ink"
+              className="relative z-10 rounded-full p-1.5 text-ink-subtle transition-colors hover:bg-black/10 hover:text-ink"
             >
               <X size={18} />
             </button>
           </div>
         </div>
-        <div className="mx-6 border-t border-line" />
 
         <div className="p-6">
           {date.note ? (
