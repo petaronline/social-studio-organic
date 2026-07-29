@@ -20,6 +20,7 @@ import {
   CATEGORY_STYLE,
   type NotableDateInstance,
 } from '@/lib/notable-dates';
+import { NotableDateArt } from './NotableDateArt';
 
 /** A sensible default post time, so the composer opens on a real slot rather
  *  than midnight: 10:00 local on the date. */
@@ -81,14 +82,21 @@ export function NotableDatesPanel({
                   onClick={() => setSelected(d)}
                   className="group flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-left transition-colors hover:bg-surface-alt"
                 >
+                  {/* Motif tile doubles as the date chip: the illustration on
+                      a faint category-tinted ground, with the day number
+                      pinned in the corner — one element carries both "what"
+                      and "when". */}
                   <span
-                    className="flex h-9 w-11 shrink-0 flex-col items-center justify-center rounded-md font-mono leading-none"
-                    style={{ backgroundColor: style.bg, color: style.ink }}
+                    className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg"
+                    style={{ backgroundColor: style.bg }}
                   >
-                    <span className="text-2xs font-semibold uppercase">
-                      {d.date.toLocaleDateString(undefined, { month: 'short' })}
+                    <NotableDateArt title={d.title} category={d.category} size={40} />
+                    <span
+                      className="absolute bottom-0 right-0 rounded-tl-md bg-surface px-1 font-mono text-2xs font-bold tabular-nums"
+                      style={{ color: style.ink }}
+                    >
+                      {d.day}
                     </span>
-                    <span className="text-sm font-bold tabular-nums">{d.day}</span>
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold text-ink">
@@ -147,32 +155,41 @@ function NotableDateOverlay({
         className="animate-slide-up w-full max-w-md overflow-hidden rounded-2xl bg-surface shadow-lift"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Coloured header carries the date, big — the one place the category
-            tint is allowed to be loud. */}
-        <div className="flex items-start justify-between p-6" style={{ backgroundColor: style.bg, color: style.ink }}>
-          <div>
-            <div className="lab" style={{ color: style.ink }}>
-              {style.label}
-            </div>
-            <h3 className="mt-1 font-display text-2xl font-extrabold leading-tight">
-              {date.title}
-            </h3>
-            <div className="mt-1 font-mono text-sm font-semibold tabular-nums">
-              {date.date.toLocaleDateString(undefined, {
-                weekday: 'long',
-                day: 'numeric',
-                month: 'long',
-              })}
-            </div>
+        {/* White header so the coral+blue illustration is the hero — a
+            category tint behind it fought the fixed two-tone art. The tint
+            survives only as the small category label. The motif sits large
+            on the right; the title/date sit left. */}
+        <div className="relative overflow-hidden bg-surface p-6">
+          <div className="pointer-events-none absolute -right-2 top-2" aria-hidden>
+            <NotableDateArt title={date.title} category={date.category} size={132} />
           </div>
-          <button
-            onClick={onClose}
-            aria-label="Close"
-            className="rounded-full p-1.5 transition-colors hover:bg-black/10"
-          >
-            <X size={18} />
-          </button>
+
+          <div className="relative flex items-start justify-between">
+            <div className="pr-24">
+              <div className="lab" style={{ color: style.ink }}>
+                {style.label}
+              </div>
+              <h3 className="mt-1 max-w-[14ch] font-display text-2xl font-extrabold leading-tight text-ink">
+                {date.title}
+              </h3>
+              <div className="mt-1 font-mono text-sm font-semibold tabular-nums text-ink-muted">
+                {date.date.toLocaleDateString(undefined, {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                })}
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              aria-label="Close"
+              className="relative z-10 rounded-full p-1.5 text-ink-subtle transition-colors hover:bg-surface-alt hover:text-ink"
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
+        <div className="mx-6 border-t border-line" />
 
         <div className="p-6">
           {date.note ? (
