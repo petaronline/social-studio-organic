@@ -224,4 +224,28 @@
   .scrollbar-none::-webkit-scrollbar {
     display: none;
   }
+
+  /* Moodboard working surface — a soft checkerboard so pinned items read as
+     sitting on a physical board. Kept low-contrast on the lavender canvas. */
+  .mb-checker {
+    background-color: #F4F2F9;
+    background-image:
+      linear-gradient(45deg, #E9E5F2 25%, transparent 25%, transparent 75%, #E9E5F2 75%),
+      linear-gradient(45deg, #E9E5F2 25%, transparent 25%, transparent 75%, #E9E5F2 75%);
+    background-size: 46px 46px;
+    background-position: 0 0, 23px 23px;
+  }
+}
+
+/* Moodboard add-menu — a springy staggered "flow" open (PillFlow-ish). */
+@keyframes mb-pop {
+  from { opacity: 0; transform: translateY(12px) scale(0.94); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.mb-pop {
+  animation: mb-pop 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.mb-menu {
+  transform-origin: bottom left;
+  animation: mb-pop 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
 }

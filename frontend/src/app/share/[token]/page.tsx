@@ -130,7 +130,7 @@ export default function SharePage() {
         </div>
       </header>
 
-      <main className="min-h-0 flex-1" onClick={() => exportOpen && setExportOpen(false)}>
+      <main className="mb-checker min-h-0 flex-1" onClick={() => exportOpen && setExportOpen(false)}>
         {board.items.length === 0 ? (
           <div className="flex h-full items-center justify-center">
             <p className="font-hand text-2xl text-ink-subtle">an empty wall</p>

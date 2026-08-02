@@ -63,12 +63,14 @@ export function MoodboardControls({
         </div>
       )}
 
-      {/* Add menu — opens upward from the + button. */}
+      {/* Add menu — springs up from the + button (PillFlow-ish: the card
+          scales from its bottom-left origin and the rows flow in staggered). */}
       {open && (
-        <div className="w-60 overflow-hidden rounded-2xl bg-surface/95 p-1.5 shadow-lift ring-1 ring-line backdrop-blur">
+        <div className="mb-menu w-56 overflow-hidden rounded-2xl bg-surface/95 p-1.5 shadow-lift ring-1 ring-line backdrop-blur">
           <Tool
             icon={Type}
             label="Add title"
+            delay={0}
             disabled={disabled}
             onClick={() => {
               void board.addText('Title');
@@ -78,6 +80,7 @@ export function MoodboardControls({
           <Tool
             icon={StickyNote}
             label="Add note"
+            delay={40}
             disabled={disabled}
             onClick={() => {
               void board.addNote('New note');
@@ -89,6 +92,7 @@ export function MoodboardControls({
           <Tool
             icon={Palette}
             label="Add swatch"
+            delay={80}
             disabled={disabled}
             active={swatchOpen}
             onClick={() => {
@@ -139,6 +143,7 @@ export function MoodboardControls({
           <Tool
             icon={Link2}
             label="Add link"
+            delay={120}
             disabled={disabled}
             active={linkOpen}
             onClick={() => {
@@ -175,6 +180,7 @@ export function MoodboardControls({
           <Tool
             icon={board.busy ? Loader2 : Upload}
             label={board.busy ? 'Working…' : 'Upload image'}
+            delay={160}
             spin={board.busy}
             disabled={disabled}
             onClick={() => fileRef.current?.click()}
@@ -182,25 +188,25 @@ export function MoodboardControls({
         </div>
       )}
 
-      {/* Resting row: two equal round buttons — view toggle + the "+". The
-          toggle is icon-only with a hover tooltip (its `title`). */}
-      <div className="flex items-center gap-2">
-        <button
-          onClick={onToggleView}
-          title={view === 'messy' ? 'Tidy view' : 'Messy view'}
-          aria-label={view === 'messy' ? 'Tidy view' : 'Messy view'}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-surface/95 text-ink shadow-lift ring-1 ring-line backdrop-blur transition-colors hover:bg-surface-alt"
-        >
-          {view === 'messy' ? <LayoutGrid size={20} /> : <Shuffle size={20} />}
-        </button>
-
+      {/* Resting stack — the "+" sits on top of the view toggle. Both are
+          small round buttons; the toggle is icon-only with a hover tooltip. */}
+      <div className="flex flex-col items-center gap-2">
         <button
           onClick={() => (open ? closeAll() : setOpen(true))}
           title={open ? 'Close' : 'Add to board'}
           aria-label={open ? 'Close menu' : 'Add to board'}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-cherry text-white shadow-lift transition-transform hover:scale-105"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-cherry text-white shadow-lift transition-transform hover:scale-105"
         >
-          <Plus size={22} className={`transition-transform ${open ? 'rotate-45' : ''}`} />
+          <Plus size={20} className={`transition-transform duration-200 ${open ? 'rotate-45' : ''}`} />
+        </button>
+
+        <button
+          onClick={onToggleView}
+          title={view === 'messy' ? 'Tidy view' : 'Messy view'}
+          aria-label={view === 'messy' ? 'Tidy view' : 'Messy view'}
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-surface/95 text-ink shadow-lift ring-1 ring-line backdrop-blur transition-colors hover:bg-surface-alt"
+        >
+          {view === 'messy' ? <LayoutGrid size={18} /> : <Shuffle size={18} />}
         </button>
       </div>
 
@@ -228,6 +234,7 @@ function Tool({
   disabled,
   spin,
   active,
+  delay,
 }: {
   icon: LucideIcon;
   label: string;
@@ -235,14 +242,18 @@ function Tool({
   disabled?: boolean;
   spin?: boolean;
   active?: boolean;
+  /** Stagger offset (ms) for the flow-in animation. */
+  delay?: number;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
+      style={delay != null ? { animationDelay: `${delay}ms` } : undefined}
       className={[
         'flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-medium text-ink transition-colors',
+        delay != null ? 'mb-pop' : '',
         active ? 'bg-surface-alt' : 'hover:bg-surface-alt',
         'disabled:cursor-not-allowed disabled:opacity-40',
       ].join(' ')}

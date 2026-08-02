@@ -24,7 +24,7 @@ export const ReadOnlyBoard = forwardRef<
     const swatches = ordered.filter((i) => i.kind === 'swatch');
     const rest = ordered.filter((i) => i.kind !== 'swatch');
     return (
-      <div ref={ref} className="relative h-full bg-[#FBFBFD]">
+      <div ref={ref} className="relative h-full">
         <div className="h-full overflow-y-auto px-8 pb-12 pt-8">
           <div className="mx-auto max-w-6xl [column-fill:_balance] gap-4 [columns:2] sm:[columns:3] lg:[columns:4]">
             {rest.map((item) => (
@@ -52,7 +52,7 @@ export const ReadOnlyBoard = forwardRef<
 
   // Messy — absolute placement by stored fraction/rotation/z.
   return (
-    <div ref={ref} className="relative h-full w-full overflow-hidden bg-[#FBFBFD]">
+    <div ref={ref} className="relative h-full w-full overflow-hidden">
       {items.map((item) => (
         <div
           key={item.id}

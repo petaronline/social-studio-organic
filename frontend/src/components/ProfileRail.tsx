@@ -35,7 +35,10 @@ import {
 
 export function ProfileRail() {
   const pathname = usePathname();
-  const visible = pathname.startsWith('/organic');
+  // Hidden on the moodboard: it's a single-brand surface and the brand is
+  // already named on the board, so a profile-scoping rail is just noise there.
+  const visible =
+    pathname.startsWith('/organic') && !pathname.startsWith('/organic/moodboard');
 
   const [accounts, setAccounts] = useState<OrganicAccount[]>([]);
   const [scope, setScope] = useState<ActiveScope>({ type: 'all' });
