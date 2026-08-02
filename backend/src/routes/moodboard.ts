@@ -17,6 +17,7 @@ import { z } from 'zod';
 import { requireAuth } from '../middleware/auth';
 import * as moodboard from '../services/moodboard';
 import { unfurl } from '../services/unfurl';
+import { fetchImageToUpload, ImageFetchError } from '../services/image-fetch';
 
 export const moodboardRouter = Router();
 
@@ -179,4 +180,28 @@ moodboardRouter.post('/unfurl', requireAuth, async (req: Request, res: Response)
   }
   const meta = await unfurl(parsed.data.url);
   res.json({ meta });
+});
+
+// ---------------------------------------------------------------------
+// POST /organic/moodboard/fetch-image  { url } → stores the bytes as an
+// upload and returns its id. Used when pasting an image copied from a web
+// page: hotlinking the source URL usually renders blank (referer/CORS
+// blocks), so we pull the bytes server-side instead.
+// ---------------------------------------------------------------------
+const fetchImageSchema = z.object({ url: httpUrl });
+
+moodboardRouter.post('/fetch-image', requireAuth, async (req: Request, res: Response) => {
+  const parsed = fetchImageSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'A valid http(s) image url is required.' });
+  }
+  try {
+    const upload = await fetchImageToUpload(req.user!.id, parsed.data.url);
+    res.json({ upload });
+  } catch (err) {
+    if (err instanceof ImageFetchError) {
+      return res.status(400).json({ error: err.message });
+    }
+    throw err;
+  }
 });

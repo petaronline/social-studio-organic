@@ -1109,6 +1109,14 @@ export const organicMoodboard = {
     api.delete<{ ok: true }>(`/organic/moodboard/${id}`),
   unfurl: (url: string) =>
     api.post<{ meta: UnfurlResult }>('/organic/moodboard/unfurl', { url }),
+  /** Pull a remote image's bytes server-side and store them as an upload —
+   *  so a pasted/copied web image displays even when the source blocks
+   *  hotlinking. Returns the new upload's id + dimensions. */
+  fetchImage: (url: string) =>
+    api.post<{ upload: { id: string; widthPx: number | null; heightPx: number | null } }>(
+      '/organic/moodboard/fetch-image',
+      { url }
+    ),
 };
 
 // ============================================================

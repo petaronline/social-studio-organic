@@ -183,7 +183,24 @@ export function useMoodboard(brandId: string | null): UseMoodboard {
   );
 
   const addImageFromUrl = useCallback(
-    (url: string) => create('image', { url }),
+    async (url: string) => {
+      // Pull the bytes server-side first so the image displays even when the
+      // source blocks hotlinking (the common case for images copied off a web
+      // page). Fall back to referencing the URL directly if the fetch fails.
+      setBusy(true);
+      try {
+        const { upload } = await organicMoodboard.fetchImage(url);
+        await create('image', {
+          uploadId: upload.id,
+          naturalWidth: upload.widthPx ?? undefined,
+          naturalHeight: upload.heightPx ?? undefined,
+        });
+      } catch {
+        await create('image', { url });
+      } finally {
+        setBusy(false);
+      }
+    },
     [create]
   );
 
