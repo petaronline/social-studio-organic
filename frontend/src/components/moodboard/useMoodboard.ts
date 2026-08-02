@@ -29,6 +29,34 @@ function isHttpUrl(s: string): boolean {
   return /^https?:\/\/\S+$/i.test(s.trim());
 }
 
+/** Pull the first <img src> out of a clipboard text/html payload — this is
+ *  what "Copy image" on a web page actually puts on the clipboard. */
+function firstImgSrc(html: string): string | null {
+  const m = html.match(/<img[^>]+\bsrc=["']([^"']+)["']/i);
+  if (!m) return null;
+  return m[1]
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+}
+
+/** Turn a base64 data: image URL into a File so it can be uploaded. Returns
+ *  null for anything that isn't a base64 image data URL. */
+function dataUrlToFile(dataUrl: string): File | null {
+  const m = /^data:(image\/[a-z0-9.+-]+);base64,(.*)$/is.exec(dataUrl);
+  if (!m) return null;
+  try {
+    const mime = m[1];
+    const bin = atob(m[2]);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const ext = (mime.split('/')[1] || 'png').replace('+xml', '');
+    return new File([bytes], `pasted.${ext}`, { type: mime });
+  } catch {
+    return null;
+  }
+}
+
 export interface UseMoodboard {
   items: MoodboardItem[];
   limit: number;
@@ -199,12 +227,19 @@ export function useMoodboard(brandId: string | null): UseMoodboard {
       const dt = e.clipboardData;
       if (!dt) return;
 
-      // 1) Image blobs (screenshots, copied images) → upload each.
+      // 1) Real image blobs (screenshots, or a "Copy image" that yields the
+      //    actual bitmap). Read both files and items — browsers disagree on
+      //    which one carries the blob.
       const imageFiles: File[] = [];
-      for (const item of Array.from(dt.items)) {
-        if (item.kind === 'file' && item.type.startsWith('image/')) {
-          const f = item.getAsFile();
-          if (f) imageFiles.push(f);
+      for (const f of Array.from(dt.files ?? [])) {
+        if (f.type.startsWith('image/')) imageFiles.push(f);
+      }
+      if (!imageFiles.length) {
+        for (const item of Array.from(dt.items ?? [])) {
+          if (item.kind === 'file' && item.type.startsWith('image/')) {
+            const f = item.getAsFile();
+            if (f) imageFiles.push(f);
+          }
         }
       }
       if (imageFiles.length) {
@@ -213,7 +248,29 @@ export function useMoodboard(brandId: string | null): UseMoodboard {
         return;
       }
 
-      // 2) A URL in the clipboard → direct image, or a link to unfurl.
+      // 2) HTML payload — "Copy image" on a web page lands here as an <img>,
+      //    with no file blob and no plain-text URL. Extract the source: a
+      //    data: bitmap gets uploaded, an http(s) src becomes an image card.
+      const html = dt.getData('text/html');
+      if (html) {
+        const src = firstImgSrc(html);
+        if (src) {
+          if (src.startsWith('data:image/')) {
+            const file = dataUrlToFile(src);
+            if (file) {
+              e.preventDefault();
+              void addImageFromFile(file);
+              return;
+            }
+          } else if (isHttpUrl(src)) {
+            e.preventDefault();
+            void addImageFromUrl(src);
+            return;
+          }
+        }
+      }
+
+      // 3) A URL in plain text → direct image, or a link to unfurl.
       const text = dt.getData('text/plain')?.trim();
       if (text && isHttpUrl(text)) {
         e.preventDefault();

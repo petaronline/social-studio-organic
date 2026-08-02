@@ -13,7 +13,20 @@
 import type { Metadata } from 'next';
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
+import localFont from 'next/font/local';
 import '@/styles/globals.css';
+
+// Casual Human — the handwritten face for moodboard notes. Self-hosted (CSP
+// blocks external font hosts); exposed as --font-casual-human, wired to
+// Tailwind's `font-hand`.
+const casualHuman = localFont({
+  src: [
+    { path: '../fonts/CasualHuman.otf', weight: '400', style: 'normal' },
+    { path: '../fonts/CasualHuman-Bold.otf', weight: '700', style: 'normal' },
+  ],
+  variable: '--font-casual-human',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'The Social Studio',
@@ -25,7 +38,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable} ${casualHuman.variable}`}>
       <body>{children}</body>
     </html>
   );
