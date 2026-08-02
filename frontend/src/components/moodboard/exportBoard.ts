@@ -22,12 +22,19 @@ function triggerDownload(dataUrl: string, filename: string) {
   a.remove();
 }
 
+// 1×1 transparent PNG. Any image the exporter can't read into the canvas
+// (a cross-origin host that blocks it — hotlinked pics, some link thumbnails)
+// is swapped for this instead of tainting the canvas and failing the whole
+// export. Same-origin uploads inline fine and render normally.
+const TRANSPARENT_PX =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+
 async function snapshot(el: HTMLElement): Promise<string> {
   return toPng(el, {
     pixelRatio: 2,
     cacheBust: true,
     backgroundColor: '#FBFBFD',
-    // A cross-origin image that can't be inlined is dropped, not fatal.
+    imagePlaceholder: TRANSPARENT_PX,
     skipAutoScale: true,
   });
 }
