@@ -1,23 +1,35 @@
 'use client';
 
 /**
- * Floating control cluster, bottom-left of the board (matches the approved
- * messy-view mock). One tool per row:
+ * Bottom-left controls.
  *
- *   switch view — messy ⇄ pinterest
- *   add note    — drops a post-it you then edit in place
- *   add swatch  — a colour block (native picker)
- *   add link    — paste a URL; it's unfurled into a card
- *   upload      — file picker for images
+ * A single cherry "+" button is the resting state; clicking it opens the add
+ * menu upward (title, note, swatch, link, upload). Swatch and link expand an
+ * inline composer. The messy/tidy view toggle sits beside the "+" as its own
+ * always-visible button, since it's flipped often and shouldn't be buried.
  *
- * Pasting anywhere on the page also works (images + URLs) — these buttons
- * are the deliberate, discoverable path to the same thing.
+ * Pasting anywhere on the page also adds things — these are the deliberate,
+ * discoverable path.
  */
 
 import { useRef, useState } from 'react';
-import { LayoutGrid, StickyNote, Palette, Link2, Upload, Loader2, type LucideIcon } from 'lucide-react';
+import {
+  Plus,
+  X,
+  Type,
+  StickyNote,
+  Palette,
+  Link2,
+  Upload,
+  Loader2,
+  LayoutGrid,
+  Shuffle,
+  type LucideIcon,
+} from 'lucide-react';
 import type { UseMoodboard } from './useMoodboard';
 import type { MoodboardView } from './MoodboardCanvas';
+
+const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 
 export function MoodboardControls({
   board,
@@ -29,82 +41,165 @@ export function MoodboardControls({
   onToggleView: () => void;
 }) {
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const [open, setOpen] = useState(false);
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
+  const [swatchOpen, setSwatchOpen] = useState(false);
+  const [hex, setHex] = useState('#30915A');
 
   const disabled = board.full || board.busy;
 
+  const closeAll = () => {
+    setOpen(false);
+    setLinkOpen(false);
+    setSwatchOpen(false);
+  };
+
   return (
-    <div className="pointer-events-none absolute bottom-6 left-6 z-40 flex flex-col items-start gap-2">
+    <div className="absolute bottom-6 left-6 z-40 flex flex-col items-start gap-2">
       {board.full && (
-        <div className="pointer-events-auto rounded-full bg-ink/85 px-3 py-1 text-2xs font-semibold text-white shadow-lift">
+        <div className="rounded-full bg-ink/85 px-3 py-1 text-2xs font-semibold text-white shadow-lift">
           Board full · {board.limit} max
         </div>
       )}
 
-      {linkOpen && (
-        <form
-          className="pointer-events-auto flex items-center gap-1 rounded-full bg-surface p-1 pl-3 shadow-lift ring-1 ring-line"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const url = linkUrl.trim();
-            if (url) {
-              void board.addLink(url);
-              setLinkUrl('');
-              setLinkOpen(false);
-            }
-          }}
-        >
-          <input
-            autoFocus
-            value={linkUrl}
-            onChange={(e) => setLinkUrl(e.target.value)}
-            onKeyDown={(e) => e.key === 'Escape' && setLinkOpen(false)}
-            placeholder="Paste a link…"
-            className="w-52 bg-transparent text-sm text-ink outline-none placeholder:text-ink-subtle"
+      {/* Add menu — opens upward from the + button. */}
+      {open && (
+        <div className="w-60 overflow-hidden rounded-2xl bg-surface/95 p-1.5 shadow-lift ring-1 ring-line backdrop-blur">
+          <Tool
+            icon={Type}
+            label="Add title"
+            disabled={disabled}
+            onClick={() => {
+              void board.addText('Title');
+              closeAll();
+            }}
           />
-          <button type="submit" className="btn-primary btn-sm rounded-full">
-            Add
-          </button>
-        </form>
-      )}
+          <Tool
+            icon={StickyNote}
+            label="Add note"
+            disabled={disabled}
+            onClick={() => {
+              void board.addNote('New note');
+              closeAll();
+            }}
+          />
 
-      <div className="pointer-events-auto flex flex-col gap-1 rounded-2xl bg-surface/95 p-1.5 shadow-lift ring-1 ring-line backdrop-blur">
-        <Tool icon={LayoutGrid} label={view === 'messy' ? 'Tidy view' : 'Messy view'} onClick={onToggleView} />
-        <div className="mx-2 my-0.5 h-px bg-line" />
-        <Tool
-          icon={StickyNote}
-          label="Add note"
-          disabled={disabled}
-          onClick={() => void board.addNote('New note')}
-        />
-        <label className="contents">
+          {/* Swatch — colour picker + hex field side by side. */}
           <Tool
             icon={Palette}
             label="Add swatch"
             disabled={disabled}
-            asLabel
+            active={swatchOpen}
+            onClick={() => {
+              setSwatchOpen((v) => !v);
+              setLinkOpen(false);
+            }}
           />
-          <input
-            type="color"
-            className="sr-only"
+          {swatchOpen && (
+            <div className="mb-1 flex items-center gap-2 rounded-xl bg-surface-alt px-2.5 py-2">
+              <input
+                type="color"
+                value={HEX_RE.test(hex) ? hex : '#30915A'}
+                onChange={(e) => setHex(e.target.value.toUpperCase())}
+                className="h-8 w-8 shrink-0 cursor-pointer rounded-lg border border-line bg-transparent p-0"
+                aria-label="Pick a colour"
+              />
+              <input
+                value={hex}
+                onChange={(e) => {
+                  let v = e.target.value.toUpperCase();
+                  if (v && !v.startsWith('#')) v = `#${v}`;
+                  setHex(v.slice(0, 7));
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && HEX_RE.test(hex)) {
+                    void board.addSwatch(hex);
+                    closeAll();
+                  }
+                }}
+                placeholder="#RRGGBB"
+                spellCheck={false}
+                className="w-full min-w-0 bg-transparent font-mono text-sm uppercase text-ink outline-none placeholder:text-ink-subtle"
+              />
+              <button
+                disabled={!HEX_RE.test(hex)}
+                onClick={() => {
+                  void board.addSwatch(hex);
+                  closeAll();
+                }}
+                className="btn-primary btn-sm shrink-0 rounded-lg disabled:opacity-40"
+              >
+                Add
+              </button>
+            </div>
+          )}
+
+          {/* Link — paste a URL, unfurled into a card. */}
+          <Tool
+            icon={Link2}
+            label="Add link"
             disabled={disabled}
-            onChange={(e) => void board.addSwatch(e.target.value.toUpperCase())}
+            active={linkOpen}
+            onClick={() => {
+              setLinkOpen((v) => !v);
+              setSwatchOpen(false);
+            }}
           />
-        </label>
-        <Tool
-          icon={Link2}
-          label="Add link"
-          disabled={disabled}
-          onClick={() => setLinkOpen((v) => !v)}
-        />
-        <Tool
-          icon={board.busy ? Loader2 : Upload}
-          label={board.busy ? 'Working…' : 'Upload'}
-          spin={board.busy}
-          disabled={disabled}
-          onClick={() => fileRef.current?.click()}
-        />
+          {linkOpen && (
+            <form
+              className="mb-1 flex items-center gap-1 rounded-xl bg-surface-alt px-2.5 py-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const url = linkUrl.trim();
+                if (url) {
+                  void board.addLink(url);
+                  setLinkUrl('');
+                  closeAll();
+                }
+              }}
+            >
+              <input
+                autoFocus
+                value={linkUrl}
+                onChange={(e) => setLinkUrl(e.target.value)}
+                placeholder="Paste a link…"
+                className="w-full min-w-0 bg-transparent text-sm text-ink outline-none placeholder:text-ink-subtle"
+              />
+              <button type="submit" className="btn-primary btn-sm shrink-0 rounded-lg">
+                Add
+              </button>
+            </form>
+          )}
+
+          <Tool
+            icon={board.busy ? Loader2 : Upload}
+            label={board.busy ? 'Working…' : 'Upload image'}
+            spin={board.busy}
+            disabled={disabled}
+            onClick={() => fileRef.current?.click()}
+          />
+        </div>
+      )}
+
+      {/* Resting row: view toggle + the + button. */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onToggleView}
+          title={view === 'messy' ? 'Tidy view' : 'Messy view'}
+          className="flex items-center gap-2 rounded-full bg-surface/95 py-2 pl-3 pr-3.5 text-sm font-medium text-ink shadow-lift ring-1 ring-line backdrop-blur transition-colors hover:bg-surface-alt"
+        >
+          {view === 'messy' ? <LayoutGrid size={16} className="text-ink-subtle" /> : <Shuffle size={16} className="text-ink-subtle" />}
+          <span>{view === 'messy' ? 'Tidy' : 'Messy'}</span>
+        </button>
+
+        <button
+          onClick={() => (open ? closeAll() : setOpen(true))}
+          aria-label={open ? 'Close menu' : 'Add to board'}
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-cherry text-white shadow-lift transition-transform hover:scale-105"
+        >
+          <Plus size={22} className={`transition-transform ${open ? 'rotate-45' : ''}`} />
+        </button>
       </div>
 
       <input
@@ -117,6 +212,7 @@ export function MoodboardControls({
           const files = Array.from(e.target.files ?? []);
           files.forEach((f) => void board.addImageFromFile(f));
           e.target.value = '';
+          closeAll();
         }}
       />
     </div>
@@ -129,34 +225,28 @@ function Tool({
   onClick,
   disabled,
   spin,
-  asLabel,
+  active,
 }: {
   icon: LucideIcon;
   label: string;
   onClick?: () => void;
   disabled?: boolean;
   spin?: boolean;
-  /** Render the visual as a <span> so it can sit inside a <label>. */
-  asLabel?: boolean;
+  active?: boolean;
 }) {
-  const cls =
-    'flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-medium text-ink transition-colors hover:bg-surface-alt disabled:cursor-not-allowed disabled:opacity-40';
-  const inner = (
-    <>
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={[
+        'flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-medium text-ink transition-colors',
+        active ? 'bg-surface-alt' : 'hover:bg-surface-alt',
+        'disabled:cursor-not-allowed disabled:opacity-40',
+      ].join(' ')}
+    >
       <Icon size={16} className={['text-ink-subtle', spin ? 'animate-spin' : ''].join(' ')} />
       <span className="pr-1">{label}</span>
-    </>
-  );
-  if (asLabel) {
-    return (
-      <span className={[cls, disabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'].join(' ')}>
-        {inner}
-      </span>
-    );
-  }
-  return (
-    <button type="button" onClick={onClick} disabled={disabled} className={cls}>
-      {inner}
     </button>
   );
 }

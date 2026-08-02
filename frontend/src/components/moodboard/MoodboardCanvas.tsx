@@ -15,7 +15,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { X, GripVertical } from 'lucide-react';
-import type { MoodboardItem, MoodboardNoteContent } from '@/lib/api';
+import type { MoodboardItem, MoodboardSwatchContent } from '@/lib/api';
 import { MoodboardItemView } from './MoodboardItemView';
 import type { UseMoodboard } from './useMoodboard';
 
@@ -31,6 +31,7 @@ function widthFor(item: MoodboardItem): number {
     case 'image': return 180 + jitter;      // 180..239
     case 'link': return 224 + (jitter % 40); // 224..263
     case 'note': return 168 + (jitter % 44); // 168..211
+    case 'text': return 240 + (jitter % 80); // 240..319
     case 'swatch': return 108 + (jitter % 36); // 108..143
     default: return 200;
   }
@@ -125,16 +126,47 @@ export function MoodboardCanvas({
 
   if (view === 'pinterest') {
     const ordered = [...board.items].sort((a, b) => b.zIndex - a.zIndex);
+    // Swatches don't belong in the masonry — they're a palette. Pull them out
+    // and stack them, overlapping, in the bottom-right corner.
+    const swatches = ordered.filter((i) => i.kind === 'swatch');
+    const rest = ordered.filter((i) => i.kind !== 'swatch');
     return (
-      <div className="h-full overflow-y-auto px-8 pb-28 pt-8">
-        <div className="mx-auto max-w-6xl [column-fill:_balance] gap-4 [columns:2] sm:[columns:3] lg:[columns:4]">
-          {ordered.map((item) => (
-            <div key={item.id} className="group relative mb-4 inline-block w-full break-inside-avoid">
-              <MoodboardItemView item={item} width={widthFor(item)} />
-              <DeleteButton onClick={() => board.remove(item.id)} />
-            </div>
-          ))}
+      <div className="relative h-full">
+        <div className="h-full overflow-y-auto px-8 pb-28 pt-8">
+          <div className="mx-auto max-w-6xl [column-fill:_balance] gap-4 [columns:2] sm:[columns:3] lg:[columns:4]">
+            {rest.map((item) => (
+              <div key={item.id} className="group relative mb-4 inline-block w-full break-inside-avoid">
+                <MoodboardItemView item={item} width={widthFor(item)} />
+                <DeleteButton onClick={() => board.remove(item.id)} />
+              </div>
+            ))}
+          </div>
         </div>
+
+        {swatches.length > 0 && (
+          <div className="pointer-events-none absolute bottom-5 right-5 flex flex-col items-end">
+            {swatches.map((s, i) => {
+              const color = (s.content as MoodboardSwatchContent).color;
+              return (
+                <div
+                  key={s.id}
+                  className="group pointer-events-auto relative"
+                  style={{ marginTop: i === 0 ? 0 : -26, zIndex: swatches.length - i }}
+                >
+                  {/* hex label, revealed on hover to the left */}
+                  <span className="absolute right-[72px] top-1/2 -translate-y-1/2 rounded-md bg-ink px-2 py-1 font-mono text-2xs font-bold uppercase text-white opacity-0 shadow-lift transition-opacity group-hover:opacity-100">
+                    {color}
+                  </span>
+                  <div
+                    className="h-16 w-16 rounded-2xl shadow-lift ring-2 ring-white"
+                    style={{ backgroundColor: color }}
+                  />
+                  <DeleteButton onClick={() => board.remove(s.id)} />
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   }
@@ -164,11 +196,11 @@ export function MoodboardCanvas({
             onPointerUp={endDrag}
             onPointerCancel={endDrag}
             onDoubleClick={() => {
-              if (item.kind === 'note') setEditingId(item.id);
+              if (item.kind === 'note' || item.kind === 'text') setEditingId(item.id);
             }}
           >
-            {isEditing && item.kind === 'note' ? (
-              <NoteEditor
+            {isEditing && (item.kind === 'note' || item.kind === 'text') ? (
+              <InlineEditor
                 item={item}
                 width={w}
                 onDone={(text) => {
@@ -216,7 +248,7 @@ function DeleteButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-function NoteEditor({
+function InlineEditor({
   item,
   width,
   onDone,
@@ -225,13 +257,40 @@ function NoteEditor({
   width: number;
   onDone: (text: string) => void;
 }) {
-  const content = item.content as MoodboardNoteContent;
+  const content = item.content as { text: string; color?: string };
   const [text, setText] = useState(content.text);
   const ref = useRef<HTMLTextAreaElement | null>(null);
   useEffect(() => {
     ref.current?.focus();
     ref.current?.select();
   }, []);
+
+  const commit = () => onDone(text.trim());
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) commit();
+  };
+
+  // Text title — big display type, no card.
+  if (item.kind === 'text') {
+    return (
+      <div style={{ width }}>
+        <textarea
+          ref={ref}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onBlur={commit}
+          onKeyDown={onKeyDown}
+          rows={2}
+          maxLength={200}
+          placeholder="Title"
+          className="w-full resize-none border-0 bg-transparent p-0 font-display font-extrabold uppercase leading-[0.95] tracking-tight outline-none"
+          style={{ color: content.color || '#151529', fontSize: Math.round(width * 0.16) }}
+        />
+      </div>
+    );
+  }
+
+  // Post-it note.
   return (
     <div
       className="rounded-[3px] px-4 py-3.5 shadow-[0_10px_26px_-8px_rgba(20,20,50,0.38)]"
@@ -241,10 +300,8 @@ function NoteEditor({
         ref={ref}
         value={text}
         onChange={(e) => setText(e.target.value)}
-        onBlur={() => onDone(text.trim())}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) onDone(text.trim());
-        }}
+        onBlur={commit}
+        onKeyDown={onKeyDown}
         rows={3}
         maxLength={600}
         className="w-full resize-none border-0 bg-transparent p-0 font-hand text-[1.05rem] leading-snug text-[#2A2A3C] outline-none"

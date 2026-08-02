@@ -48,6 +48,11 @@ const noteContent = z.object({
   color: z.string().regex(HEX).optional(),
 });
 
+const textContent = z.object({
+  text: z.string().max(200),
+  color: z.string().regex(HEX).optional(),
+});
+
 const linkContent = z.object({
   url: httpUrl,
   title: z.string().max(200),
@@ -62,6 +67,7 @@ function contentSchemaFor(kind: string) {
     case 'swatch': return swatchContent;
     case 'note': return noteContent;
     case 'link': return linkContent;
+    case 'text': return textContent;
     default: return null;
   }
 }
@@ -86,7 +92,7 @@ moodboardRouter.get('/', requireAuth, async (req: Request, res: Response) => {
 // ---------------------------------------------------------------------
 const createSchema = z.object({
   brandId: z.string().uuid(),
-  kind: z.enum(['image', 'swatch', 'note', 'link']),
+  kind: z.enum(['image', 'swatch', 'note', 'link', 'text']),
   content: z.record(z.unknown()),
   x: z.number().finite().optional(),
   y: z.number().finite().optional(),

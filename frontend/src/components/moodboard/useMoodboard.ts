@@ -72,6 +72,7 @@ export interface UseMoodboard {
   addImageFromUrl: (url: string) => Promise<void>;
   addSwatch: (color: string) => Promise<void>;
   addNote: (text: string, color?: string) => Promise<void>;
+  addText: (text: string, color?: string) => Promise<void>;
   addLink: (url: string) => Promise<void>;
   handlePaste: (e: ClipboardEvent) => void;
   updateNoteText: (id: string, text: string) => Promise<void>;
@@ -214,6 +215,11 @@ export function useMoodboard(brandId: string | null): UseMoodboard {
     [create]
   );
 
+  const addText = useCallback(
+    (text: string, color?: string) => create('text', { text, color }),
+    [create]
+  );
+
   const addLink = useCallback(
     async (url: string) => {
       if (!brandId || items.length >= limit) {
@@ -303,7 +309,7 @@ export function useMoodboard(brandId: string | null): UseMoodboard {
   const updateNoteText = useCallback(
     async (id: string, text: string) => {
       const current = items.find((i) => i.id === id);
-      if (!current || current.kind !== 'note') return;
+      if (!current || (current.kind !== 'note' && current.kind !== 'text')) return;
       const content = { ...(current.content as { color?: string }), text };
       setItems((prev) =>
         prev.map((i) => (i.id === id ? { ...i, content: content as MoodboardItem['content'] } : i))
@@ -377,6 +383,7 @@ export function useMoodboard(brandId: string | null): UseMoodboard {
     addImageFromUrl,
     addSwatch,
     addNote,
+    addText,
     addLink,
     handlePaste,
     updateNoteText,

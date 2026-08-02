@@ -18,6 +18,7 @@ import {
   type MoodboardSwatchContent,
   type MoodboardNoteContent,
   type MoodboardLinkContent,
+  type MoodboardTextContent,
 } from '@/lib/api';
 
 /** Where an image item's bytes come from: an upload, or a pasted URL. */
@@ -112,6 +113,22 @@ export function MoodboardItemView({
           >
             {text || '…'}
           </p>
+        </div>
+      );
+    }
+
+    case 'text': {
+      const { text, color } = item.content as MoodboardTextContent;
+      // A title laid straight on the canvas — no card, no background. Size
+      // scales with the item width so a wide title reads big.
+      return (
+        <div style={{ width }}>
+          <h2
+            className="break-words font-display font-extrabold uppercase leading-[0.95] tracking-tight"
+            style={{ color: color || '#151529', fontSize: Math.round(width * 0.16) }}
+          >
+            {text || 'Title'}
+          </h2>
         </div>
       );
     }

@@ -1024,7 +1024,7 @@ export const organicIdeas = {
 // Moodboard — per-brand visual reference board
 // ============================================================
 
-export type MoodboardKind = 'image' | 'swatch' | 'note' | 'link';
+export type MoodboardKind = 'image' | 'swatch' | 'note' | 'link' | 'text';
 
 /** Per-kind payloads. Discriminated by the item's `kind`. */
 export interface MoodboardImageContent {
@@ -1037,6 +1037,10 @@ export interface MoodboardSwatchContent {
   color: string;
 }
 export interface MoodboardNoteContent {
+  text: string;
+  color?: string;
+}
+export interface MoodboardTextContent {
   text: string;
   color?: string;
 }
@@ -1056,7 +1060,8 @@ export interface MoodboardItem {
     | MoodboardImageContent
     | MoodboardSwatchContent
     | MoodboardNoteContent
-    | MoodboardLinkContent;
+    | MoodboardLinkContent
+    | MoodboardTextContent;
   x: number;
   y: number;
   rotation: number;
@@ -1081,7 +1086,8 @@ export interface CreateMoodboardItemInput {
     | MoodboardImageContent
     | MoodboardSwatchContent
     | MoodboardNoteContent
-    | MoodboardLinkContent;
+    | MoodboardLinkContent
+    | MoodboardTextContent;
   x?: number;
   y?: number;
   rotation?: number;

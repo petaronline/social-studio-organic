@@ -10,9 +10,9 @@
  */
 import { query } from '../db/pool';
 
-export const MOODBOARD_ITEM_LIMIT = 20;
+export const MOODBOARD_ITEM_LIMIT = 25;
 
-export type MoodboardKind = 'image' | 'swatch' | 'note' | 'link';
+export type MoodboardKind = 'image' | 'swatch' | 'note' | 'link' | 'text';
 
 export interface MoodboardItem {
   id: string;
