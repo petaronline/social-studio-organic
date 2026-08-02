@@ -38,17 +38,14 @@ export interface FetchedImage {
 
 export class ImageFetchError extends Error {}
 
-/** Fetch `url`, verify it's an image within limits, store it, and return the
- *  new upload's id + dimensions. Throws ImageFetchError on any refusal. */
-export async function fetchImageToUpload(userId: string, url: string): Promise<FetchedImage> {
+/** Fetch a remote image with SSRF + type + size guards. Returns the raw bytes
+ *  and its MIME. Shared by the upload path and the streaming proxy. */
+export async function fetchRemoteImage(url: string): Promise<{ buffer: Buffer; mime: string }> {
   if (!isFetchableUrl(url)) {
     throw new ImageFetchError('That URL is not allowed.');
   }
-
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-  let buf: Buffer;
-  let mime: string;
   try {
     const res = await fetch(url, {
       signal: controller.signal,
@@ -61,7 +58,7 @@ export async function fetchImageToUpload(userId: string, url: string): Promise<F
     });
     if (!res.ok) throw new ImageFetchError(`Source returned ${res.status}.`);
 
-    mime = (res.headers.get('content-type') ?? '').split(';')[0].trim().toLowerCase();
+    const mime = (res.headers.get('content-type') ?? '').split(';')[0].trim().toLowerCase();
     if (!mime.startsWith('image/')) {
       throw new ImageFetchError('That link is not an image.');
     }
@@ -69,21 +66,23 @@ export async function fetchImageToUpload(userId: string, url: string): Promise<F
     if (len && len > MAX_BYTES) {
       throw new ImageFetchError('That image is too large (20 MB max).');
     }
-
     const ab = await res.arrayBuffer();
-    buf = Buffer.from(ab);
-    if (buf.length > MAX_BYTES) {
-      throw new ImageFetchError('That image is too large (20 MB max).');
-    }
-    if (buf.length === 0) {
-      throw new ImageFetchError('That image was empty.');
-    }
+    const buffer = Buffer.from(ab);
+    if (buffer.length > MAX_BYTES) throw new ImageFetchError('That image is too large (20 MB max).');
+    if (buffer.length === 0) throw new ImageFetchError('That image was empty.');
+    return { buffer, mime };
   } catch (err) {
     if (err instanceof ImageFetchError) throw err;
     throw new ImageFetchError('Could not fetch that image.');
   } finally {
     clearTimeout(timer);
   }
+}
+
+/** Fetch `url`, verify it's an image within limits, store it, and return the
+ *  new upload's id + dimensions. Throws ImageFetchError on any refusal. */
+export async function fetchImageToUpload(userId: string, url: string): Promise<FetchedImage> {
+  const { buffer: buf, mime } = await fetchRemoteImage(url);
 
   const ext = MIME_EXT[mime] ?? '.img';
   const hash = crypto.createHash('sha256').update(buf).digest('hex');

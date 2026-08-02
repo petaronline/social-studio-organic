@@ -250,6 +250,22 @@ export async function getBoardByShareToken(token: string): Promise<SharedBoard |
   return { brand: { name, color }, items: itemsRes.rows.map(rowToItem) };
 }
 
+/** True when `url` appears on the shared board (as an image's url or a link
+ *  card's imageUrl). Gates the public image proxy so it can't be used as an
+ *  open relay for arbitrary URLs. */
+export async function sharedBoardReferencesUrl(token: string, url: string): Promise<boolean> {
+  const { rows } = await query<{ one: number }>(
+    `SELECT 1 AS one
+       FROM organic_moodboard_shares s
+       JOIN organic_moodboard_items m ON m.brand_id = s.brand_id
+      WHERE s.token = $1
+        AND (m.content->>'url' = $2 OR m.content->>'imageUrl' = $2)
+      LIMIT 1`,
+    [token, url]
+  );
+  return rows.length > 0;
+}
+
 /** Resolve a shared board item's underlying upload for public streaming.
  *  Guards that the item belongs to the shared board and is an uploaded image. */
 export async function getSharedItemUpload(

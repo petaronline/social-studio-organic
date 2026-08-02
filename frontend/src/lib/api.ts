@@ -1142,6 +1142,13 @@ export const organicMoodboard = {
   /** <img src> for a shared image item's bytes (public, token-scoped). */
   sharedMediaUrl: (token: string, itemId: string) =>
     `/api/organic/moodboard/public/${encodeURIComponent(token)}/media/${itemId}`,
+  /** Same-origin proxy for an external image URL — so it displays despite
+   *  hotlink blocks and can be read into a PNG/PDF export. */
+  imgProxyUrl: (url: string) =>
+    `/api/organic/moodboard/img-proxy?url=${encodeURIComponent(url)}`,
+  /** Public (share-page) variant of the image proxy. */
+  sharedImgProxyUrl: (token: string, url: string) =>
+    `/api/organic/moodboard/public/${encodeURIComponent(token)}/img-proxy?url=${encodeURIComponent(url)}`,
 };
 
 export interface SharedMoodboard {

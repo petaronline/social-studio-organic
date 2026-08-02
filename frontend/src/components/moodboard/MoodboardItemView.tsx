@@ -36,7 +36,13 @@ export function imageSrc(
     }
     return uploads.fileUrl(content.uploadId);
   }
-  if (content.url) return content.url;
+  if (content.url) {
+    // External URL images go through the same-origin proxy so they display
+    // despite hotlink blocks and survive canvas export.
+    return opts?.shareToken
+      ? organicMoodboard.sharedImgProxyUrl(opts.shareToken, content.url)
+      : organicMoodboard.imgProxyUrl(content.url);
+  }
   return null;
 }
 

@@ -20,7 +20,7 @@ import { z } from 'zod';
 import { requireAuth } from '../middleware/auth';
 import * as moodboard from '../services/moodboard';
 import { unfurl } from '../services/unfurl';
-import { fetchImageToUpload, ImageFetchError } from '../services/image-fetch';
+import { fetchImageToUpload, fetchRemoteImage, ImageFetchError } from '../services/image-fetch';
 
 export const moodboardRouter = Router();
 
@@ -217,6 +217,33 @@ moodboardRouter.post('/fetch-image', requireAuth, async (req: Request, res: Resp
   }
 });
 
+// ---------------------------------------------------------------------
+// GET /organic/moodboard/img-proxy?url=…  (authed)
+//
+// Streams a remote image through our origin so it displays even when the
+// source blocks hotlinking, and so it can be read into a canvas for
+// PNG/PDF export (a cross-origin image taints the export). This is only for
+// image items stored as a URL; uploaded images are served from /uploads.
+// ---------------------------------------------------------------------
+async function streamProxiedImage(url: string, res: Response): Promise<void> {
+  try {
+    const { buffer, mime } = await fetchRemoteImage(url);
+    res.setHeader('Content-Type', mime);
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.send(buffer);
+  } catch (err) {
+    const msg = err instanceof ImageFetchError ? err.message : 'Could not fetch that image.';
+    res.status(502).json({ error: msg });
+  }
+}
+
+moodboardRouter.get('/img-proxy', requireAuth, async (req: Request, res: Response) => {
+  const url = typeof req.query.url === 'string' ? req.query.url : '';
+  if (!/^https?:\/\//i.test(url)) return res.status(400).json({ error: 'A valid image url is required.' });
+  await streamProxiedImage(url, res);
+});
+
 // =====================================================================
 // Sharing (authed) — manage a brand's public share token.
 //   GET    /organic/moodboard/share?brandId=…  → { token: string | null }
@@ -288,4 +315,19 @@ moodboardRouter.get('/public/:token/media/:itemId', async (req: Request, res: Re
   res.setHeader('Content-Type', file.contentType);
   res.setHeader('Cache-Control', 'public, max-age=3600');
   createReadStream(absPath).pipe(res);
+});
+
+// GET /organic/moodboard/public/:token/img-proxy?url=… — the public variant
+// of the image proxy, gated so it only serves URLs that actually appear on
+// the shared board (no open-relay abuse).
+moodboardRouter.get('/public/:token/img-proxy', async (req: Request, res: Response) => {
+  const token = String(req.params.token);
+  const url = typeof req.query.url === 'string' ? req.query.url : '';
+  if (!TOKEN_RE.test(token) || !/^https?:\/\//i.test(url)) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  if (!(await moodboard.sharedBoardReferencesUrl(token, url))) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  await streamProxiedImage(url, res);
 });
