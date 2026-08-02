@@ -12,7 +12,13 @@ if [ -z "$ZIP" ] || [ ! -f "$ZIP" ]; then
   exit 1
 fi
 
-WORK="/home/petaronline/public_html/vass"
+# This MUST be the organic staging dir, not the ads app's (.../vass). When it
+# pointed at .../vass, install-patch extracted organic's zip into the ADS
+# staging tree and then copied the merged ads+organic backend into
+# /opt/vass-organic — dragging ads-only files (sheet-parser.ts and its `xlsx`
+# import, launches.ts, audits.ts, …) into organic, where they broke the
+# TypeScript build. Keep this equal to deploy.sh's STAGING.
+WORK="/home/petaronline/public_html/vass-organic"
 LIVE="/opt/vass-organic"
 
 echo "==> Extracting $ZIP into $WORK"
@@ -53,6 +59,16 @@ if [ -f "$WORK/DELETE.txt" ]; then
     fi
   done < "$WORK/DELETE.txt"
 fi
+
+# Wipe the live source trees before copying the patch in. cp -rf MERGES —
+# it never deletes a file the new patch dropped — so without this, any file
+# that once shipped and later got removed lingers forever and can break the
+# build via a dead import. The zip always carries the complete src, so
+# clearing it first is safe and makes /opt match the repo exactly. dist is
+# cleared too so no stale compiled output survives. (node_modules, .next and
+# the Docker build are untouched.)
+echo "==> Clearing live source trees (orphan-proofing)"
+rm -rf "$LIVE/backend/src" "$LIVE/backend/dist" "$LIVE/frontend/src"
 
 echo "==> Copying patch into $LIVE"
 \cp -rf backend "$LIVE/" 2>/dev/null || true
