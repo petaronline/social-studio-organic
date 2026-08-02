@@ -190,7 +190,7 @@ export default function StudioPage() {
           insights are unreliable. `queued` takes the inverted hero treatment
           because on this screen the number you act on is what's still to
           come, not what already went out. */}
-      <div className="mb-6 flex flex-wrap gap-2.5">
+      <div className="mb-6 flex flex-wrap items-stretch gap-2.5">
         <div className="stat stat-hero">
           <div className="stat-value">{loading ? '—' : dash?.queuedThisWeek ?? 0}</div>
           <div className="lab mt-1.5">Queued this week</div>
@@ -213,22 +213,22 @@ export default function StudioPage() {
             <div className="lab mt-1.5">Need attention</div>
           </Link>
         )}
-      </div>
 
-      {/* Two actions, kept small — they're shortcuts, not the point of the
-          page any more. */}
-      <div className="mb-6 flex flex-wrap gap-2">
-        <button onClick={() => setComposerOpen(true)} className="btn-primary">
-          <Plus size={15} /> New post
-        </button>
-        <button
-          onClick={() => setIdeaEditorOpen(true)}
-          disabled={scope.type === 'all'}
-          title={scope.type === 'all' ? 'Pick a brand or profile to drop ideas under.' : undefined}
-          className="btn-secondary"
-        >
-          <Lightbulb size={15} /> Drop an idea
-        </button>
+        {/* Actions share the stats row — pushed to the right, vertically
+            centred against the tiles. They're shortcuts, not the point. */}
+        <div className="ml-auto flex items-center gap-2 self-center">
+          <button onClick={() => setComposerOpen(true)} className="btn-primary">
+            <Plus size={15} /> New post
+          </button>
+          <button
+            onClick={() => setIdeaEditorOpen(true)}
+            disabled={scope.type === 'all'}
+            title={scope.type === 'all' ? 'Pick a brand or profile to drop ideas under.' : undefined}
+            className="btn-secondary"
+          >
+            <Lightbulb size={15} /> Drop an idea
+          </button>
+        </div>
       </div>
 
       {loading ? (
