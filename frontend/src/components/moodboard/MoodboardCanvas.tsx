@@ -14,16 +14,21 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { X, GripVertical } from 'lucide-react';
+import { X, GripVertical, Minus, Plus } from 'lucide-react';
 import type { MoodboardItem, MoodboardSwatchContent } from '@/lib/api';
 import { MoodboardItemView } from './MoodboardItemView';
 import type { UseMoodboard } from './useMoodboard';
 
 export type MoodboardView = 'messy' | 'pinterest';
 
-/** Deterministic per-item width jitter so a wall of images isn't uniform.
- *  Derived from the id, so it's stable across renders and reloads. */
+const TEXT_MIN_W = 120;
+const TEXT_MAX_W = 680;
+
+/** Rendered width. A stored width (set by resizing, or by the text-size
+ *  buttons) wins; otherwise a deterministic per-item jitter so a wall of
+ *  images isn't uniform. Derived from the id so it's stable across reloads. */
 function widthFor(item: MoodboardItem): number {
+  if (item.width != null) return item.width;
   let h = 0;
   for (let i = 0; i < item.id.length; i++) h = (h * 31 + item.id.charCodeAt(i)) >>> 0;
   const jitter = h % 60; // 0..59
@@ -223,11 +228,53 @@ export function MoodboardCanvas({
                   <GripVertical size={13} />
                 </div>
                 <DeleteButton onClick={() => board.remove(item.id)} />
+                {item.kind === 'text' && (
+                  <TextSizeControls
+                    onSmaller={() =>
+                      board.setWidth(item.id, Math.max(TEXT_MIN_W, w * 0.85))
+                    }
+                    onBigger={() =>
+                      board.setWidth(item.id, Math.min(TEXT_MAX_W, w * 1.18))
+                    }
+                  />
+                )}
               </>
             )}
           </div>
         );
       })}
+    </div>
+  );
+}
+
+/** Smaller / bigger pill for text titles — appears under the title on hover. */
+function TextSizeControls({
+  onSmaller,
+  onBigger,
+}: {
+  onSmaller: () => void;
+  onBigger: () => void;
+}) {
+  const stop = (e: React.PointerEvent | React.MouseEvent) => e.stopPropagation();
+  return (
+    <div
+      className="absolute -bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-0.5 rounded-full bg-white p-0.5 opacity-0 shadow-md ring-1 ring-black/5 transition-opacity group-hover:opacity-100"
+      onPointerDown={stop}
+    >
+      <button
+        onClick={(e) => { stop(e); onSmaller(); }}
+        aria-label="Smaller"
+        className="rounded-full p-1 text-ink-subtle transition-colors hover:bg-surface-alt hover:text-ink"
+      >
+        <Minus size={13} />
+      </button>
+      <button
+        onClick={(e) => { stop(e); onBigger(); }}
+        aria-label="Bigger"
+        className="rounded-full p-1 text-ink-subtle transition-colors hover:bg-surface-alt hover:text-ink"
+      >
+        <Plus size={13} />
+      </button>
     </div>
   );
 }

@@ -76,6 +76,7 @@ export interface UseMoodboard {
   addLink: (url: string) => Promise<void>;
   handlePaste: (e: ClipboardEvent) => void;
   updateNoteText: (id: string, text: string) => Promise<void>;
+  setWidth: (id: string, width: number) => Promise<void>;
   moveItem: (id: string, x: number, y: number, rotation?: number) => void;
   commitMove: (id: string, x: number, y: number, rotation?: number) => Promise<void>;
   bringToFront: (id: string) => Promise<void>;
@@ -323,6 +324,18 @@ export function useMoodboard(brandId: string | null): UseMoodboard {
     [items]
   );
 
+  // Set an item's rendered width (drives text-title size, image size). Rounded
+  // and persisted; optimistic locally.
+  const setWidth = useCallback(async (id: string, width: number) => {
+    const w = Math.round(width);
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, width: w } : i)));
+    try {
+      await organicMoodboard.update(id, { width: w });
+    } catch {
+      /* reconciles on next load */
+    }
+  }, []);
+
   // Local-only move (during drag) — no network.
   const moveItem = useCallback((id: string, x: number, y: number, rotation?: number) => {
     setItems((prev) =>
@@ -387,6 +400,7 @@ export function useMoodboard(brandId: string | null): UseMoodboard {
     addLink,
     handlePaste,
     updateNoteText,
+    setWidth,
     moveItem,
     commitMove,
     bringToFront,

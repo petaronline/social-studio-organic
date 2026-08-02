@@ -182,19 +182,21 @@ export function MoodboardControls({
         </div>
       )}
 
-      {/* Resting row: view toggle + the + button. */}
+      {/* Resting row: two equal round buttons — view toggle + the "+". The
+          toggle is icon-only with a hover tooltip (its `title`). */}
       <div className="flex items-center gap-2">
         <button
           onClick={onToggleView}
           title={view === 'messy' ? 'Tidy view' : 'Messy view'}
-          className="flex items-center gap-2 rounded-full bg-surface/95 py-2 pl-3 pr-3.5 text-sm font-medium text-ink shadow-lift ring-1 ring-line backdrop-blur transition-colors hover:bg-surface-alt"
+          aria-label={view === 'messy' ? 'Tidy view' : 'Messy view'}
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-surface/95 text-ink shadow-lift ring-1 ring-line backdrop-blur transition-colors hover:bg-surface-alt"
         >
-          {view === 'messy' ? <LayoutGrid size={16} className="text-ink-subtle" /> : <Shuffle size={16} className="text-ink-subtle" />}
-          <span>{view === 'messy' ? 'Tidy' : 'Messy'}</span>
+          {view === 'messy' ? <LayoutGrid size={20} /> : <Shuffle size={20} />}
         </button>
 
         <button
           onClick={() => (open ? closeAll() : setOpen(true))}
+          title={open ? 'Close' : 'Add to board'}
           aria-label={open ? 'Close menu' : 'Add to board'}
           className="flex h-12 w-12 items-center justify-center rounded-full bg-cherry text-white shadow-lift transition-transform hover:scale-105"
         >
