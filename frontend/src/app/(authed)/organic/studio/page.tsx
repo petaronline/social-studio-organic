@@ -234,22 +234,31 @@ export default function StudioPage() {
       {loading ? (
         <div className="card px-6 py-16 text-center text-sm text-ink-subtle">Loading…</div>
       ) : dash ? (
-        <div className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <NextUpPanel
-            posts={dash.nextUp}
-            accountNames={accountNames}
-            onOpenComposer={() => setComposerOpen(true)}
-          />
+        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {/* Column 1 — Pipeline, plus what needs attention. */}
+          <div className="flex flex-col gap-4">
+            <NextUpPanel
+              posts={dash.nextUp}
+              accountNames={accountNames}
+              onOpenComposer={() => setComposerOpen(true)}
+            />
+            <AttentionPanel items={dash.attention} />
+          </div>
+
+          {/* Column 2 — Tasks. */}
           <div className="flex flex-col gap-4">
             <TasksPanel />
-            <AttentionPanel items={dash.attention} />
-            <CadencePanel week={dash.week} emptyDaysAhead={dash.emptyDaysAhead} />
+          </div>
+
+          {/* Column 3 — Notable dates, plus this week's cadence. */}
+          <div className="flex flex-col gap-4">
             <NotableDatesPanel
               onCreateForDate={(iso) => {
                 setComposerPreset(iso);
                 setComposerOpen(true);
               }}
             />
+            <CadencePanel week={dash.week} emptyDaysAhead={dash.emptyDaysAhead} />
           </div>
         </div>
       ) : (
