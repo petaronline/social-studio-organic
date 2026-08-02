@@ -225,17 +225,12 @@
     display: none;
   }
 
-  /* Moodboard working surface — ruled notebook paper. Horizontal lines,
-     visible but soft, so pinned items read as sitting on a sheet. */
+  /* Moodboard working surface — a fine dot grid (dotted-notebook style),
+     small and soft so pinned items read as sitting on a sheet. */
   .mb-paper {
     background-color: #FCFCFE;
-    background-image: repeating-linear-gradient(
-      to bottom,
-      #FCFCFE 0px,
-      #FCFCFE 33px,
-      #D4DAEC 33px,
-      #D4DAEC 34px
-    );
+    background-image: radial-gradient(#C8CFE4 1.1px, transparent 1.1px);
+    background-size: 20px 20px;
   }
 }
 
