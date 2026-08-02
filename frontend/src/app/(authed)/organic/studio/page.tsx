@@ -38,6 +38,7 @@ import {
   NextUpPanel,
 } from '@/components/studio/DashboardPanels';
 import { NotableDatesPanel } from '@/components/studio/NotableDates';
+import { TasksPanel } from '@/components/tasks/TasksPanel';
 import {
   getActiveBrandId,
   getActiveScope,
@@ -240,6 +241,7 @@ export default function StudioPage() {
             onOpenComposer={() => setComposerOpen(true)}
           />
           <div className="flex flex-col gap-4">
+            <TasksPanel />
             <AttentionPanel items={dash.attention} />
             <CadencePanel week={dash.week} emptyDaysAhead={dash.emptyDaysAhead} />
             <NotableDatesPanel

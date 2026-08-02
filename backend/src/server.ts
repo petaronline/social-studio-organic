@@ -27,6 +27,7 @@ import { brandingRouter } from './routes/branding';
 import { teamRouter } from './routes/team';
 import { organicRouter } from './routes/organic';
 import { moodboardRouter } from './routes/moodboard';
+import { tasksRouter } from './routes/tasks';
 import { brandsRouter } from './routes/brands';
 
 const app = express();
@@ -73,6 +74,7 @@ app.use('/branding', brandingRouter);
 app.use('/team', teamRouter);
 // Mounted before '/organic' so the more specific prefix wins the match.
 app.use('/organic/moodboard', moodboardRouter);
+app.use('/organic/tasks', tasksRouter);
 app.use('/organic', organicRouter);
 app.use('/brands', brandsRouter);
 

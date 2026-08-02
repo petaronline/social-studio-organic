@@ -1157,6 +1157,40 @@ export interface SharedMoodboard {
 }
 
 // ============================================================
+// Tasks — per-user, per-brand to-do lists
+// ============================================================
+
+export interface Task {
+  id: string;
+  brandId: string;
+  title: string;
+  done: boolean;
+  completedAt: string | null;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** A task plus its brand's mark — used by the cross-brand dashboard box. */
+export interface TaskWithBrand extends Task {
+  brandName: string;
+  brandColor: string;
+}
+
+export const organicTasks = {
+  list: (brandId: string) =>
+    api.get<{ tasks: Task[] }>(`/organic/tasks?brandId=${encodeURIComponent(brandId)}`),
+  /** Cross-brand top-N for the dashboard box. */
+  recent: (limit = 5) =>
+    api.get<{ tasks: TaskWithBrand[] }>(`/organic/tasks/recent?limit=${limit}`),
+  create: (brandId: string, title: string) =>
+    api.post<{ task: Task }>('/organic/tasks', { brandId, title }),
+  update: (id: string, patch: { title?: string; done?: boolean }) =>
+    api.patch<{ task: Task }>(`/organic/tasks/${id}`, patch),
+  delete: (id: string) => api.delete<{ ok: true }>(`/organic/tasks/${id}`),
+};
+
+// ============================================================
 // Notifications — top-bar bell
 // ============================================================
 
