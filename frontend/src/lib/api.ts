@@ -1123,7 +1123,31 @@ export const organicMoodboard = {
       '/organic/moodboard/fetch-image',
       { url }
     ),
+  // ── Public sharing ──
+  getShare: (brandId: string) =>
+    api.get<{ token: string | null }>(
+      `/organic/moodboard/share?brandId=${encodeURIComponent(brandId)}`
+    ),
+  createShare: (brandId: string) =>
+    api.post<{ token: string }>('/organic/moodboard/share', { brandId }),
+  revokeShare: (brandId: string) =>
+    api.delete<{ ok: true }>(
+      `/organic/moodboard/share?brandId=${encodeURIComponent(brandId)}`
+    ),
+  /** Public board fetch — no auth needed; the token is the grant. */
+  getSharedBoard: (token: string) =>
+    api.get<{ board: SharedMoodboard }>(
+      `/organic/moodboard/public/${encodeURIComponent(token)}`
+    ),
+  /** <img src> for a shared image item's bytes (public, token-scoped). */
+  sharedMediaUrl: (token: string, itemId: string) =>
+    `/api/organic/moodboard/public/${encodeURIComponent(token)}/media/${itemId}`,
 };
+
+export interface SharedMoodboard {
+  brand: { name: string; color: string };
+  items: MoodboardItem[];
+}
 
 // ============================================================
 // Notifications — top-bar bell

@@ -16,8 +16,7 @@
  * cluster is the discoverable path to the same actions.
  */
 
-import { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Images } from 'lucide-react';
 import {
   brands as brandsApi,
@@ -30,6 +29,7 @@ import {
 import { useMoodboard } from '@/components/moodboard/useMoodboard';
 import { MoodboardCanvas, type MoodboardView } from '@/components/moodboard/MoodboardCanvas';
 import { MoodboardControls } from '@/components/moodboard/MoodboardControls';
+import { MoodboardTopActions } from '@/components/moodboard/MoodboardTopActions';
 
 export default function MoodboardPage() {
   // ── Active brand ────────────────────────────────────────────────
@@ -56,6 +56,9 @@ export default function MoodboardPage() {
   // ── Board state ─────────────────────────────────────────────────
   const board = useMoodboard(activeBrandId);
   const [view, setView] = useState<MoodboardView>('messy');
+  // Snapshot target for PNG/PDF export — wraps the canvas only, so the chip
+  // and floating controls stay out of the exported image.
+  const boardRef = useRef<HTMLDivElement | null>(null);
 
   // Paste anywhere on the page.
   useEffect(() => {
@@ -134,7 +137,9 @@ export default function MoodboardPage() {
         </div>
       ) : (
         <>
-          <MoodboardCanvas board={board} view={view} />
+          <div ref={boardRef} className="h-full w-full">
+            <MoodboardCanvas board={board} view={view} />
+          </div>
           {board.items.length === 0 && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
               <div className="text-center">
@@ -146,6 +151,15 @@ export default function MoodboardPage() {
             </div>
           )}
         </>
+      )}
+
+      {/* Share + Export, top-right. */}
+      {!board.loading && !board.error && (
+        <MoodboardTopActions
+          brandId={activeBrandId}
+          brandName={brand?.name ?? 'Moodboard'}
+          boardRef={boardRef}
+        />
       )}
 
       {/* Tools. */}

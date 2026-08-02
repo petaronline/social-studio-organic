@@ -13,6 +13,9 @@
  * `image` item carrying { url } directly.
  */
 import { Router, Request, Response } from 'express';
+import fs from 'node:fs/promises';
+import { createReadStream } from 'node:fs';
+import path from 'node:path';
 import { z } from 'zod';
 import { requireAuth } from '../middleware/auth';
 import * as moodboard from '../services/moodboard';
@@ -20,6 +23,8 @@ import { unfurl } from '../services/unfurl';
 import { fetchImageToUpload, ImageFetchError } from '../services/image-fetch';
 
 export const moodboardRouter = Router();
+
+const UPLOAD_ROOT = process.env.UPLOAD_ROOT ?? '/uploads';
 
 const HEX = /^#[0-9A-Fa-f]{6}$/;
 
@@ -210,4 +215,77 @@ moodboardRouter.post('/fetch-image', requireAuth, async (req: Request, res: Resp
     }
     throw err;
   }
+});
+
+// =====================================================================
+// Sharing (authed) — manage a brand's public share token.
+//   GET    /organic/moodboard/share?brandId=…  → { token: string | null }
+//   POST   /organic/moodboard/share  { brandId } → { token }
+//   DELETE /organic/moodboard/share  { brandId } → { ok }
+// =====================================================================
+moodboardRouter.get('/share', requireAuth, async (req: Request, res: Response) => {
+  const brandId = typeof req.query.brandId === 'string' ? req.query.brandId : '';
+  if (!/^[0-9a-f-]{36}$/i.test(brandId)) {
+    return res.status(400).json({ error: 'A valid brandId is required.' });
+  }
+  const token = await moodboard.getShareToken(req.user!.id, brandId);
+  res.json({ token });
+});
+
+const shareBodySchema = z.object({ brandId: z.string().uuid() });
+
+moodboardRouter.post('/share', requireAuth, async (req: Request, res: Response) => {
+  const parsed = shareBodySchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'A valid brandId is required.' });
+  const token = await moodboard.createShare(req.user!.id, parsed.data.brandId);
+  if (!token) return res.status(404).json({ error: 'Brand not found' });
+  res.json({ token });
+});
+
+moodboardRouter.delete('/share', requireAuth, async (req: Request, res: Response) => {
+  const brandId = typeof req.query.brandId === 'string' ? req.query.brandId : '';
+  if (!/^[0-9a-f-]{36}$/i.test(brandId)) {
+    return res.status(400).json({ error: 'A valid brandId is required.' });
+  }
+  const ok = await moodboard.revokeShare(req.user!.id, brandId);
+  if (!ok) return res.status(404).json({ error: 'Brand not found' });
+  res.json({ ok: true });
+});
+
+// =====================================================================
+// Public (NO auth) — the shared board and its image bytes. The token is
+// the grant; anyone holding it can read. Revoking it (deleting the row)
+// makes both endpoints 404.
+//   GET /organic/moodboard/public/:token             → { board }
+//   GET /organic/moodboard/public/:token/media/:itemId → image bytes
+// =====================================================================
+const TOKEN_RE = /^[A-Za-z0-9_-]{16,64}$/;
+
+moodboardRouter.get('/public/:token', async (req: Request, res: Response) => {
+  const token = String(req.params.token);
+  if (!TOKEN_RE.test(token)) return res.status(404).json({ error: 'Not found' });
+  const board = await moodboard.getBoardByShareToken(token);
+  if (!board) return res.status(404).json({ error: 'This board is not shared, or the link was revoked.' });
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ board });
+});
+
+moodboardRouter.get('/public/:token/media/:itemId', async (req: Request, res: Response) => {
+  const token = String(req.params.token);
+  const itemId = String(req.params.itemId);
+  if (!TOKEN_RE.test(token) || !/^[0-9a-f-]{36}$/i.test(itemId)) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  const file = await moodboard.getSharedItemUpload(token, itemId);
+  if (!file) return res.status(404).json({ error: 'Not found' });
+
+  const absPath = path.join(UPLOAD_ROOT, file.storagePath);
+  try {
+    await fs.access(absPath);
+  } catch {
+    return res.status(404).json({ error: 'File missing on disk' });
+  }
+  res.setHeader('Content-Type', file.contentType);
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  createReadStream(absPath).pipe(res);
 });

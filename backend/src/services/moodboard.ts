@@ -8,6 +8,7 @@
  * The 20-item cap lives here (COUNT before INSERT) because SQL can't
  * express "at most N rows in this group" as a constraint.
  */
+import crypto from 'node:crypto';
 import { query } from '../db/pool';
 
 export const MOODBOARD_ITEM_LIMIT = 25;
@@ -185,4 +186,89 @@ export async function deleteItem(userId: string, id: string): Promise<boolean> {
     [id, userId]
   );
   return rows.length > 0;
+}
+
+// ─── Public sharing ──────────────────────────────────────────────────
+//
+// A brand's board can be published behind an unguessable token. The token
+// row IS the grant: anyone holding it can read the board; deleting the row
+// revokes it. One active token per brand (re-sharing mints a fresh one).
+
+/** The current share token for a brand's board, or null. Verifies ownership. */
+export async function getShareToken(userId: string, brandId: string): Promise<string | null> {
+  if (!(await userOwnsBrand(userId, brandId))) return null;
+  const { rows } = await query<{ token: string }>(
+    `SELECT token FROM organic_moodboard_shares WHERE brand_id = $1 LIMIT 1`,
+    [brandId]
+  );
+  return rows.length ? rows[0].token : null;
+}
+
+/** Create (or return the existing) share token for a brand. Ownership checked. */
+export async function createShare(userId: string, brandId: string): Promise<string | null> {
+  if (!(await userOwnsBrand(userId, brandId))) return null;
+  const existing = await getShareToken(userId, brandId);
+  if (existing) return existing;
+  const token = crypto.randomBytes(18).toString('base64url'); // 24 url-safe chars
+  await query(
+    `INSERT INTO organic_moodboard_shares (brand_id, token) VALUES ($1, $2)
+     ON CONFLICT (brand_id) DO UPDATE SET token = EXCLUDED.token`,
+    [brandId, token]
+  );
+  return token;
+}
+
+/** Revoke a brand's share (the link stops working). */
+export async function revokeShare(userId: string, brandId: string): Promise<boolean> {
+  if (!(await userOwnsBrand(userId, brandId))) return false;
+  await query(`DELETE FROM organic_moodboard_shares WHERE brand_id = $1`, [brandId]);
+  return true;
+}
+
+export interface SharedBoard {
+  brand: { name: string; color: string };
+  items: MoodboardItem[];
+}
+
+/** Fetch a board by its public share token. No user scoping — the token is
+ *  the grant. Returns null if the token is unknown/revoked. */
+export async function getBoardByShareToken(token: string): Promise<SharedBoard | null> {
+  const { rows } = await query<{ brand_id: string; name: string; color: string }>(
+    `SELECT s.brand_id, b.name, b.color
+       FROM organic_moodboard_shares s
+       JOIN brands b ON b.id = s.brand_id
+      WHERE s.token = $1 LIMIT 1`,
+    [token]
+  );
+  if (!rows.length) return null;
+  const { brand_id, name, color } = rows[0];
+  const itemsRes = await query<any>(
+    `SELECT ${COLS} FROM organic_moodboard_items
+      WHERE brand_id = $1 ORDER BY z_index ASC, created_at ASC`,
+    [brand_id]
+  );
+  return { brand: { name, color }, items: itemsRes.rows.map(rowToItem) };
+}
+
+/** Resolve a shared board item's underlying upload for public streaming.
+ *  Guards that the item belongs to the shared board and is an uploaded image. */
+export async function getSharedItemUpload(
+  token: string,
+  itemId: string
+): Promise<{ storagePath: string; contentType: string } | null> {
+  const { rows } = await query<{ storage_path: string; content_type: string }>(
+    `SELECT u.storage_path, u.content_type
+       FROM organic_moodboard_shares s
+       JOIN organic_moodboard_items m ON m.brand_id = s.brand_id
+       JOIN uploads u ON u.id = (m.content->>'uploadId')::uuid
+      WHERE s.token = $1
+        AND m.id = $2
+        AND m.kind = 'image'
+        AND m.content ? 'uploadId'
+      LIMIT 1`,
+    [token, itemId]
+  );
+  return rows.length
+    ? { storagePath: rows[0].storage_path, contentType: rows[0].content_type }
+    : null;
 }

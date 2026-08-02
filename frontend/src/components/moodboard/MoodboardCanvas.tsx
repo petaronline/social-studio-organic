@@ -17,30 +17,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { X, GripVertical, Minus, Plus } from 'lucide-react';
 import type { MoodboardItem, MoodboardSwatchContent } from '@/lib/api';
 import { MoodboardItemView } from './MoodboardItemView';
+import { widthFor, TEXT_MIN_W, TEXT_MAX_W } from './widthFor';
 import type { UseMoodboard } from './useMoodboard';
 
 export type MoodboardView = 'messy' | 'pinterest';
-
-const TEXT_MIN_W = 120;
-const TEXT_MAX_W = 680;
-
-/** Rendered width. A stored width (set by resizing, or by the text-size
- *  buttons) wins; otherwise a deterministic per-item jitter so a wall of
- *  images isn't uniform. Derived from the id so it's stable across reloads. */
-function widthFor(item: MoodboardItem): number {
-  if (item.width != null) return item.width;
-  let h = 0;
-  for (let i = 0; i < item.id.length; i++) h = (h * 31 + item.id.charCodeAt(i)) >>> 0;
-  const jitter = h % 60; // 0..59
-  switch (item.kind) {
-    case 'image': return 180 + jitter;      // 180..239
-    case 'link': return 224 + (jitter % 40); // 224..263
-    case 'note': return 168 + (jitter % 44); // 168..211
-    case 'text': return 240 + (jitter % 80); // 240..319
-    case 'swatch': return 108 + (jitter % 36); // 108..143
-    default: return 200;
-  }
-}
 
 interface DragState {
   id: string;

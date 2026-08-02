@@ -13,6 +13,7 @@
 
 import {
   uploads,
+  organicMoodboard,
   type MoodboardItem,
   type MoodboardImageContent,
   type MoodboardSwatchContent,
@@ -21,9 +22,20 @@ import {
   type MoodboardTextContent,
 } from '@/lib/api';
 
-/** Where an image item's bytes come from: an upload, or a pasted URL. */
-export function imageSrc(content: MoodboardImageContent): string | null {
-  if (content.uploadId) return uploads.fileUrl(content.uploadId);
+/** Where an image item's bytes come from: an upload, or a pasted URL.
+ *  On a shared (public) board there's no auth cookie, so an uploaded image
+ *  is served through the token-scoped public media endpoint instead of the
+ *  authed /uploads route. */
+export function imageSrc(
+  content: MoodboardImageContent,
+  opts?: { shareToken?: string; itemId?: string }
+): string | null {
+  if (content.uploadId) {
+    if (opts?.shareToken && opts.itemId) {
+      return organicMoodboard.sharedMediaUrl(opts.shareToken, opts.itemId);
+    }
+    return uploads.fileUrl(content.uploadId);
+  }
   if (content.url) return content.url;
   return null;
 }
@@ -44,15 +56,19 @@ function contrastInk(hex: string): string {
 export function MoodboardItemView({
   item,
   width,
+  shareToken,
 }: {
   item: MoodboardItem;
   /** Rendered width in px. Height follows the content. */
   width: number;
+  /** When rendering a shared/public board, routes uploaded images through
+   *  the token-scoped public media endpoint (no auth cookie available). */
+  shareToken?: string;
 }) {
   switch (item.kind) {
     case 'image': {
       const content = item.content as MoodboardImageContent;
-      const src = imageSrc(content);
+      const src = imageSrc(content, { shareToken, itemId: item.id });
       const ratio =
         content.naturalWidth && content.naturalHeight
           ? content.naturalHeight / content.naturalWidth
