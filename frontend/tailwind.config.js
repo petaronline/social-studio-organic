@@ -98,6 +98,10 @@ module.exports = {
         // every figure in a stat tile. It is what stops this looking like
         // every other SaaS dashboard.
         mono: ['var(--font-geist-mono)', 'ui-monospace', 'monospace'],
+        // Handwriting, for moodboard notes + marker scrawl. No web font
+        // (CSP blocks them) — a cursive system stack that resolves to
+        // something handwritten on every OS.
+        hand: ['"Bradley Hand"', '"Segoe Print"', '"Comic Sans MS"', 'ui-rounded', 'cursive'],
       },
 
       fontSize: {

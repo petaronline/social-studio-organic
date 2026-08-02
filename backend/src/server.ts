@@ -26,6 +26,7 @@ import { notificationsRouter } from './routes/notifications';
 import { brandingRouter } from './routes/branding';
 import { teamRouter } from './routes/team';
 import { organicRouter } from './routes/organic';
+import { moodboardRouter } from './routes/moodboard';
 import { brandsRouter } from './routes/brands';
 
 const app = express();
@@ -70,6 +71,8 @@ app.use('/uploads', uploadsRouter);
 app.use('/notifications', notificationsRouter);
 app.use('/branding', brandingRouter);
 app.use('/team', teamRouter);
+// Mounted before '/organic' so the more specific prefix wins the match.
+app.use('/organic/moodboard', moodboardRouter);
 app.use('/organic', organicRouter);
 app.use('/brands', brandsRouter);
 

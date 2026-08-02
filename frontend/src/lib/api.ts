@@ -1021,6 +1021,97 @@ export const organicIdeas = {
 };
 
 // ============================================================
+// Moodboard — per-brand visual reference board
+// ============================================================
+
+export type MoodboardKind = 'image' | 'swatch' | 'note' | 'link';
+
+/** Per-kind payloads. Discriminated by the item's `kind`. */
+export interface MoodboardImageContent {
+  uploadId?: string;
+  url?: string;
+  naturalWidth?: number;
+  naturalHeight?: number;
+}
+export interface MoodboardSwatchContent {
+  color: string;
+}
+export interface MoodboardNoteContent {
+  text: string;
+  color?: string;
+}
+export interface MoodboardLinkContent {
+  url: string;
+  title: string;
+  description?: string | null;
+  imageUrl?: string | null;
+  siteName?: string | null;
+}
+
+export interface MoodboardItem {
+  id: string;
+  brandId: string;
+  kind: MoodboardKind;
+  content:
+    | MoodboardImageContent
+    | MoodboardSwatchContent
+    | MoodboardNoteContent
+    | MoodboardLinkContent;
+  x: number;
+  y: number;
+  rotation: number;
+  zIndex: number;
+  width: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UnfurlResult {
+  url: string;
+  title: string;
+  description: string | null;
+  imageUrl: string | null;
+  siteName: string | null;
+}
+
+export interface CreateMoodboardItemInput {
+  brandId: string;
+  kind: MoodboardKind;
+  content:
+    | MoodboardImageContent
+    | MoodboardSwatchContent
+    | MoodboardNoteContent
+    | MoodboardLinkContent;
+  x?: number;
+  y?: number;
+  rotation?: number;
+}
+
+export interface UpdateMoodboardItemInput {
+  content?: MoodboardItem['content'];
+  x?: number;
+  y?: number;
+  rotation?: number;
+  zIndex?: number;
+  width?: number | null;
+}
+
+export const organicMoodboard = {
+  list: (brandId: string) =>
+    api.get<{ items: MoodboardItem[]; limit: number }>(
+      `/organic/moodboard?brandId=${encodeURIComponent(brandId)}`
+    ),
+  create: (input: CreateMoodboardItemInput) =>
+    api.post<{ item: MoodboardItem }>('/organic/moodboard', input),
+  update: (id: string, input: UpdateMoodboardItemInput) =>
+    api.patch<{ item: MoodboardItem }>(`/organic/moodboard/${id}`, input),
+  delete: (id: string) =>
+    api.delete<{ ok: true }>(`/organic/moodboard/${id}`),
+  unfurl: (url: string) =>
+    api.post<{ meta: UnfurlResult }>('/organic/moodboard/unfurl', { url }),
+};
+
+// ============================================================
 // Notifications — top-bar bell
 // ============================================================
 

@@ -34,6 +34,7 @@ import {
   FileText,
   Lightbulb,
   BarChart3,
+  Images,
   type LucideIcon,
 } from 'lucide-react';
 import { StudioLogo } from './StudioLogo';
@@ -89,6 +90,7 @@ const PRIMARY_NAV: NavItem[] = [
   { kind: 'flat', label: 'Pipeline',  href: '/organic/pipeline',  icon: Workflow,  active: ACTIVE_INDIGO },
   { kind: 'flat', label: 'Drafts',    href: '/organic/drafts',    icon: FileText,  active: ACTIVE_AMBER },
   { kind: 'flat', label: 'Ideas',     href: '/organic/ideas',     icon: Lightbulb, active: ACTIVE_LILAC },
+  { kind: 'flat', label: 'Moodboard', href: '/organic/moodboard', icon: Images,    active: ACTIVE_ROSE },
   { kind: 'flat', label: 'Analytics', href: '/organic/analytics', icon: BarChart3, active: ACTIVE_MINT },
 ];
 
