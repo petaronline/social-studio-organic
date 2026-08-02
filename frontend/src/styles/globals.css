@@ -225,15 +225,17 @@
     display: none;
   }
 
-  /* Moodboard working surface — a soft checkerboard so pinned items read as
-     sitting on a physical board. Kept low-contrast on the lavender canvas. */
-  .mb-checker {
-    background-color: #F4F2F9;
-    background-image:
-      linear-gradient(45deg, #E9E5F2 25%, transparent 25%, transparent 75%, #E9E5F2 75%),
-      linear-gradient(45deg, #E9E5F2 25%, transparent 25%, transparent 75%, #E9E5F2 75%);
-    background-size: 46px 46px;
-    background-position: 0 0, 23px 23px;
+  /* Moodboard working surface — ruled notebook paper. Horizontal lines,
+     visible but soft, so pinned items read as sitting on a sheet. */
+  .mb-paper {
+    background-color: #FCFCFE;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      #FCFCFE 0px,
+      #FCFCFE 33px,
+      #D4DAEC 33px,
+      #D4DAEC 34px
+    );
   }
 }
 

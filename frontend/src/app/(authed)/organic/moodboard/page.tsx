@@ -79,7 +79,7 @@ export default function MoodboardPage() {
   // panel height minus <main>'s py-7 top+bottom, with -m-7 reclaiming the
   // padding so the board runs edge to edge.
   const shell =
-    'mb-checker relative -m-7 h-[calc(100vh-5rem)] overflow-hidden sm:h-[calc(100vh-6rem)]';
+    'mb-paper relative -m-7 h-[calc(100vh-5rem)] overflow-hidden sm:h-[calc(100vh-6rem)]';
 
   // ── No brand in scope ───────────────────────────────────────────
   if (!activeBrandId) {
