@@ -1191,6 +1191,59 @@ export const organicTasks = {
 };
 
 // ============================================================
+// Notes & meeting notes — per-user, per-brand
+// ============================================================
+
+export type NoteType = 'note' | 'meeting';
+
+export interface Note {
+  id: string;
+  brandId: string;
+  type: NoteType;
+  title: string;
+  body: string; // editor HTML
+  meetingAt: string | null;
+  attendees: string | null;
+  pinned: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NoteWithBrand extends Note {
+  brandName: string;
+  brandColor: string;
+}
+
+export interface CreateNoteInput {
+  brandId: string;
+  type: NoteType;
+  title?: string;
+  body?: string;
+  meetingAt?: string | null;
+  attendees?: string | null;
+}
+
+export interface UpdateNoteInput {
+  title?: string;
+  body?: string;
+  meetingAt?: string | null;
+  attendees?: string | null;
+  pinned?: boolean;
+}
+
+export const organicNotes = {
+  list: (brandId: string) =>
+    api.get<{ notes: Note[] }>(`/organic/notes?brandId=${encodeURIComponent(brandId)}`),
+  recent: (limit = 5) =>
+    api.get<{ notes: NoteWithBrand[] }>(`/organic/notes/recent?limit=${limit}`),
+  get: (id: string) => api.get<{ note: Note }>(`/organic/notes/${id}`),
+  create: (input: CreateNoteInput) => api.post<{ note: Note }>('/organic/notes', input),
+  update: (id: string, patch: UpdateNoteInput) =>
+    api.patch<{ note: Note }>(`/organic/notes/${id}`, patch),
+  delete: (id: string) => api.delete<{ ok: true }>(`/organic/notes/${id}`),
+};
+
+// ============================================================
 // Notifications — top-bar bell
 // ============================================================
 

@@ -36,6 +36,7 @@ import {
   BarChart3,
   Images,
   ListChecks,
+  NotebookPen,
   type LucideIcon,
 } from 'lucide-react';
 import { StudioLogo } from './StudioLogo';
@@ -93,6 +94,7 @@ const PRIMARY_NAV: NavItem[] = [
   { kind: 'flat', label: 'Ideas',     href: '/organic/ideas',     icon: Lightbulb, active: ACTIVE_LILAC },
   { kind: 'flat', label: 'Moodboard', href: '/organic/moodboard', icon: Images,     active: ACTIVE_ROSE },
   { kind: 'flat', label: 'Tasks',     href: '/organic/tasks',     icon: ListChecks, active: ACTIVE_SKY },
+  { kind: 'flat', label: 'Notes',     href: '/organic/notes',     icon: NotebookPen, active: ACTIVE_AMBER },
   { kind: 'flat', label: 'Analytics', href: '/organic/analytics', icon: BarChart3,  active: ACTIVE_MINT },
 ];
 
