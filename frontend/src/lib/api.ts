@@ -1196,6 +1196,8 @@ export const organicTasks = {
 
 export type NoteType = 'note' | 'meeting';
 
+export type TranscribeStatus = 'idle' | 'processing' | 'done' | 'error';
+
 export interface Note {
   id: string;
   brandId: string;
@@ -1207,6 +1209,12 @@ export interface Note {
   pinned: boolean;
   createdAt: string;
   updatedAt: string;
+  // Meeting transcription pipeline
+  transcribeStatus: TranscribeStatus;
+  transcribeError: string | null;
+  transcript: string | null;
+  summary: string | null; // summary HTML
+  nextSteps: string[];
 }
 
 export interface NoteWithBrand extends Note {
@@ -1241,6 +1249,10 @@ export const organicNotes = {
   update: (id: string, patch: UpdateNoteInput) =>
     api.patch<{ note: Note }>(`/organic/notes/${id}`, patch),
   delete: (id: string) => api.delete<{ ok: true }>(`/organic/notes/${id}`),
+  /** Upload a meeting recording; kicks off background transcription + summary.
+   *  Poll get(id) until transcribeStatus is 'done' or 'error'. */
+  transcribe: (id: string, file: File, onProgress?: (fraction: number) => void) =>
+    api.upload<{ note: Note }>(`/organic/notes/${id}/transcribe`, file, onProgress),
 };
 
 // ============================================================

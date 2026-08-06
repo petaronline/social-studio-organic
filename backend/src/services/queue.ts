@@ -37,6 +37,7 @@ export const QUEUE_NAMES = {
   metaSync: 'vass-meta-sync',
   commentScan: 'vass-comment-scan',
   commentSweep: 'vass-comment-sweep',
+  transcribe: 'vass-transcribe',
 } as const;
 
 // The job-specific payload. Keeping this tiny (just an ID) — the worker
@@ -379,7 +380,55 @@ export function createCommentSweepWorker(
   );
 }
 
+// ─── Meeting transcription queue ───────────────────────────────────────
+// One job per uploaded recording. Payload is just the note id; the worker
+// pulls the audio path, runs Whisper + the local summariser, and writes the
+// results back. CPU-bound and slow, so concurrency is 1 (one meeting at a
+// time keeps the box responsive).
+
+export interface TranscribeJobData {
+  noteId: string;
+}
+
+let transcribeQueue: Queue<TranscribeJobData> | null = null;
+
+export function getTranscribeQueue(): Queue<TranscribeJobData> {
+  if (transcribeQueue) return transcribeQueue;
+  transcribeQueue = new Queue<TranscribeJobData>(QUEUE_NAMES.transcribe, {
+    connection: getRedisConnection() as ConnectionOptions,
+    defaultJobOptions: {
+      // Transcription failures are usually a down service or a bad file —
+      // one retry rides out a transient blip; more just re-burns CPU.
+      attempts: 2,
+      backoff: { type: 'fixed', delay: 15_000 },
+      removeOnComplete: { age: 24 * 60 * 60 },
+      removeOnFail: { age: 7 * 24 * 60 * 60 },
+    },
+  });
+  return transcribeQueue;
+}
+
+export function createTranscribeWorker(
+  processor: (data: TranscribeJobData, jobId: string) => Promise<void>
+): Worker<TranscribeJobData> {
+  return new Worker<TranscribeJobData>(
+    QUEUE_NAMES.transcribe,
+    async (job) => {
+      console.log(`[transcribe] processing ${job.id} (note ${job.data.noteId})`);
+      await processor(job.data, String(job.id));
+    },
+    {
+      connection: getRedisConnection() as ConnectionOptions,
+      concurrency: 1,
+    }
+  );
+}
+
 export async function closeQueues(): Promise<void> {
+  if (transcribeQueue) {
+    await transcribeQueue.close();
+    transcribeQueue = null;
+  }
   if (launchAdQueue) {
     await launchAdQueue.close();
     launchAdQueue = null;

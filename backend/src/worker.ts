@@ -17,10 +17,12 @@
  */
 import {
   createOrganicPublishWorker,
+  createTranscribeWorker,
   getRedisConnection,
 } from './services/queue';
 import { runPublish as runOrganicPublish } from './services/organic-publish-runner';
 import { startMetaSyncWorker, scheduleHourlySync } from './services/meta-sync-runner';
+import { runTranscription } from './services/transcribe';
 import { closePool } from './db/pool';
 
 async function main() {
@@ -28,6 +30,17 @@ async function main() {
 
   const organicPublishWorker = createOrganicPublishWorker(async (data) => {
     await runOrganicPublish(data.postId);
+  });
+
+  // Meeting-recording transcription (Whisper + local LLM summary).
+  const transcribeWorker = createTranscribeWorker(async (data) => {
+    await runTranscription(data.noteId);
+  });
+  transcribeWorker.on('failed', (job, err) => {
+    console.warn(`[transcribe] job ${job?.id} failed: ${err.message}`);
+  });
+  transcribeWorker.on('error', (err) => {
+    console.error('[transcribe] error:', err.message);
   });
 
   // Hourly Meta sync. We register the repeatable job once on startup;
@@ -54,6 +67,7 @@ async function main() {
   const shutdown = async () => {
     console.log('[worker] shutting down…');
     await organicPublishWorker.close();
+    await transcribeWorker.close();
     await metaSyncWorker.close();
     const conn = getRedisConnection();
     await conn.quit();
