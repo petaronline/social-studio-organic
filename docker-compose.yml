@@ -123,38 +123,7 @@ services:
       HOSTNAME: 127.0.0.1
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
 
-  # Self-hosted speech-to-text (faster-whisper, CPU). Free. Transcribes meeting
-  # recordings. The model downloads on first run into the cache volume (first
-  # transcription is slow while it fetches; fast after). Binds host port 9000.
-  whisper:
-    image: onerahmet/openai-whisper-asr-webservice:latest
-    container_name: vass-organic-whisper
-    restart: unless-stopped
-    network_mode: host
-    environment:
-      ASR_ENGINE: faster_whisper
-      # small = good multilingual (Serbian + English) balance on CPU. The box
-      # has plenty of RAM to go bigger (medium/large-v3) by changing this.
-      ASR_MODEL: small
-    volumes:
-      - organic_whisper_cache:/root/.cache
-
-  # Self-hosted LLM (Ollama, CPU) for meeting summaries. Free, and OPTIONAL: if
-  # it isn't running or the model isn't pulled, transcription still works and
-  # the summary step is skipped. Pull the model once after first deploy:
-  #   docker exec vass-organic-ollama ollama pull qwen2.5:7b-instruct
-  # Binds host port 11434.
-  ollama:
-    image: ollama/ollama:latest
-    container_name: vass-organic-ollama
-    restart: unless-stopped
-    network_mode: host
-    volumes:
-      - organic_ollama:/root/.ollama
-
 volumes:
   organic_postgres_data:
   organic_redis_data:
   organic_uploads:
-  organic_whisper_cache:
-  organic_ollama:

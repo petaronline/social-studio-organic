@@ -22,8 +22,6 @@ import {
 } from '@/lib/api';
 import { getActiveBrandId, VASS_ACTIVE_SCOPE_EVENT } from '@/components/BrandSelector';
 import { NoteEditor, noteSnippet } from '@/components/notes/NoteEditor';
-import { MeetingAI } from '@/components/notes/MeetingAI';
-import { organicTasks } from '@/lib/api';
 
 const MEETING_TEMPLATE =
   '<h2>Agenda</h2><p></p><h2>Discussion</h2><p></p><h2>Action items</h2>' +
@@ -260,33 +258,6 @@ export default function NotesPage() {
                   />
                 </label>
               </div>
-            )}
-
-            {/* Meeting AI — record/upload → transcript + summary + tasks */}
-            {selected.type === 'meeting' && (
-              <MeetingAI
-                note={selected}
-                onNoteUpdate={(updated) =>
-                  setNotes((prev) =>
-                    prev.map((n) =>
-                      n.id === updated.id
-                        ? {
-                            ...n,
-                            transcribeStatus: updated.transcribeStatus,
-                            transcribeError: updated.transcribeError,
-                            transcript: updated.transcript,
-                            summary: updated.summary,
-                            nextSteps: updated.nextSteps,
-                          }
-                        : n
-                    )
-                  )
-                }
-                onInsertSummary={(html) => patch(selected.id, { body: `${selected.body || ''}${html}` })}
-                onCreateTasks={(steps) => {
-                  steps.forEach((s) => organicTasks.create(selected.brandId, s).catch(() => {}));
-                }}
-              />
             )}
 
             {/* Body */}

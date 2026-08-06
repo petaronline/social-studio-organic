@@ -9,8 +9,6 @@ import { query } from '../db/pool';
 
 export type NoteType = 'note' | 'meeting';
 
-export type TranscribeStatus = 'idle' | 'processing' | 'done' | 'error';
-
 export interface Note {
   id: string;
   brandId: string;
@@ -22,12 +20,6 @@ export interface Note {
   pinned: boolean;
   createdAt: Date;
   updatedAt: Date;
-  // Meeting transcription pipeline
-  transcribeStatus: TranscribeStatus;
-  transcribeError: string | null;
-  transcript: string | null;
-  summary: string | null;
-  nextSteps: string[];
 }
 
 export interface NoteWithBrand extends Note {
@@ -61,16 +53,10 @@ function rowToNote(row: any): Note {
     pinned: row.pinned,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-    transcribeStatus: row.transcribe_status ?? 'idle',
-    transcribeError: row.transcribe_error ?? null,
-    transcript: row.transcript ?? null,
-    summary: row.summary ?? null,
-    nextSteps: Array.isArray(row.next_steps) ? row.next_steps : [],
   };
 }
 
-const COLS = `id, brand_id, type, title, body, meeting_at, attendees, pinned, created_at, updated_at,
-  transcribe_status, transcribe_error, transcript, summary, next_steps`;
+const COLS = `id, brand_id, type, title, body, meeting_at, attendees, pinned, created_at, updated_at`;
 
 export async function userOwnsBrand(userId: string, brandId: string): Promise<boolean> {
   const { rows } = await query<{ one: number }>(
@@ -175,57 +161,4 @@ export async function deleteNote(userId: string, id: string): Promise<boolean> {
     [id, userId]
   );
   return rows.length > 0;
-}
-
-// ─── Transcription lifecycle ─────────────────────────────────────────
-
-/** Mark a note as processing and record where its audio is. Ownership-scoped
- *  (called from the upload route). Returns the updated note. */
-export async function startTranscription(
-  userId: string,
-  id: string,
-  audioPath: string
-): Promise<Note | null> {
-  const { rows } = await query<any>(
-    `UPDATE organic_notes
-        SET audio_path = $1, transcribe_status = 'processing', transcribe_error = NULL
-      WHERE id = $2 AND user_id = $3
-      RETURNING ${COLS}`,
-    [audioPath, id, userId]
-  );
-  return rows.length ? rowToNote(rows[0]) : null;
-}
-
-/** Worker-side: the audio path for a note (no user scope — the job carries a
- *  trusted note id). */
-export async function getAudioPath(id: string): Promise<string | null> {
-  const { rows } = await query<{ audio_path: string | null }>(
-    `SELECT audio_path FROM organic_notes WHERE id = $1 LIMIT 1`,
-    [id]
-  );
-  return rows.length ? rows[0].audio_path : null;
-}
-
-/** Worker-side: store transcript + (optional) summary, mark done, drop audio. */
-export async function finishTranscription(
-  id: string,
-  result: { transcript: string; summary: string | null; nextSteps: string[] }
-): Promise<void> {
-  await query(
-    `UPDATE organic_notes
-        SET transcript = $1, summary = $2, next_steps = $3::jsonb,
-            transcribe_status = 'done', transcribe_error = NULL, audio_path = NULL
-      WHERE id = $4`,
-    [result.transcript, result.summary, JSON.stringify(result.nextSteps), id]
-  );
-}
-
-/** Worker-side: mark the transcription failed. */
-export async function failTranscription(id: string, error: string): Promise<void> {
-  await query(
-    `UPDATE organic_notes
-        SET transcribe_status = 'error', transcribe_error = $1, audio_path = NULL
-      WHERE id = $2`,
-    [error.slice(0, 500), id]
-  );
 }

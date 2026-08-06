@@ -30,15 +30,6 @@ const envSchema = z.object({
 
   // URLs
   FRONTEND_URL: z.string().url().default('http://localhost:3000'),
-
-  // Meeting transcription (self-hosted, free).
-  // Whisper ASR web service (faster-whisper) — speech-to-text.
-  WHISPER_URL: z.string().url().default('http://127.0.0.1:9000'),
-  // Ollama — local LLM for the summary step. Optional: if unreachable, the
-  // transcript is still produced and the summary is skipped.
-  OLLAMA_URL: z.string().url().default('http://127.0.0.1:11434'),
-  // The local model Ollama should use for summaries.
-  SUMMARY_MODEL: z.string().default('qwen2.5:7b-instruct'),
 });
 
 const parsed = envSchema.safeParse(process.env);
