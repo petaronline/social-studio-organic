@@ -39,6 +39,7 @@ import {
 } from '@/components/studio/DashboardPanels';
 import { NotableDatesPanel } from '@/components/studio/NotableDates';
 import { TasksPanel } from '@/components/tasks/TasksPanel';
+import { NewsPanel } from '@/components/studio/NewsPanel';
 import {
   getActiveBrandId,
   getActiveScope,
@@ -245,9 +246,10 @@ export default function StudioPage() {
             <AttentionPanel items={dash.attention} />
           </div>
 
-          {/* Column 2 — Tasks. */}
+          {/* Column 2 — Tasks + social-media news. */}
           <div className="flex flex-col gap-4">
             <TasksPanel />
+            <NewsPanel />
           </div>
 
           {/* Column 3 — Notable dates, plus this week's cadence. */}

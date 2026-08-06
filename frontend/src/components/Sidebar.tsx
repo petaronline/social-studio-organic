@@ -37,10 +37,10 @@ import {
   Images,
   ListChecks,
   NotebookPen,
+  Sparkles,
   type LucideIcon,
 } from 'lucide-react';
 import { StudioLogo } from './StudioLogo';
-import { NotificationsBell } from './NotificationsBell';
 import { BrandSelector } from './BrandSelector';
 import { auth, branding, CurrentUser } from '@/lib/api';
 
@@ -107,7 +107,8 @@ const PRIMARY_NAV: NavItem[] = [
  * them ends up stale.
  */
 const SECONDARY_NAV: NavItem[] = [
-  { kind: 'flat', label: 'Settings', href: '/settings', icon: Settings, active: ACTIVE_SLATE },
+  { kind: 'flat', label: 'Settings',  href: '/settings',  icon: Settings, active: ACTIVE_SLATE },
+  { kind: 'flat', label: "What's new", href: '/changelog', icon: Sparkles, active: ACTIVE_ROSE },
 ];
 
 // ─── Sidebar ─────────────────────────────────────────────────────────────────
@@ -186,8 +187,9 @@ export function Sidebar({ user }: { user: CurrentUser }) {
 
       {/* User card. The app has no top bar — the approved direction put the
           identity and its controls down here, and the page's own header owns
-          the actions. Notifications and sign-out live on this row so the
-          work surface stays entirely content. */}
+          the actions. Sign-out lives on this row so the work surface stays
+          entirely content. (Notifications removed until there's multi-user
+          activity worth surfacing — see the roadmap.) */}
       <div className="p-3">
         <div className="flex items-center gap-2 rounded-lg bg-surface-alt px-3 py-2.5">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cherry text-xs font-bold text-white">
@@ -197,7 +199,6 @@ export function Sidebar({ user }: { user: CurrentUser }) {
             <div className="truncate text-sm font-semibold text-ink">{user.name}</div>
             <div className="truncate text-xs text-ink-subtle">{user.email}</div>
           </div>
-          <NotificationsBell />
           <button
             onClick={handleLogout}
             title="Sign out"

@@ -1244,6 +1244,21 @@ export const organicNotes = {
 };
 
 // ============================================================
+// Social-media news feed (cross-brand, cached RSS merge)
+// ============================================================
+
+export interface NewsItem {
+  title: string;
+  url: string;
+  source: string;
+  publishedAt: string | null;
+}
+
+export const organicNews = {
+  list: () => api.get<{ items: NewsItem[] }>('/organic/news'),
+};
+
+// ============================================================
 // Notifications — top-bar bell
 // ============================================================
 

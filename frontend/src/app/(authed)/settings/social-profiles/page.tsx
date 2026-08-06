@@ -140,7 +140,7 @@ export default function SocialProfilesPage() {
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 5000);
   }, []);
 
-  const loadAll = useCallback(async () => {
+  const loadAll = useCallback(async (announce = false) => {
     try {
       const [accountsResp, brandsResp] = await Promise.all([
         organicAccounts.list(),
@@ -148,6 +148,11 @@ export default function SocialProfilesPage() {
       ]);
       setAccounts(accountsResp.accounts);
       setBrands(brandsResp.brands);
+      // Manual refresh re-reads every profile and re-resolves its avatar
+      // (which can clear a stale placeholder). Confirm it did something so the
+      // button doesn't feel inert. Note: this reloads from our store — it does
+      // not re-pull fresh profile data from the networks.
+      if (announce) addToast('success', 'Profiles refreshed');
     } catch (err) {
       addToast('error', err instanceof ApiError ? err.message : 'Failed to load');
     } finally {
@@ -404,7 +409,7 @@ export default function SocialProfilesPage() {
           </p>
         </div>
         <button
-          onClick={() => { setLoading(true); loadAll(); }}
+          onClick={() => { setLoading(true); loadAll(true); }}
           disabled={loading}
           className="flex items-center gap-2 px-3 py-1.5 text-sm text-ink-muted hover:text-ink rounded-lg hover:bg-surface-alt transition-colors disabled:opacity-50"
         >
