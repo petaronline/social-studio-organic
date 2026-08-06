@@ -17,6 +17,9 @@ export interface Task {
   sortOrder: number;
   createdAt: Date;
   updatedAt: Date;
+  /** 'YYYY-MM-DD' or null. */
+  dueDate: string | null;
+  tag: string | null;
 }
 
 /** A task plus the brand it belongs to — for the cross-brand dashboard list. */
@@ -35,10 +38,18 @@ function rowToTask(row: any): Task {
     sortOrder: row.sort_order,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    dueDate: row.due_date ?? null,
+    tag: row.tag ?? null,
   };
 }
 
-const COLS = `id, brand_id, title, done, completed_at, sort_order, created_at, updated_at`;
+const COLS = `id, brand_id, title, done, completed_at, sort_order, created_at, updated_at, due_date, tag`;
+
+function cleanTag(tag: string | null | undefined): string | null {
+  if (tag == null) return null;
+  const t = tag.trim().replace(/^#+/, '').slice(0, 40);
+  return t.length ? t : null;
+}
 
 export async function userOwnsBrand(userId: string, brandId: string): Promise<boolean> {
   const { rows } = await query<{ one: number }>(
@@ -75,12 +86,22 @@ export async function listRecent(userId: string, limit: number): Promise<TaskWit
   return rows.map((r) => ({ ...rowToTask(r), brandName: r.brand_name, brandColor: r.brand_color }));
 }
 
-export async function createTask(userId: string, brandId: string, title: string): Promise<Task> {
+export interface CreateTaskInput {
+  dueDate?: string | null;
+  tag?: string | null;
+}
+
+export async function createTask(
+  userId: string,
+  brandId: string,
+  title: string,
+  input: CreateTaskInput = {}
+): Promise<Task> {
   const { rows } = await query<any>(
-    `INSERT INTO organic_tasks (user_id, brand_id, title)
-     VALUES ($1, $2, $3)
+    `INSERT INTO organic_tasks (user_id, brand_id, title, due_date, tag)
+     VALUES ($1, $2, $3, $4, $5)
      RETURNING ${COLS}`,
-    [userId, brandId, title.trim()]
+    [userId, brandId, title.trim(), input.dueDate ?? null, cleanTag(input.tag)]
   );
   return rowToTask(rows[0]);
 }
@@ -88,6 +109,8 @@ export async function createTask(userId: string, brandId: string, title: string)
 export interface TaskPatch {
   title?: string;
   done?: boolean;
+  dueDate?: string | null;
+  tag?: string | null;
 }
 
 export async function updateTask(userId: string, id: string, patch: TaskPatch): Promise<Task | null> {
@@ -103,6 +126,14 @@ export async function updateTask(userId: string, id: string, patch: TaskPatch): 
     vals.push(patch.done);
     // Stamp / clear completion time alongside the flag.
     sets.push(`completed_at = ${patch.done ? 'NOW()' : 'NULL'}`);
+  }
+  if (patch.dueDate !== undefined) {
+    sets.push(`due_date = $${i++}`);
+    vals.push(patch.dueDate);
+  }
+  if (patch.tag !== undefined) {
+    sets.push(`tag = $${i++}`);
+    vals.push(cleanTag(patch.tag));
   }
   if (sets.length === 0) {
     const { rows } = await query<any>(

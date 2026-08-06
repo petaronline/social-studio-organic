@@ -1169,6 +1169,13 @@ export interface Task {
   sortOrder: number;
   createdAt: string;
   updatedAt: string;
+  dueDate: string | null; // 'YYYY-MM-DD'
+  tag: string | null;
+}
+
+export interface TaskExtras {
+  dueDate?: string | null;
+  tag?: string | null;
 }
 
 /** A task plus its brand's mark — used by the cross-brand dashboard box. */
@@ -1183,9 +1190,9 @@ export const organicTasks = {
   /** Cross-brand top-N for the dashboard box. */
   recent: (limit = 5) =>
     api.get<{ tasks: TaskWithBrand[] }>(`/organic/tasks/recent?limit=${limit}`),
-  create: (brandId: string, title: string) =>
-    api.post<{ task: Task }>('/organic/tasks', { brandId, title }),
-  update: (id: string, patch: { title?: string; done?: boolean }) =>
+  create: (brandId: string, title: string, extras: TaskExtras = {}) =>
+    api.post<{ task: Task }>('/organic/tasks', { brandId, title, ...extras }),
+  update: (id: string, patch: { title?: string; done?: boolean } & TaskExtras) =>
     api.patch<{ task: Task }>(`/organic/tasks/${id}`, patch),
   delete: (id: string) => api.delete<{ ok: true }>(`/organic/tasks/${id}`),
 };

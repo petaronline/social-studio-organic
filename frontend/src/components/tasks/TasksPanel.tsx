@@ -80,6 +80,8 @@ export function TasksPanel() {
               key={t.id}
               title={t.title}
               done={t.done}
+              dueDate={t.dueDate}
+              tag={t.tag}
               onToggle={(n) => toggle(t.id, n)}
               onDelete={() => remove(t.id)}
               brandMark={<BrandMark name={t.brandName} color={t.brandColor} />}

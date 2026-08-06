@@ -35,9 +35,13 @@ tasksRouter.get('/', requireAuth, async (req: Request, res: Response) => {
   res.json({ tasks: list });
 });
 
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
 const createSchema = z.object({
   brandId: z.string().uuid(),
   title: z.string().trim().min(1).max(500),
+  dueDate: z.string().regex(DATE_RE).nullable().optional(),
+  tag: z.string().max(60).nullable().optional(),
 });
 
 tasksRouter.post('/', requireAuth, async (req: Request, res: Response) => {
@@ -48,13 +52,18 @@ tasksRouter.post('/', requireAuth, async (req: Request, res: Response) => {
   if (!(await tasks.userOwnsBrand(req.user!.id, parsed.data.brandId))) {
     return res.status(404).json({ error: 'Brand not found' });
   }
-  const task = await tasks.createTask(req.user!.id, parsed.data.brandId, parsed.data.title);
+  const task = await tasks.createTask(req.user!.id, parsed.data.brandId, parsed.data.title, {
+    dueDate: parsed.data.dueDate ?? null,
+    tag: parsed.data.tag ?? null,
+  });
   res.status(201).json({ task });
 });
 
 const updateSchema = z.object({
   title: z.string().trim().min(1).max(500).optional(),
   done: z.boolean().optional(),
+  dueDate: z.string().regex(DATE_RE).nullable().optional(),
+  tag: z.string().max(60).nullable().optional(),
 });
 
 tasksRouter.patch('/:id', requireAuth, async (req: Request, res: Response) => {

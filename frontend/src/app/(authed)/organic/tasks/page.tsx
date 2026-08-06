@@ -9,11 +9,11 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ListChecks, Plus } from 'lucide-react';
+import { ListChecks, Plus, CalendarClock, Tag } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
-import { organicTasks, brands as brandsApi, type Task, type Brand } from '@/lib/api';
+import { organicTasks, brands as brandsApi, type Task, type Brand, type TaskExtras } from '@/lib/api';
 import { getActiveBrandId, VASS_ACTIVE_SCOPE_EVENT } from '@/components/BrandSelector';
-import { TaskRow } from '@/components/tasks/TaskRow';
+import { TaskRow, EmptyTaskSquiggles } from '@/components/tasks/TaskRow';
 
 export default function TasksPage() {
   const [brandId, setBrandId] = useState<string | 'all'>('all');
@@ -37,6 +37,8 @@ export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState('');
+  const [draftDue, setDraftDue] = useState('');
+  const [draftTag, setDraftTag] = useState('');
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(() => {
@@ -59,9 +61,14 @@ export default function TasksPage() {
     if (!title || !activeBrandId) return;
     setBusy(true);
     try {
-      const { task } = await organicTasks.create(activeBrandId, title);
+      const { task } = await organicTasks.create(activeBrandId, title, {
+        dueDate: draftDue || null,
+        tag: draftTag.trim() || null,
+      });
       setTasks((prev) => [...prev.filter((t) => !t.done), task, ...prev.filter((t) => t.done)]);
       setDraft('');
+      setDraftDue('');
+      setDraftTag('');
     } finally {
       setBusy(false);
     }
@@ -71,6 +78,15 @@ export default function TasksPage() {
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, done: next } : t)));
     try {
       await organicTasks.update(id, { done: next });
+    } catch {
+      load();
+    }
+  }
+
+  async function edit(id: string, patch: TaskExtras) {
+    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+    try {
+      await organicTasks.update(id, patch);
     } catch {
       load();
     }
@@ -112,35 +128,74 @@ export default function TasksPage() {
       />
 
       {/* Add box */}
-      <div className="card mb-4 flex items-center gap-2 p-2">
-        <div className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full border-2 border-line-strong text-ink-subtle">
-          <Plus size={12} strokeWidth={3} />
+      <div className="card mb-4 p-2">
+        <div className="flex items-center gap-2">
+          <div className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full border-2 border-line-strong text-ink-subtle">
+            <Plus size={12} strokeWidth={3} />
+          </div>
+          <input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && add()}
+            placeholder="Add a task…"
+            className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-subtle"
+          />
+          {draft.trim() && (
+            <button onClick={add} disabled={busy} className="btn-primary btn-sm">
+              Add
+            </button>
+          )}
         </div>
-        <input
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && add()}
-          placeholder="Add a task…"
-          className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-subtle"
-        />
+
+        {/* Optional due date + tag — revealed once you start typing. */}
         {draft.trim() && (
-          <button onClick={add} disabled={busy} className="btn-primary btn-sm">
-            Add
-          </button>
+          <div className="mt-2 flex flex-wrap items-center gap-2 pl-7">
+            <label className="flex items-center gap-1.5 rounded-lg bg-surface-alt px-2 py-1 text-xs text-ink-muted">
+              <CalendarClock size={13} className="text-ink-subtle" />
+              <input
+                type="date"
+                value={draftDue}
+                onChange={(e) => setDraftDue(e.target.value)}
+                className="bg-transparent text-xs text-ink outline-none"
+              />
+            </label>
+            <label className="flex items-center gap-1.5 rounded-lg bg-surface-alt px-2 py-1 text-xs text-ink-muted">
+              <Tag size={13} className="text-ink-subtle" />
+              <input
+                value={draftTag}
+                onChange={(e) => setDraftTag(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && add()}
+                placeholder="tag"
+                maxLength={40}
+                className="w-24 bg-transparent text-xs text-ink outline-none placeholder:text-ink-subtle"
+              />
+            </label>
+          </div>
         )}
       </div>
 
       {loading ? (
         <div className="card px-6 py-12 text-center text-sm text-ink-subtle">Loading…</div>
       ) : tasks.length === 0 ? (
-        <div className="card px-6 py-12 text-center">
-          <p className="text-sm text-ink-muted">No tasks yet. Add the first one above.</p>
+        <div className="card p-2">
+          <EmptyTaskSquiggles />
+          <p className="pb-2 pt-1 text-center text-xs text-ink-subtle">Add your first task above.</p>
         </div>
       ) : (
         <div className="card p-2">
           <ul className="flex flex-col">
             {open.map((t) => (
-              <TaskRow key={t.id} title={t.title} done={t.done} onToggle={(n) => toggle(t.id, n)} onDelete={() => remove(t.id)} />
+              <TaskRow
+                key={t.id}
+                title={t.title}
+                done={t.done}
+                dueDate={t.dueDate}
+                tag={t.tag}
+                onToggle={(n) => toggle(t.id, n)}
+                onDelete={() => remove(t.id)}
+                onSetDue={(d) => edit(t.id, { dueDate: d })}
+                onSetTag={(tg) => edit(t.id, { tag: tg })}
+              />
             ))}
           </ul>
 
@@ -149,7 +204,17 @@ export default function TasksPage() {
               <div className="lab px-2 pb-1 pt-3">Done · {done.length}</div>
               <ul className="flex flex-col">
                 {done.map((t) => (
-                  <TaskRow key={t.id} title={t.title} done={t.done} onToggle={(n) => toggle(t.id, n)} onDelete={() => remove(t.id)} />
+                  <TaskRow
+                    key={t.id}
+                    title={t.title}
+                    done={t.done}
+                    dueDate={t.dueDate}
+                    tag={t.tag}
+                    onToggle={(n) => toggle(t.id, n)}
+                    onDelete={() => remove(t.id)}
+                    onSetDue={(d) => edit(t.id, { dueDate: d })}
+                    onSetTag={(tg) => edit(t.id, { tag: tg })}
+                  />
                 ))}
               </ul>
             </>

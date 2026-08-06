@@ -5,8 +5,15 @@
  * needed, reuses idle ones, closes them after a timeout. You never want to
  * open a new connection per request.
  */
-import { Pool, PoolClient } from 'pg';
+import { Pool, PoolClient, types } from 'pg';
 import { env } from '../utils/env';
+
+// Return DATE columns (OID 1082) as the raw 'YYYY-MM-DD' string instead of a
+// JS Date. node-pg's default parses a bare date into a local-midnight Date,
+// which shifts a day when serialised to UTC — a task "due Aug 12" would show
+// as Aug 11 for anyone east of UTC. The string carries no timezone, so it
+// can't drift.
+types.setTypeParser(1082, (v) => v);
 
 export const pool = new Pool({
   connectionString: env.DATABASE_URL,

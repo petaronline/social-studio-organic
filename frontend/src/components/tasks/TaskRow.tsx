@@ -1,14 +1,43 @@
 'use client';
 
 /**
- * One task line: a round checkbox (the "ticker") at the start, the title, and
- * a delete button. Checking it strikes the title through; done or not, it can
- * be deleted. An optional brandMark renders at the row end — the dashboard box
- * uses it to show which brand each cross-brand task belongs to.
+ * One task line: a round checkbox (the "ticker"), the title, an optional due
+ * date and tag, and a delete button. Checking it strikes the title through;
+ * done or not, it can be deleted.
+ *
+ * When onSetDue / onSetTag are provided (the Tasks page), the due/tag chips are
+ * editable inline and hover reveals affordances to add them. Without them (the
+ * dashboard box) the chips are read-only.
  */
 
-import { Check, X } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
+import { Check, X, CalendarClock, Tag } from 'lucide-react';
+
+// ── Helpers ──────────────────────────────────────────────────────────
+
+function localTodayStr(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function fmtDue(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+/** Soft tag palette, picked deterministically from the tag text. */
+const TAG_STYLES = [
+  { bg: '#FFE1EC', ink: '#B4245C' },
+  { bg: '#DDE8FF', ink: '#2547A8' },
+  { bg: '#D3F3E9', ink: '#0B6B52' },
+  { bg: '#ECE2FF', ink: '#5B2FB0' },
+  { bg: '#FFF0D6', ink: '#8A5A00' },
+];
+function tagStyle(tag: string) {
+  let h = 0;
+  for (let i = 0; i < tag.length; i++) h = (h * 31 + tag.charCodeAt(i)) >>> 0;
+  return TAG_STYLES[h % TAG_STYLES.length];
+}
 
 export function TaskRow({
   title,
@@ -16,15 +45,26 @@ export function TaskRow({
   onToggle,
   onDelete,
   brandMark,
+  dueDate = null,
+  tag = null,
+  onSetDue,
+  onSetTag,
 }: {
   title: string;
   done: boolean;
   onToggle: (next: boolean) => void;
   onDelete: () => void;
   brandMark?: ReactNode;
+  dueDate?: string | null;
+  tag?: string | null;
+  onSetDue?: (date: string | null) => void;
+  onSetTag?: (tag: string | null) => void;
 }) {
+  const [editing, setEditing] = useState<null | 'due' | 'tag'>(null);
+  const overdue = !done && dueDate != null && dueDate < localTodayStr();
+
   return (
-    <li className="group flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-surface-alt">
+    <li className="group flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-surface-alt">
       <button
         onClick={() => onToggle(!done)}
         aria-label={done ? 'Mark not done' : 'Mark done'}
@@ -46,6 +86,68 @@ export function TaskRow({
         {title}
       </span>
 
+      {/* Due date */}
+      {editing === 'due' ? (
+        <input
+          type="date"
+          defaultValue={dueDate ?? ''}
+          autoFocus
+          onChange={(e) => { onSetDue?.(e.target.value || null); setEditing(null); }}
+          onBlur={() => setEditing(null)}
+          className="rounded-md bg-surface px-1.5 py-0.5 font-mono text-2xs text-ink outline-none ring-1 ring-line"
+        />
+      ) : dueDate ? (
+        <button
+          onClick={() => onSetDue && setEditing('due')}
+          className={[
+            'flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 font-mono text-2xs font-semibold tabular-nums',
+            overdue ? 'bg-cherry/10 text-cherry' : 'bg-surface-alt text-ink-muted',
+          ].join(' ')}
+        >
+          <CalendarClock size={11} /> {fmtDue(dueDate)}
+        </button>
+      ) : onSetDue ? (
+        <button
+          onClick={() => setEditing('due')}
+          title="Set due date"
+          className="shrink-0 rounded-md p-1 text-ink-subtle opacity-0 transition-all hover:bg-black/5 hover:text-ink group-hover:opacity-100"
+        >
+          <CalendarClock size={13} />
+        </button>
+      ) : null}
+
+      {/* Tag */}
+      {editing === 'tag' ? (
+        <input
+          defaultValue={tag ?? ''}
+          autoFocus
+          placeholder="tag"
+          maxLength={40}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') { onSetTag?.((e.target as HTMLInputElement).value || null); setEditing(null); }
+            if (e.key === 'Escape') setEditing(null);
+          }}
+          onBlur={(e) => { onSetTag?.(e.target.value || null); setEditing(null); }}
+          className="w-20 rounded-md bg-surface px-1.5 py-0.5 text-2xs text-ink outline-none ring-1 ring-line"
+        />
+      ) : tag ? (
+        <button
+          onClick={() => onSetTag && setEditing('tag')}
+          className="shrink-0 rounded-md px-1.5 py-0.5 text-2xs font-bold uppercase tracking-wide"
+          style={{ backgroundColor: tagStyle(tag).bg, color: tagStyle(tag).ink }}
+        >
+          {tag}
+        </button>
+      ) : onSetTag ? (
+        <button
+          onClick={() => setEditing('tag')}
+          title="Add tag"
+          className="shrink-0 rounded-md p-1 text-ink-subtle opacity-0 transition-all hover:bg-black/5 hover:text-ink group-hover:opacity-100"
+        >
+          <Tag size={13} />
+        </button>
+      ) : null}
+
       {brandMark}
 
       <button
@@ -59,8 +161,7 @@ export function TaskRow({
   );
 }
 
-/** Small circular brand mark — initials on the brand colour. Robust (no
- *  dependence on a profile picture that might be a placeholder). */
+/** Small circular brand mark — initials on the brand colour. */
 export function BrandMark({ name, color, size = 20 }: { name: string; color: string; size?: number }) {
   return (
     <span
@@ -70,5 +171,36 @@ export function BrandMark({ name, color, size = 20 }: { name: string; color: str
     >
       {name.charAt(0).toUpperCase()}
     </span>
+  );
+}
+
+// ── Empty-state squiggles ────────────────────────────────────────────
+
+// Hand-drawn wavy "lines", different for each row — a playful placeholder for
+// an empty list.
+const SQUIGGLES = [
+  'M3 12 q 16 -9 32 0 t 32 0 t 32 0 t 32 0 t 30 0',
+  'M3 13 q 22 -11 44 0 t 44 0 t 44 0 t 34 0',
+  'M3 12 q 11 8 22 0 t 22 0 t 22 0 t 22 0 t 22 0 t 16 0',
+  'M3 14 q 18 -7 36 0 t 36 0 t 34 0',
+];
+
+export function EmptyTaskSquiggles() {
+  return (
+    <ul className="flex flex-col gap-1 py-2" aria-hidden>
+      {[0, 1, 2].map((i) => (
+        <li key={i} className="flex items-center gap-3 px-2 py-1.5">
+          <span className="h-[18px] w-[18px] shrink-0 rounded-full border-2 border-line" />
+          <svg viewBox="0 0 220 24" className="h-5 w-52" fill="none">
+            <path
+              d={SQUIGGLES[i % SQUIGGLES.length]}
+              stroke="#D3CFE2"
+              strokeWidth={2.5}
+              strokeLinecap="round"
+            />
+          </svg>
+        </li>
+      ))}
+    </ul>
   );
 }
