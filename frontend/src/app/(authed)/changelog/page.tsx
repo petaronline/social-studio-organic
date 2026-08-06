@@ -8,8 +8,43 @@
  * RELEASES when something ships.
  */
 
-import { Sparkles, Images, ListChecks, NotebookPen, Share2, FileDown } from 'lucide-react';
+import { Sparkles, Images, ListChecks, NotebookPen, Share2, FileDown, Map, Circle } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+
+interface RoadmapItem {
+  title: string;
+  note: string;
+  status: 'Planned' | 'Exploring' | 'Later';
+}
+
+const ROADMAP: RoadmapItem[] = [
+  {
+    title: 'AI meeting notes (Fathom-style)',
+    note: 'Record or upload a meeting, auto-transcribe it, and pull out a summary, decisions and next steps — with action items flowing straight into tasks.',
+    status: 'Exploring',
+  },
+  {
+    title: 'Shareable notes & meeting notes',
+    note: 'Send a note or meeting to a client via a read-only link, the same way moodboards share.',
+    status: 'Planned',
+  },
+  {
+    title: 'Re-sync profiles from the networks',
+    note: 'A real refresh that pulls fresh photos, names and token health from Meta and the other platforms on demand.',
+    status: 'Planned',
+  },
+  {
+    title: 'Notifications',
+    note: 'Back once there’s multi-user activity — comments, approvals, teammates — worth surfacing.',
+    status: 'Later',
+  },
+];
+
+const STATUS_STYLE: Record<RoadmapItem['status'], string> = {
+  Exploring: 'bg-cherry/10 text-cherry',
+  Planned: 'bg-platform-fb text-platform-fb-ink',
+  Later: 'bg-surface-alt text-ink-muted',
+};
 
 interface Feature {
   icon: LucideIcon;
@@ -93,6 +128,30 @@ export default function ChangelogPage() {
           Everything we’ve shipped in The Social Studio, newest first.
         </p>
       </header>
+
+      {/* Roadmap — what's coming, before the shipped log. */}
+      <section className="mb-14 rounded-2xl border border-dashed border-line-strong bg-surface-alt/40 p-5">
+        <div className="mb-3 flex items-center gap-2">
+          <Map size={16} className="text-ink-subtle" />
+          <h2 className="font-display text-base font-extrabold text-ink">Coming up</h2>
+        </div>
+        <ul className="flex flex-col gap-3">
+          {ROADMAP.map((r) => (
+            <li key={r.title} className="flex items-start gap-3">
+              <Circle size={9} className="mt-1.5 shrink-0 text-line-strong" />
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-semibold text-ink">{r.title}</span>
+                  <span className={`rounded-full px-2 py-0.5 text-2xs font-bold uppercase tracking-wide ${STATUS_STYLE[r.status]}`}>
+                    {r.status}
+                  </span>
+                </div>
+                <p className="mt-0.5 text-sm leading-relaxed text-ink-muted">{r.note}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <div className="flex flex-col gap-14">
         {RELEASES.map((release) => (
