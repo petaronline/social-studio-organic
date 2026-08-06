@@ -17,29 +17,51 @@ export function Squiggles({
   rows = 3,
   withCheckbox = false,
   className = '',
+  onRowClick,
 }: {
   rows?: number;
   /** Draw an empty round checkbox before each line (task look). */
   withCheckbox?: boolean;
   className?: string;
+  /** When set, each row is clickable (e.g. to start a new task / note). */
+  onRowClick?: () => void;
 }) {
   return (
-    <ul className={`flex flex-col gap-1 ${className}`} aria-hidden>
-      {Array.from({ length: rows }).map((_, i) => (
-        <li key={i} className="flex items-center gap-3 px-2 py-1.5">
-          {withCheckbox && (
-            <span className="h-[18px] w-[18px] shrink-0 rounded-full border-2 border-line" />
-          )}
-          <svg viewBox="0 0 220 24" className="h-5 w-52" fill="none">
-            <path
-              d={SQUIGGLES[i % SQUIGGLES.length]}
-              stroke="#D3CFE2"
-              strokeWidth={2.5}
-              strokeLinecap="round"
-            />
-          </svg>
-        </li>
-      ))}
+    <ul className={`flex flex-col gap-1 ${className}`}>
+      {Array.from({ length: rows }).map((_, i) => {
+        const inner = (
+          <>
+            {withCheckbox && (
+              <span className="h-[18px] w-[18px] shrink-0 rounded-full border-2 border-line" />
+            )}
+            <svg viewBox="0 0 220 24" className="h-5 w-52" fill="none" aria-hidden>
+              <path
+                d={SQUIGGLES[i % SQUIGGLES.length]}
+                stroke="#D3CFE2"
+                strokeWidth={2.5}
+                strokeLinecap="round"
+              />
+            </svg>
+          </>
+        );
+        return (
+          <li key={i}>
+            {onRowClick ? (
+              <button
+                onClick={onRowClick}
+                className="flex w-full cursor-text items-center gap-3 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-surface-alt"
+                title="Add"
+              >
+                {inner}
+              </button>
+            ) : (
+              <div className="flex items-center gap-3 px-2 py-1.5" aria-hidden>
+                {inner}
+              </div>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }

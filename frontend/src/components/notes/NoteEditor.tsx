@@ -44,7 +44,13 @@ export function NoteEditor({
       StarterKit,
       TaskList,
       TaskItem.configure({ nested: true }),
-      Placeholder.configure({ placeholder: placeholder ?? 'Start writing…' }),
+      // Mark EVERY empty block (not just the first) so each blank line under a
+      // heading gets a hand-drawn squiggle placeholder via CSS (.is-empty).
+      Placeholder.configure({
+        placeholder: placeholder ?? 'Start writing…',
+        includeChildren: true,
+        showOnlyCurrent: false,
+      }),
     ],
     content: value || '',
     editorProps: { attributes: { class: 'note-prose focus:outline-none' } },

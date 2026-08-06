@@ -8,7 +8,7 @@
  * cross-brand view lives in the Studio dashboard box instead.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ListChecks, Plus, CalendarClock, Tag } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { organicTasks, brands as brandsApi, type Task, type Brand, type TaskExtras } from '@/lib/api';
@@ -41,6 +41,7 @@ export default function TasksPage() {
   const [draftDue, setDraftDue] = useState('');
   const [draftTag, setDraftTag] = useState('');
   const [busy, setBusy] = useState(false);
+  const addRef = useRef<HTMLInputElement | null>(null);
 
   const load = useCallback(() => {
     if (!activeBrandId) {
@@ -135,6 +136,7 @@ export default function TasksPage() {
             <Plus size={12} strokeWidth={3} />
           </div>
           <input
+            ref={addRef}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && add()}
@@ -216,12 +218,14 @@ export default function TasksPage() {
             </>
           )}
 
-          {/* Ghost "room for more" rows — always a couple of hand-drawn lines,
-              three when the list is empty. */}
-          <Squiggles withCheckbox rows={tasks.length ? 2 : 3} className="mt-1 opacity-80" />
-          {tasks.length === 0 && (
-            <p className="pb-1 text-center text-xs text-ink-subtle">Add your first task above.</p>
-          )}
+          {/* Ghost "room for more" rows — click one to start writing a task
+              (focuses the add box). A couple normally, three when empty. */}
+          <Squiggles
+            withCheckbox
+            rows={tasks.length ? 2 : 3}
+            className="mt-1 opacity-80"
+            onRowClick={() => addRef.current?.focus()}
+          />
         </div>
       )}
     </div>

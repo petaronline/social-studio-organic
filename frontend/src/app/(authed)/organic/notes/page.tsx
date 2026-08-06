@@ -173,8 +173,8 @@ export default function NotesPage() {
             <p className="px-2 py-6 text-center text-sm text-ink-subtle">Loading…</p>
           ) : notes.length === 0 ? (
             <div className="px-1 py-4">
-              <Squiggles rows={3} className="opacity-80" />
-              <p className="mt-1 text-center text-xs text-ink-subtle">No notes yet.</p>
+              <Squiggles rows={3} className="opacity-80" onRowClick={() => create('note')} />
+              <p className="mt-1 text-center text-xs text-ink-subtle">Click a line to start a note.</p>
             </div>
           ) : (
             <ul className="flex flex-col gap-0.5">
@@ -206,7 +206,7 @@ export default function NotesPage() {
       <section className="min-w-0 flex-1 overflow-y-auto bg-surface">
         {!selected ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 text-sm text-ink-subtle">
-            <Squiggles rows={4} className="opacity-70" />
+            <Squiggles rows={4} className="opacity-70" onRowClick={() => create('note')} />
             Select a note, or create one.
           </div>
         ) : (
