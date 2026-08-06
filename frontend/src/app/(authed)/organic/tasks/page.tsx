@@ -13,7 +13,8 @@ import { ListChecks, Plus, CalendarClock, Tag } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { organicTasks, brands as brandsApi, type Task, type Brand, type TaskExtras } from '@/lib/api';
 import { getActiveBrandId, VASS_ACTIVE_SCOPE_EVENT } from '@/components/BrandSelector';
-import { TaskRow, EmptyTaskSquiggles } from '@/components/tasks/TaskRow';
+import { TaskRow } from '@/components/tasks/TaskRow';
+import { Squiggles } from '@/components/Squiggles';
 
 export default function TasksPage() {
   const [brandId, setBrandId] = useState<string | 'all'>('all');
@@ -176,11 +177,6 @@ export default function TasksPage() {
 
       {loading ? (
         <div className="card px-6 py-12 text-center text-sm text-ink-subtle">Loading…</div>
-      ) : tasks.length === 0 ? (
-        <div className="card p-2">
-          <EmptyTaskSquiggles />
-          <p className="pb-2 pt-1 text-center text-xs text-ink-subtle">Add your first task above.</p>
-        </div>
       ) : (
         <div className="card p-2">
           <ul className="flex flex-col">
@@ -218,6 +214,13 @@ export default function TasksPage() {
                 ))}
               </ul>
             </>
+          )}
+
+          {/* Ghost "room for more" rows — always a couple of hand-drawn lines,
+              three when the list is empty. */}
+          <Squiggles withCheckbox rows={tasks.length ? 2 : 3} className="mt-1 opacity-80" />
+          {tasks.length === 0 && (
+            <p className="pb-1 text-center text-xs text-ink-subtle">Add your first task above.</p>
           )}
         </div>
       )}

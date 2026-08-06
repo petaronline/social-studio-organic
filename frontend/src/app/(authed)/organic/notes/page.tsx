@@ -22,6 +22,7 @@ import {
 } from '@/lib/api';
 import { getActiveBrandId, VASS_ACTIVE_SCOPE_EVENT } from '@/components/BrandSelector';
 import { NoteEditor, noteSnippet } from '@/components/notes/NoteEditor';
+import { Squiggles } from '@/components/Squiggles';
 
 const MEETING_TEMPLATE =
   '<h2>Agenda</h2><p></p><h2>Discussion</h2><p></p><h2>Action items</h2>' +
@@ -171,7 +172,10 @@ export default function NotesPage() {
           {loading ? (
             <p className="px-2 py-6 text-center text-sm text-ink-subtle">Loading…</p>
           ) : notes.length === 0 ? (
-            <p className="px-2 py-6 text-center text-sm text-ink-muted">No notes yet.</p>
+            <div className="px-1 py-4">
+              <Squiggles rows={3} className="opacity-80" />
+              <p className="mt-1 text-center text-xs text-ink-subtle">No notes yet.</p>
+            </div>
           ) : (
             <ul className="flex flex-col gap-0.5">
               {notes.map((n) => (
@@ -201,7 +205,8 @@ export default function NotesPage() {
       {/* Editor pane */}
       <section className="min-w-0 flex-1 overflow-y-auto bg-surface">
         {!selected ? (
-          <div className="flex h-full items-center justify-center text-sm text-ink-subtle">
+          <div className="flex h-full flex-col items-center justify-center gap-2 text-sm text-ink-subtle">
+            <Squiggles rows={4} className="opacity-70" />
             Select a note, or create one.
           </div>
         ) : (
