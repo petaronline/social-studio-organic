@@ -179,6 +179,16 @@ export default function TasksPage() {
 
       {loading ? (
         <div className="card px-6 py-12 text-center text-sm text-ink-subtle">Loading…</div>
+      ) : tasks.length === 0 ? (
+        <div className="card p-2">
+          <Squiggles
+            withCheckbox
+            rows={4}
+            className="opacity-80"
+            onRowClick={() => addRef.current?.focus()}
+          />
+          <p className="pb-1 pt-0.5 text-center text-xs text-ink-subtle">Click a line to add your first task.</p>
+        </div>
       ) : (
         <div className="card p-2">
           <ul className="flex flex-col">
@@ -217,15 +227,6 @@ export default function TasksPage() {
               </ul>
             </>
           )}
-
-          {/* Ghost "room for more" rows — click one to start writing a task
-              (focuses the add box). A couple normally, three when empty. */}
-          <Squiggles
-            withCheckbox
-            rows={tasks.length ? 2 : 3}
-            className="mt-1 opacity-80"
-            onRowClick={() => addRef.current?.focus()}
-          />
         </div>
       )}
     </div>
