@@ -37,9 +37,8 @@ const envSchema = z.object({
   // Ollama — local LLM for the summary step. Optional: if unreachable, the
   // transcript is still produced and the summary is skipped.
   OLLAMA_URL: z.string().url().default('http://127.0.0.1:11434'),
-  // The local model Ollama should use for summaries. qwen2.5:7b is
-  // instruction-tuned by default and strong multilingual (Serbian + English).
-  SUMMARY_MODEL: z.string().default('qwen2.5:7b'),
+  // The local model Ollama should use for summaries.
+  SUMMARY_MODEL: z.string().default('qwen2.5:7b-instruct'),
 });
 
 const parsed = envSchema.safeParse(process.env);
